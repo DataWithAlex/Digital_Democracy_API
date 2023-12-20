@@ -53,9 +53,15 @@ To generate a bill summary, send a POST request to /generate-bill-summary/ with 
 {
   "url": "https://www.flsenate.gov/Session/Bill/2023/23/ByCategory/?Tab=BillText"
 }
-
 ```
-The API will return a JSON response indicating the success of the operation.
+The URL example above, https://www.flsenate.gov/Session/Bill/2023/23/ByCategory/?Tab=BillText , is a bill on FLsenate.gov:
+
+![image](https://github.com/DataWithAlex/Digital_Democracy_API/assets/106262604/5398cd37-f8c5-4d3d-a1e7-f773efb360c3)
+
+The API will return a JSON response indicating the success of the operation. The result is a PDF generated which contains a summary of the bill, and Pros & Cons for whether it was voted on or not:
+
+![image](https://github.com/DataWithAlex/Digital_Democracy_API/assets/106262604/7bf71a29-ec45-43cb-9f78-142b358cdedc)
+
 
 ## API Endpoints
 
@@ -71,7 +77,13 @@ The API consists of several components:
 - main.py: The FastAPI application definition with API endpoints.
 
 ## License
-MIT License
+
+Copyright (c) [2023] [Alex Sciuto]
+
+All rights reserved.
+
+No permission is granted to use, modify, or distribute this software or its parts for any purpose without the express written permission of the copyright owner.
+
 
 
 
