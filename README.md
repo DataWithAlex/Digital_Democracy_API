@@ -67,6 +67,9 @@ The API will return a JSON response indicating the success of the operation. The
 
 - POST /generate-bill-summary/: Generates a bill summary PDF report.
 
+![image](https://github.com/DataWithAlex/Digital_Democracy_API/assets/106262604/57132440-d27b-425b-b2b1-eb67dd7a6329)
+
+
 ## How It Works
 
 The API consists of several components:
