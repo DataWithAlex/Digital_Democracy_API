@@ -2,6 +2,8 @@
 .venv
 env/
 venv/
+.venv_new
+venv_new/
 ENV/
 env.bak/
 venv.bak/
