@@ -7,6 +7,7 @@ import openai
 from .summarization import summarize_with_openai_chat
 from .summarization import full_summarize_with_openai_chat
 from .dependencies import openai_api_key
+import os
 
 
 openai.api_key = openai_api_key
@@ -76,5 +77,7 @@ def create_summary_pdf(input_pdf_path, output_pdf_path, title):
     story.append(t)
 
     doc.build(story)
+
+    return os.path.abspath(output_pdf_path)
 
 # Note: Make sure that the 'summarize_with_openai_chat' function is properly defined in the summarization.py module.

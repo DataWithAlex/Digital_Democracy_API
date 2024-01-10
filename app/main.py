@@ -3,6 +3,7 @@ from app.web_scraping import fetch_bill_details
 from app.pdf_generation import create_summary_pdf
 from app.models import BillRequest
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -20,14 +21,16 @@ async def generate_bill_summary(bill_request: BillRequest):
         # Fetch bill details
         bill_details = fetch_bill_details(bill_request.url)
         
-        # Check if PDF path exists in the response
         if 'pdf_path' in bill_details:
             # Summarize and generate PDF
             pdf_path = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
             
             # Read and return the PDF file
-            with open(pdf_path, "rb") as pdf_file:
-                return Response(content=pdf_file.read(), media_type="application/pdf")
+            if pdf_path and os.path.exists(pdf_path):
+                with open(pdf_path, "rb") as pdf_file:
+                    return Response(content=pdf_file.read(), media_type="application/pdf")
+            else:
+                raise HTTPException(status_code=500, detail="Failed to generate PDF")
 
         else:
             raise HTTPException(status_code=404, detail="PDF not found for the bill")
