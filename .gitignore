@@ -4,7 +4,9 @@ env/
 venv/
 .venv_new
 venv_new/
+.venv_3
+venv_3/
 ENV/
 env.bak/
 venv.bak/
-
+requirements_old.txt

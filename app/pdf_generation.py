@@ -7,7 +7,6 @@ import openai
 from .summarization import summarize_with_openai_chat
 from .summarization import full_summarize_with_openai_chat
 from .dependencies import openai_api_key
-import fitz  # This is correct for PyMuPDF
 
 
 openai.api_key = openai_api_key
