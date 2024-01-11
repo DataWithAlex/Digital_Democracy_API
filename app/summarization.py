@@ -40,3 +40,20 @@ def full_summarize_with_openai_chat(full_text, model="gpt-3.5-turbo"):
     summary = response['choices'][0]['message']['content']
     return summary
 
+def full_summarize_with_openai_chat_spanish(full_text, model="gpt-3.5-turbo"):
+    """
+    Summarizes a given text using OpenAI's Chat Completion API.
+
+    :param text: The text to summarize.
+    :param model: The OpenAI model to use for summarization.
+    :return: A summary of the provided text.
+    """
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "Vas a generar una respuesta de 3 a 4 oraciones que resuma cada página de un proyecto de ley aprobado en el Senado de Florida. Recibirá el texto sin formato de cada página. No incluir el título de los proyectos de ley en el resumen ni los números de referencia. Tampoco menciones el número de factura. "},
+            {"role": "user", "content": f"Por favor resuma el siguiente texto:\n\n{full_text}"}
+        ]
+    )
+    summary = response['choices'][0]['message']['content']
+    return summary
