@@ -5,6 +5,7 @@ from app.pdf_generation import create_summary_pdf_spanish
 from app.models import BillRequest
 import logging
 import os
+from .translation import translate_to_spanish
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

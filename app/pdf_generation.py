@@ -127,16 +127,20 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
         logging.error("No text extracted from PDF for translation.")
         return None
 
-    full_text = translate_to_spanish(full_text)
+    # full_text = translate_to_spanish(full_text)
 
     # Generate a single summary for the full text
-    summary = full_summarize_with_openai_chat_spanish(full_text)
+    summary = full_summarize_with_openai_chat(full_text)
+    summary = translate_to_spanish(summary)
 
     # Add the cumulative summary to the story
     story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
     story.append(Spacer(1, 12))
 
-    pros, cons = generate_pros_and_cons_spanish(full_text)
+    pros, cons = generate_pros_and_cons(full_text)
+    pros = translate_to_spanish(pros)
+    cons = translate_to_spanish(cons)
+
     data = [['Cons', 'Pros'],
             [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
 
