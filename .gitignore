@@ -10,3 +10,6 @@ ENV/
 env.bak/
 venv.bak/
 requirements_old.txt
+secret_testing
+secret_testing/
+.secret_testing

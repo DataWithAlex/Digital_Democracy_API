@@ -12,6 +12,14 @@ from .translation import translate_to_spanish
 import os
 import logging
 
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+import fitz  # PyMuPDF
+import os
+
+
 
 openai.api_key = openai_api_key
 
@@ -68,10 +76,11 @@ def create_summary_pdf(input_pdf_path, output_pdf_path, title):
     doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
     story = []
 
+    # Add the title to the document
     story.append(Paragraph(title, styles['Title']))
     story.append(Spacer(1, 12))
 
-    # Open the original PDF and extract all text
+    # Extract full text from the PDF
     full_text = ""
     with fitz.open(input_pdf_path) as pdf:
         for page_num in range(len(pdf)):
@@ -79,17 +88,16 @@ def create_summary_pdf(input_pdf_path, output_pdf_path, title):
             text = page.get_text()
             full_text += text + " "
 
-    # Generate a single summary for the full text
+    # Generate the summary, pros, and cons
     summary = full_summarize_with_openai_chat(full_text)
+    pros, cons = generate_pros_and_cons(full_text)
 
-    # Add the cumulative summary to the story
+    # Add summary, pros, and cons to the document
     story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
     story.append(Spacer(1, 12))
 
-    pros, cons = generate_pros_and_cons(full_text)
-    data = [['Cons', 'Pros'],
-            [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
-
+    # Creating a table for pros and cons
+    data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
     col_widths = [width * 0.45, width * 0.45]
     t = Table(data, colWidths=col_widths)
     t.setStyle(TableStyle([
@@ -102,9 +110,10 @@ def create_summary_pdf(input_pdf_path, output_pdf_path, title):
     ]))
     story.append(t)
 
+    # Build the PDF document
     doc.build(story)
 
-    return os.path.abspath(output_pdf_path)
+    return os.path.abspath(output_pdf_path), summary, pros, cons
 
 def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
     width, height = letter
