@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class BillRequest(BaseModel):
     url: str
+    lan: str  # Added language field
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, BIGINT
 from sqlalchemy.orm import relationship

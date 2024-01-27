@@ -121,10 +121,11 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
     doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
     story = []
 
+    # Add the title to the document
     story.append(Paragraph(title, styles['Title']))
     story.append(Spacer(1, 12))
 
-    # Open the original PDF and extract all text
+    # Extract full text from the PDF
     full_text = ""
     with fitz.open(input_pdf_path) as pdf:
         for page_num in range(len(pdf)):
@@ -136,26 +137,24 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
         logging.error("No text extracted from PDF for translation.")
         return None
 
-    # full_text = translate_to_spanish(full_text)
-
-    # Generate a single summary for the full text
+    # Generate the summary, pros, and cons in Spanish
     summary = full_summarize_with_openai_chat(full_text)
-    summary = translate_to_spanish(summary)
+    summary_es = translate_to_spanish(summary)
+    pros, cons = generate_pros_and_cons(full_text)
+    pros_es = translate_to_spanish(pros)
+    cons_es = translate_to_spanish(cons)
 
-    # Add the cumulative summary to the story
-    story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
+    # Add the Spanish summary, pros, and cons to the document
+    story.append(Paragraph(f"<b>Summary:</b><br/>{summary_es}", styles['Normal']))
     story.append(Spacer(1, 12))
 
-    pros, cons = generate_pros_and_cons(full_text)
-    pros = translate_to_spanish(pros)
-    cons = translate_to_spanish(cons)
-
-    data = [['Cons', 'Pros'],
-            [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
-
+    # Define the column widths for the table
     col_widths = [width * 0.45, width * 0.45]
-    t = Table(data, colWidths=col_widths)
-    t.setStyle(TableStyle([
+
+    # Creating a table for Spanish pros and cons
+    data_es = [['Cons', 'Pros'], [Paragraph(cons_es, styles['Normal']), Paragraph(pros_es, styles['Normal'])]]
+    t_es = Table(data_es, colWidths=col_widths)
+    t_es.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), colors.grey),
         ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -163,10 +162,11 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
         ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
         ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
     ]))
-    story.append(t)
 
+    # Append the table to the story
+    story.append(t_es)
+
+    # Build the PDF document
     doc.build(story)
 
-    return os.path.abspath(output_pdf_path)
-
-# Note: Make sure that the 'summarize_with_openai_chat' function is properly defined in the summarization.py module.
+    return os.path.abspath(output_pdf_path), summary_es, pros_es, cons_es

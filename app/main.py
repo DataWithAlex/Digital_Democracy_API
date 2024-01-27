@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 from .web_scraping import fetch_bill_details
 from .pdf_generation import create_summary_pdf, create_summary_pdf_spanish
+from .translation import translate_to_spanish
 from .models import BillRequest, Bill, BillMeta
 import logging
 import os
@@ -49,19 +50,21 @@ async def universal_exception_handler(request: Request, exc: Exception):
     logging.error(f"Unhandled exception occurred: {exc}", exc_info=True)
     return {"message": "An internal server error occurred."}
 
-# Endpoint for generating bill summary
 @app.post("/generate-bill-summary/", response_class=Response)
 async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends(get_db)):
     try:
         # Fetch bill details
         bill_details = fetch_bill_details(bill_request.url)
 
-        # Ensure that required keys are in bill_details
+        # Ensure required keys are in bill_details
         if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
-        # Summarize and generate PDF
-        pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+        # Check language and generate PDF accordingly
+        if bill_request.lan == "es":
+            pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
+        else:
+            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
 
         # Insert bill details into the database
         new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
@@ -70,11 +73,11 @@ async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends
 
         # Insert summary, pros, and cons into bill_meta
         for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
+            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=bill_request.lan.upper())
             db.add(new_meta)
         db.commit()
 
-        # Check if the PDF was successfully created
+        # Check if PDF was successfully created
         if pdf_path and os.path.exists(pdf_path):
             with open(pdf_path, "rb") as pdf_file:
                 return Response(content=pdf_file.read(), media_type="application/pdf")
