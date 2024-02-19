@@ -1,23 +1,15 @@
-from fastapi import FastAPI, HTTPException, Request, Response
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy import create_engine
-from .web_scraping import fetch_bill_details
-from .pdf_generation import create_summary_pdf, create_summary_pdf_spanish
-from .models import BillRequest, Bill, BillMeta
-import logging
-import os
-import re  # Importing regular expression library for extracting govId
-
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 from .web_scraping import fetch_bill_details
 from .pdf_generation import create_summary_pdf, create_summary_pdf_spanish
 from .translation import translate_to_spanish
+from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta
 import logging
 import os
 import re
+import openai
 
 # Dependency
 def get_db():
@@ -76,6 +68,16 @@ async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends
             new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=bill_request.lan.upper())
             db.add(new_meta)
         db.commit()
+
+        logging.info("About to run Selenium script")
+        # Run the Selenium script after generating the summary
+        run_selenium_script(
+            title=bill_details['govId'],
+            summary=summary,
+            pros_text=pros,
+            cons_text=cons
+        )
+        logging.info("Finished running Selenium script")
 
         # Check if PDF was successfully created
         if pdf_path and os.path.exists(pdf_path):

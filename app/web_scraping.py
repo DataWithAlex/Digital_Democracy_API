@@ -2,9 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import re
-
 import boto3
-
 from datetime import datetime
 
 def upload_to_s3(bucket_name, file_path):

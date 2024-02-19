@@ -13,3 +13,10 @@ requirements_old.txt
 secret_testing
 secret_testing/
 .secret_testing
+
+Alex_Tests/
+myenv/
+.myenv
+__pycache__/
+.__pycache__
+
