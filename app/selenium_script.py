@@ -90,15 +90,31 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         logger.info("Selenium Confirmed to be running on EC2")
         # EC2 specific code here
         # Example: Adjust Selenium ChromeDriver options for EC2
+        logger.info("Initializing ChromeDriver with headless options")
+        # Specify Chrome options for headless execution
         chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Necessary for EC2 without GUI
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        logger.info("chrome options: --headless --no-sandbox --disable-dev-shm-usage confirmed")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--remote-debugging-port=9222")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-setuid-sandbox")
+        chrome_options.add_argument("--disable-infobars")
+
+        # Log the confirmation of chrome options
+        logger.info("Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed")
+
+        # Update the path to where your ChromeDriver is located
+        service = Service("/home/ec2-user/.wdm/drivers/chromedriver/linux64/121.0.6167.184/chromedriver-linux64/chromedriver")
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        logger.info("ChromeDriver initialized successfully")
         # Setup for WebDriver (Chrome) with the specified options
 
-        service = Service("/home/ec2-user/.wdm/drivers/chromedriver/linux64/121.0.6167.184/chromedriver-linux64/chromedriver")
-        driver = webdriver.Chrome(service=service)
+        #service = Service("/home/ec2-user/.wdm/drivers/chromedriver/linux64/121.0.6167.184/chromedriver-linux64/chromedriver")
+        #driver = webdriver.Chrome(service=service)
 
         #service = Service("/usr/bin/chromedriver")
         #driver = webdriver.Chrome(service=service, options=chrome_options)
