@@ -1,3 +1,19 @@
 2024-02-19 00:45:25,190 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/12
 2024-02-19 00:45:36,144 - myapp - INFO - About to run Selenium script
 2024-02-19 00:46:17,649 - myapp - INFO - Finished running Selenium script
+2024-02-19 01:01:49 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/12
+2024-02-19 01:01:49,099 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/12
+2024-02-19 01:02:01 - myapp - INFO - About to run Selenium script
+2024-02-19 01:02:01,331 - myapp - INFO - About to run Selenium script
+2024-02-19 01:02:41 - myapp - INFO - Finished running Selenium script
+2024-02-19 01:02:41,420 - myapp - INFO - Finished running Selenium script
+2024-02-19 01:08:36 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/12
+2024-02-19 01:08:47 - myapp - INFO - About to run Selenium script
+2024-02-19 01:09:27 - myapp - INFO - Finished running Selenium script
+2024-02-19 01:11:14 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/12
+2024-02-19 01:11:25 - myapp - INFO - About to run Selenium script
+2024-02-19 01:12:05 - myapp - INFO - Finished running Selenium script
+2024-02-19 01:13:39 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/12
+2024-02-19 01:13:50 - myapp - INFO - About to run Selenium script
+2024-02-19 01:13:50 - myapp - INFO - Selenium Confirmed to be running on Local
+2024-02-19 01:14:30 - myapp - INFO - Finished running Selenium script

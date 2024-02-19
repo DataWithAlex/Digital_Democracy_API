@@ -11,29 +11,7 @@ import os
 import re
 import openai
 
-import logging
-from logging.handlers import RotatingFileHandler
-
-# Setup the logger
-logger = logging.getLogger("myapp")
-logger.setLevel(logging.INFO)  # Or use logging.DEBUG for more verbose output
-
-# Create a file handler which logs even debug messages
-fh = RotatingFileHandler('myapp.log', maxBytes=1000000, backupCount=5)
-fh.setLevel(logging.INFO)  # Or use logging.DEBUG for more verbose output
-
-# Create console handler with a higher log level
-ch = logging.StreamHandler()
-ch.setLevel(logging.ERROR)  # Only errors and critical messages will be logged to console
-
-# Create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-ch.setFormatter(formatter)
-
-# Add the handlers to logger
-logger.addHandler(fh)
-logger.addHandler(ch)
+from .logger_config import logger
 
 # Dependency
 def get_db():

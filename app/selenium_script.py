@@ -29,6 +29,16 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import re
+import logging
+
+# selenium_script.py
+# from .logger_config import get_logger
+#from .logger_config import logger
+from .logger_config import logger
+
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+
 
 def split_pros_cons(text):
     # Regular expression pattern to match the numbered points
@@ -58,6 +68,7 @@ def determine_environment():
 
     if run_env == 'ec2':
         print("Running in EC2 environment.")
+        logger.info("Selenium Confirmed to be running on EC2")
         # EC2 specific code here
         # Example: Adjust Selenium ChromeDriver options for EC2
         chrome_options = Options()
@@ -68,6 +79,7 @@ def determine_environment():
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     else:
         print("Running in local environment.")
+        logger.info("Selenium Confirmed to be running on Local")
         # Local specific code here
         # Example: Setup Selenium for local development, possibly without headless mode
         chrome_options = Options()
@@ -96,23 +108,29 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
     if run_env == 'ec2':
         print("Running in EC2 environment.")
+        logger.info("Selenium Confirmed to be running on EC2")
         # EC2 specific code here
         # Example: Adjust Selenium ChromeDriver options for EC2
         chrome_options = Options()
         chrome_options.add_argument("--headless")  # Necessary for EC2 without GUI
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
+        logger.info("chrome options: --headless --no-sandbox --disable-dev-shm-usage confirmed")
         # Setup for WebDriver (Chrome) with the specified options
         service = Service("/usr/bin/chromedriver")
         driver = webdriver.Chrome(service=service, options=chrome_options)
+        logger.info("chrome service & driver instantiated")
     else:
         print("Running in local environment.")
+        logger.info("Selenium Confirmed to be running on Local")
         # Local specific code here
         # Example: Setup Selenium for local development, possibly without headless mode
         chrome_options = Options()
+        logger.info("chrome options confirmed")
         # chrome_options.add_argument("--headless")  # Uncomment if you want headless in local too
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
+        logger.info("chrome service & driver instantiated")
 
     # Set the environment variables in the notebook for the current session
     os.environ['KIALO_USERNAME'] = 'explore@datawithalex.com'
