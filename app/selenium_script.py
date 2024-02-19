@@ -243,7 +243,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     time.sleep(1)
     #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(@class, "notranslate") and contains(@dir, "auto")]')))
     # bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, f'//p[contains(text(), "{title}")]')))
-    bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S")]')))
+    bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "Test Thesis")]')))
 
     bill_summary.clear()
     bill_summary.send_keys(bill_summary_text)
