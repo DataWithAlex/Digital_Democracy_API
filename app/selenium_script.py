@@ -104,8 +104,10 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 #    # Initialize the Chrome driver with the specified options
 #    service = Service(ChromeDriverManager().install())
 #    driver = webdriver.Chrome(service=service, options=chrome_options)
-    #run_env = os.getenv('RUN_ENV', 'local').lower()
-    run_env = os.getenv("RUN_ENV")
+    run_env = os.getenv('RUN_ENV', 'local').lower()
+    print(f"Current RUN_ENV: {run_env}")
+    logger.info(f"Current RUN_ENV: {run_env}")
+    #run_env = os.getenv("RUN_ENV")
 
     if run_env == 'ec2':
         print("Running in EC2 environment.")
