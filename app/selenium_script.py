@@ -79,7 +79,7 @@ def determine_environment():
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     else:
         print("Running in local environment.")
-        logger.info("Selenium Confirmed to be running on Local")
+        logger.info("Selenium Confirmed to be running on Local @determine_environment")
         # Local specific code here
         # Example: Setup Selenium for local development, possibly without headless mode
         chrome_options = Options()
@@ -123,7 +123,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         logger.info("chrome service & driver instantiated")
     else:
         print("Running in local environment.")
-        logger.info("Selenium Confirmed to be running on Local")
+        logger.info("Selenium Confirmed to be running on Local @run_selenium_script")
         # Local specific code here
         # Example: Setup Selenium for local development, possibly without headless mode
         chrome_options = Options()
