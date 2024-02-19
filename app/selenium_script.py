@@ -15,6 +15,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 import time
+from selenium.webdriver.chrome.service import Service
+from selenium import webdriver
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -94,8 +96,13 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         chrome_options.add_argument("--disable-dev-shm-usage")
         logger.info("chrome options: --headless --no-sandbox --disable-dev-shm-usage confirmed")
         # Setup for WebDriver (Chrome) with the specified options
-        service = Service("/usr/bin/chromedriver")
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        service = Service("/home/ec2-user/.wdm/drivers/chromedriver/linux64/121.0.6167.184/chromedriver-linux64/chromedriver")
+        driver = webdriver.Chrome(service=service)
+
+        #service = Service("/usr/bin/chromedriver")
+        #driver = webdriver.Chrome(service=service, options=chrome_options)
+
         logger.info("chrome service & driver instantiated")
     else:
         print("Running in local environment.")
