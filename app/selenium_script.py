@@ -73,10 +73,10 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 #    service = Service(ChromeDriverManager().install())
 #    driver = webdriver.Chrome(service=service, options=chrome_options)
     
-    logger.info(f"Before accessing RUN_ENV, checking environment: {os.getenv('RUN_ENV')}")
-    run_env = os.getenv('RUN_ENV', 'local').lower()
-    logger.info(f"Accessed RUN_ENV: {run_env}")
-
+    #logger.info(f"Before accessing RUN_ENV, checking environment: {os.getenv('RUN_ENV')}")
+    #run_env = 'os.getenv('RUN_ENV', 'local').lower()'
+    #logger.info(f"Accessed RUN_ENV: {run_env}")
+    run_env = 'ec2'
 
     #run_env = os.getenv('RUN_ENV', 'local').lower()
     #print(f"Current RUN_ENV: {run_env}")
