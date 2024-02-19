@@ -64,9 +64,8 @@ def determine_environment():
         chrome_options.add_argument("--headless")  # Necessary for EC2 without GUI
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        # Setup for WebDriver (Chrome) with the specified options
-        service = Service("/usr/bin/chromedriver")
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Use WebDriver Manager to get the correct version of the driver
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     else:
         print("Running in local environment.")
         # Local specific code here
