@@ -11,6 +11,30 @@ import os
 import re
 import openai
 
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Setup the logger
+logger = logging.getLogger("myapp")
+logger.setLevel(logging.INFO)  # Or use logging.DEBUG for more verbose output
+
+# Create a file handler which logs even debug messages
+fh = RotatingFileHandler('myapp.log', maxBytes=1000000, backupCount=5)
+fh.setLevel(logging.INFO)  # Or use logging.DEBUG for more verbose output
+
+# Create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.ERROR)  # Only errors and critical messages will be logged to console
+
+# Create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+# Add the handlers to logger
+logger.addHandler(fh)
+logger.addHandler(ch)
+
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -44,6 +68,7 @@ async def universal_exception_handler(request: Request, exc: Exception):
 
 @app.post("/generate-bill-summary/", response_class=Response)
 async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends(get_db)):
+    logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
         # Fetch bill details
         bill_details = fetch_bill_details(bill_request.url)
@@ -69,7 +94,7 @@ async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends
             db.add(new_meta)
         db.commit()
 
-        logging.info("About to run Selenium script")
+        logger.info("About to run Selenium script")
         # Run the Selenium script after generating the summary
         run_selenium_script(
             title=bill_details['govId'],
@@ -77,7 +102,7 @@ async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends
             pros_text=pros,
             cons_text=cons
         )
-        logging.info("Finished running Selenium script")
+        logger.info("Finished running Selenium script")
 
         # Check if PDF was successfully created
         if pdf_path and os.path.exists(pdf_path):

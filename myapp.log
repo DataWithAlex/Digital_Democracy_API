@@ -1,0 +1,3 @@
+2024-02-19 00:45:25,190 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/12
+2024-02-19 00:45:36,144 - myapp - INFO - About to run Selenium script
+2024-02-19 00:46:17,649 - myapp - INFO - Finished running Selenium script
