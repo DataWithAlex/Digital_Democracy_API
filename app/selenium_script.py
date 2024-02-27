@@ -78,7 +78,10 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     #logger.info(f"Before accessing RUN_ENV, checking environment: {os.getenv('RUN_ENV')}")
     #run_env = 'os.getenv('RUN_ENV', 'local').lower()'
     #logger.info(f"Accessed RUN_ENV: {run_env}")
+
+    # DETERMINE VARIABLES HERE
     run_env = 'ec2'
+    #run_env = 'local'
 
     #run_env = os.getenv('RUN_ENV', 'local').lower()
     #print(f"Current RUN_ENV: {run_env}")
@@ -242,7 +245,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
     time.sleep(1)
     #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(@class, "notranslate") and contains(@dir, "auto")]')))
-    # bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, f'//p[contains(text(), "{title}")]')))
+    #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S")]')))
     bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "Test Thesis")]')))
 
     bill_summary.clear()

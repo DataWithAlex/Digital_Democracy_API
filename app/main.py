@@ -1,3 +1,5 @@
+import os
+import logging
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
@@ -6,12 +8,16 @@ from .pdf_generation import create_summary_pdf, create_summary_pdf_spanish
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta
-import logging
-import os
-import re
 import openai
 
-from .logger_config import logger
+# Set OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# FastAPI app initialization
+app = FastAPI()
+
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
 
 # Dependency
 def get_db():
@@ -32,24 +38,26 @@ db_port = 3306
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# FastAPI app initialization
-app = FastAPI()
-
-# Logging configuration
-logging.basicConfig(level=logging.INFO)
-
 # Exception handlers
 @app.exception_handler(Exception)
 async def universal_exception_handler(request: Request, exc: Exception):
     logging.error(f"Unhandled exception occurred: {exc}", exc_info=True)
     return {"message": "An internal server error occurred."}
 
-@app.post("/generate-bill-summary/", response_class=Response)
-async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends(get_db)):
+# Define logger
+from .logger_config import logger
+
+def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
         # Fetch bill details
+        logger.info(f"About to run fetch_bill_details() with url: {bill_request.url}")
         bill_details = fetch_bill_details(bill_request.url)
+
+        # Log all the values in bill_details
+        logger.info("Bill details:")
+        for key, value in bill_details.items():
+            logger.info(f"{key}: {value}")
 
         # Ensure required keys are in bill_details
         if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
@@ -100,23 +108,14 @@ async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends
     finally:
         db.close()
 
-# Additional functions for storing bill details in the database
-def insert_bill_details_to_db(bill_details, pros, cons, summary):
-    db = SessionLocal()
-    try:
-        # Insert into bill table
-        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
-        db.add(new_bill)
-        db.commit()
-        db.refresh(new_bill)
+@app.post("/generate-bill-summary/", response_class=Response)
+async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends(get_db)):
+    return process_bill_request(bill_request, db)
 
-        # Insert into bill_meta table
-        for item in [("Pro", pros), ("Con", cons), ("Summary", summary)]:
-            new_meta = BillMeta(billId=new_bill.id, type=item[0], text=item[1], language="EN")
-            db.add(new_meta)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logging.error(f"Error in inserting bill details to DB: {e}")
-    finally:
-        db.close()
+@app.post("/update-bill/", response_class=Response)
+async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)):
+    # Construct URL for the bill
+    bill_url = f"https://www.flsenate.gov/Session/Bill/{year}/{bill_number}"
+    
+    # Invoke the process_bill_request function with the constructed URL and English language
+    return process_bill_request(BillRequest(url=bill_url, lan="en"), db)

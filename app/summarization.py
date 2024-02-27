@@ -1,7 +1,8 @@
 import openai
 from .dependencies import openai_api_key
+import os
 
-openai.api_key = openai_api_key
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def summarize_with_openai_chat(text, model="gpt-3.5-turbo"):
     """

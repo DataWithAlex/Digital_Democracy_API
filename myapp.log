@@ -17,3 +17,147 @@
 2024-02-19 01:13:50 - myapp - INFO - About to run Selenium script
 2024-02-19 01:13:50 - myapp - INFO - Selenium Confirmed to be running on Local
 2024-02-19 01:14:30 - myapp - INFO - Finished running Selenium script
+2024-02-27 10:10:52 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:12:59 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:13:11 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:14:08 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:16:44 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:16:45 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:17:12 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:17:13 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:19:29 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:20:53 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:20:54 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:21:02 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:21:39 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:21:40 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:21:41 - myapp - INFO - Received request to generate bill summary for URL: https://example.com/2024/1
+2024-02-27 10:22:57 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:24:06 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:24:26 - myapp - INFO - About to run Selenium script
+2024-02-27 10:24:26 - myapp - INFO - Selenium Confirmed to be running on EC2
+2024-02-27 10:24:26 - myapp - INFO - Initializing ChromeDriver with headless options
+2024-02-27 10:24:26 - myapp - INFO - Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed
+2024-02-27 10:26:02 - myapp - INFO - Received request to generate bill summary for URL: https://www.flsenate.gov/2024/1
+2024-02-27 10:30:30 - myapp - INFO - Selenium Confirmed to be running on EC2
+2024-02-27 10:30:30 - myapp - INFO - Initializing ChromeDriver with headless options
+2024-02-27 10:30:30 - myapp - INFO - Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed
+2024-02-27 10:31:10 - myapp - INFO - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:31:10 - myapp - INFO - chrome options confirmed
+2024-02-27 10:31:13 - myapp - INFO - chrome service & driver instantiated
+2024-02-27 10:32:30 - myapp - INFO - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:32:30 - myapp - INFO - chrome options confirmed
+2024-02-27 10:32:31 - myapp - INFO - chrome service & driver instantiated
+2024-02-27 10:34:41 - myapp - INFO - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:34:41 - myapp - INFO - chrome options confirmed
+2024-02-27 10:34:42 - myapp - INFO - chrome service & driver instantiated
+2024-02-27 10:40:41 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov//2024/1
+2024-02-27 10:40:41 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov//2024/1
+2024-02-27 10:40:46 - myapp - INFO - main - process_bill_request - 78 - About to run Selenium script
+2024-02-27 10:40:46 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:40:46 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 10:40:47 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 10:42:18 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:42:18 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:42:37 - myapp - INFO - main - process_bill_request - 78 - About to run Selenium script
+2024-02-27 10:42:37 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:42:37 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 10:42:39 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 10:44:54 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:44:54 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:45:11 - myapp - INFO - main - process_bill_request - 78 - About to run Selenium script
+2024-02-27 10:45:11 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:45:11 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 10:45:12 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 10:45:45 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:45:45 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:46:07 - myapp - INFO - main - process_bill_request - 78 - About to run Selenium script
+2024-02-27 10:46:07 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:46:07 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 10:46:08 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 10:49:49 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:49:49 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/1
+2024-02-27 10:49:53 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 10:49:53 - myapp - INFO - main - process_bill_request - 60 - title: CS/HB 1: Online Protections for Minors
+2024-02-27 10:49:53 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 10:49:53 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 10:49:53 - myapp - INFO - main - process_bill_request - 60 - govId: HB 1
+2024-02-27 10:49:53 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227104952_bill_text.pdf
+2024-02-27 10:50:05 - myapp - INFO - main - process_bill_request - 83 - About to run Selenium script
+2024-02-27 10:50:05 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:50:05 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 10:50:06 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 10:51:32 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 10:51:32 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 10:51:35 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 10:51:35 - myapp - INFO - main - process_bill_request - 60 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 10:51:35 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 10:51:35 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 10:51:35 - myapp - INFO - main - process_bill_request - 60 - govId: SB 2
+2024-02-27 10:51:35 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227105135_bill_text.pdf
+2024-02-27 10:51:44 - myapp - INFO - main - process_bill_request - 83 - About to run Selenium script
+2024-02-27 10:51:44 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 10:51:44 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 10:51:45 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 10:53:47 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 10:53:47 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 10:53:49 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 10:53:49 - myapp - INFO - main - process_bill_request - 60 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 10:53:49 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 10:53:49 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 10:53:49 - myapp - INFO - main - process_bill_request - 60 - govId: SB 2
+2024-02-27 10:53:49 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227105348_bill_text.pdf
+2024-02-27 11:06:43 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:06:43 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:07:12 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:07:12 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:07:14 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 11:07:14 - myapp - INFO - main - process_bill_request - 60 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 11:07:14 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 11:07:14 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 11:07:14 - myapp - INFO - main - process_bill_request - 60 - govId: SB 2
+2024-02-27 11:07:14 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227110713_bill_text.pdf
+2024-02-27 11:07:25 - myapp - INFO - main - process_bill_request - 83 - About to run Selenium script
+2024-02-27 11:07:25 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 11:07:25 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 11:07:26 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 11:08:04 - myapp - INFO - main - process_bill_request - 91 - Finished running Selenium script
+2024-02-27 11:14:36 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:14:36 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:14:38 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 11:14:38 - myapp - INFO - main - process_bill_request - 60 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 11:14:38 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 11:14:38 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 11:14:38 - myapp - INFO - main - process_bill_request - 60 - govId: SB 2
+2024-02-27 11:14:38 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227111437_bill_text.pdf
+2024-02-27 11:14:48 - myapp - INFO - main - process_bill_request - 83 - About to run Selenium script
+2024-02-27 11:14:48 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 11:14:48 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 11:14:49 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 11:15:27 - myapp - INFO - main - process_bill_request - 91 - Finished running Selenium script
+2024-02-27 11:18:36 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:18:36 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:18:39 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 11:18:39 - myapp - INFO - main - process_bill_request - 60 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 11:18:39 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 11:18:39 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 11:18:39 - myapp - INFO - main - process_bill_request - 60 - govId: SB 2
+2024-02-27 11:18:39 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227111838_bill_text.pdf
+2024-02-27 11:18:49 - myapp - INFO - main - process_bill_request - 83 - About to run Selenium script
+2024-02-27 11:18:49 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 11:18:49 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 11:18:50 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 11:19:28 - myapp - INFO - main - process_bill_request - 91 - Finished running Selenium script
+2024-02-27 11:19:55 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:19:55 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:19:57 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 11:19:57 - myapp - INFO - main - process_bill_request - 60 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 11:19:57 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 11:19:57 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 11:19:57 - myapp - INFO - main - process_bill_request - 60 - govId: SB 2
+2024-02-27 11:19:57 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227111956_bill_text.pdf
+2024-02-27 11:20:06 - myapp - INFO - main - process_bill_request - 83 - About to run Selenium script
+2024-02-27 11:20:06 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 11:20:06 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 11:20:07 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 11:20:47 - myapp - INFO - main - process_bill_request - 91 - Finished running Selenium script
