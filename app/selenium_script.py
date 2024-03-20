@@ -171,14 +171,18 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     password_field = wait.until(EC.presence_of_element_located((By.NAME, "password")))
     login_button = wait.until(EC.presence_of_element_located((By.XPATH, '//button[@aria-label="Log In"]')))
 
+    logger.info("Logging in to Kialo")
     # Type in the credentials and log in
     username_field.send_keys(username)
     password_field.send_keys(password)
     login_button.click()
 
+    logger.info("Logged in to Kialo")
+
     # Wait for and click the 'New Discussion' button after logging in
     new_discussion_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="New Discussion"]')))
     new_discussion_button.click()
+    logger.info("Creating Discussion")
 
     wait = WebDriverWait(driver, 10)
     #element = wait.until(EC.element_to_be_clickable((By.ID, '13')))
@@ -186,6 +190,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     # Wait for the radio button to be clickable by class name and click it
     element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'radio-option__input')))
     element.click()
+    logger.info("Select Private Discussion")
 
     #public_radio_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@type='radio'][@data-id='1']")))
     #public_radio_button.click()
@@ -195,6 +200,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     # Find and click the 'Next' button
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
     next_button.click()
+    logger.info("Next Page")
 
     name = "Test"
 
@@ -211,15 +217,20 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     thesis_field = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'top-node-text-editor__editor')))
     thesis_field.send_keys("Test Thesis")
 
-    # Note: Assuming 'Next' button needs to be clicked if changing the option or for the form submission.
-    # Find and click the 'Next' button
-    next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
-    next_button.click()
+    logger.info("Filled our Name and Thesis")
 
     # Note: Assuming 'Next' button needs to be clicked if changing the option or for the form submission.
     # Find and click the 'Next' button
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
     next_button.click()
+
+    logger.info("Next Page")
+
+    # Note: Assuming 'Next' button needs to be clicked if changing the option or for the form submission.
+    # Find and click the 'Next' button
+    next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
+    next_button.click()
+    logger.info("Next Page")
 
     ### HERE we are in the file upload section
 
@@ -233,6 +244,8 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     # Now, construct the path to the image.png assuming it's in the same directory as this script
     image_path = os.path.join(script_directory, 'image.png')
 
+    logger.info(f"Uploading Image for Discussion {image_path}")
+
     # Locate the file input element which is likely hidden
     file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
 
@@ -244,8 +257,12 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         arguments[0].removeAttribute('hidden');
     """, file_input)
 
+    logger.info(f"About to upload image")
+
     # Now, send the file path to the file input element, this should open the file selector dialog and select the file
     file_input.send_keys(image_path)
+
+    logger.info(f"Uploaded Image")
 
     # Some applications rely on change events to detect when a file has been selected
     # Trigger the change event just in case the application needs it
@@ -260,6 +277,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     # Note: The final click on the 'upload_button' might not be necessary if the application starts uploading immediately after the file selection.
 
     ###
+    logger.info(f"About to add tags")
 
         # Wait for the tags input field to be clickable
     tags_input_field = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input.pill-editor-input")))
