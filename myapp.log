@@ -161,3 +161,704 @@
 2024-02-27 11:20:06 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
 2024-02-27 11:20:07 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
 2024-02-27 11:20:47 - myapp - INFO - main - process_bill_request - 91 - Finished running Selenium script
+2024-02-27 11:37:18 - myapp - INFO - main - process_bill_request - 51 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:37:18 - myapp - INFO - main - process_bill_request - 54 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 11:37:20 - myapp - INFO - main - process_bill_request - 58 - Bill details:
+2024-02-27 11:37:20 - myapp - INFO - main - process_bill_request - 60 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 11:37:20 - myapp - INFO - main - process_bill_request - 60 - description: 
+2024-02-27 11:37:20 - myapp - INFO - main - process_bill_request - 60 - pdf_path: bill_text.pdf
+2024-02-27 11:37:20 - myapp - INFO - main - process_bill_request - 60 - govId: SB 2
+2024-02-27 11:37:20 - myapp - INFO - main - process_bill_request - 60 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227113720_bill_text.pdf
+2024-02-27 11:37:33 - myapp - INFO - main - process_bill_request - 83 - About to run Selenium script
+2024-02-27 11:37:33 - myapp - INFO - selenium_script - run_selenium_script - 93 - Selenium Confirmed to be running on EC2
+2024-02-27 11:37:33 - myapp - INFO - selenium_script - run_selenium_script - 96 - Initializing ChromeDriver with headless options
+2024-02-27 11:37:33 - myapp - INFO - selenium_script - run_selenium_script - 110 - Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed
+2024-02-27 15:29:29 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:29:29 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:29:32 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 15:29:32 - myapp - INFO - main - process_bill_request - 71 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 15:29:32 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 15:29:32 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 15:29:32 - myapp - INFO - main - process_bill_request - 71 - govId: SB 2
+2024-02-27 15:29:32 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227152931_bill_text.pdf
+2024-02-27 15:34:27 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:34:27 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:34:30 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 15:34:30 - myapp - INFO - main - process_bill_request - 71 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 15:34:30 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 15:34:30 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 15:34:30 - myapp - INFO - main - process_bill_request - 71 - govId: SB 2
+2024-02-27 15:34:30 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227153429_bill_text.pdf
+2024-02-27 15:35:04 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 15:35:04 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 15:35:04 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 15:35:13 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 15:35:53 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 15:35:53 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/1a706838-3681-4589-96d1-1bd6d55dda45/65312?path=65312.0~65312.3&active=~65312.3&action=new-con
+2024-02-27 15:35:53 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 15:39:13 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:39:13 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:39:16 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 15:39:16 - myapp - INFO - main - process_bill_request - 71 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 15:39:16 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 15:39:16 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 15:39:16 - myapp - INFO - main - process_bill_request - 71 - govId: SB 2
+2024-02-27 15:39:16 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227153915_bill_text.pdf
+2024-02-27 15:39:26 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 15:39:26 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 15:39:26 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 15:39:27 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 15:40:07 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 15:40:07 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/0c161e89-3f00-489e-9c11-ba642a04cc2a/65313?path=65313.0~65313.3&active=~65313.3&action=new-con
+2024-02-27 15:40:07 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 15:47:28 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:47:28 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/2
+2024-02-27 15:47:30 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 15:47:30 - myapp - INFO - main - process_bill_request - 71 - title: SB 2: Relief of Patricia Ermini by the Lee County Sheriff’s Office
+2024-02-27 15:47:30 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 15:47:30 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 15:47:30 - myapp - INFO - main - process_bill_request - 71 - govId: SB 2
+2024-02-27 15:47:30 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227154730_bill_text.pdf
+2024-02-27 15:47:41 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 15:47:41 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 15:47:41 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 15:47:42 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 15:48:20 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 15:48:20 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/9ad23490-d225-4954-8845-e19c1c6207f4/65314?path=65314.0~65314.3&active=~65314.3&action=new-con
+2024-02-27 15:48:20 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 16:15:20 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/8
+2024-02-27 16:15:20 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/8
+2024-02-27 16:15:22 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 16:15:22 - myapp - INFO - main - process_bill_request - 71 - title: SB 8: Relief of C.C. by the Department of Children and Families
+2024-02-27 16:15:22 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 16:15:22 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 16:15:22 - myapp - INFO - main - process_bill_request - 71 - govId: SB 8
+2024-02-27 16:15:22 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227161521_bill_text.pdf
+2024-02-27 16:15:35 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 16:15:35 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 16:15:35 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 16:15:36 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 16:16:09 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/8
+2024-02-27 16:16:09 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/8
+2024-02-27 16:16:11 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 16:16:11 - myapp - INFO - main - process_bill_request - 71 - title: SB 8: Relief of C.C. by the Department of Children and Families
+2024-02-27 16:16:11 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 16:16:11 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 16:16:11 - myapp - INFO - main - process_bill_request - 71 - govId: SB 8
+2024-02-27 16:16:11 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227161610_bill_text.pdf
+2024-02-27 16:16:20 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 16:16:20 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 16:16:20 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 16:16:21 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 16:16:59 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 16:16:59 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/99bc4ee3-1f5f-4cd5-8392-bab2b2cd4df1/65316?path=65316.0~65316.3&active=~65316.3&action=new-con
+2024-02-27 16:16:59 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 16:23:50 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/20
+2024-02-27 16:23:50 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/20
+2024-02-27 16:23:52 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 16:23:52 - myapp - INFO - main - process_bill_request - 71 - title: SB 20: Relief of Reginald Jackson by the City of Lakeland
+2024-02-27 16:23:52 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 16:23:52 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 16:23:52 - myapp - INFO - main - process_bill_request - 71 - govId: SB 20
+2024-02-27 16:23:52 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227162352_bill_text.pdf
+2024-02-27 16:24:01 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 16:24:01 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 16:24:01 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 16:24:03 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 16:24:41 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 16:24:41 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/2624fac0-d24d-42c8-86fe-8cd345363c90/65317?path=65317.0~65317.3&active=~65317.3&action=new-con
+2024-02-27 16:24:41 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 16:25:39 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/22
+2024-02-27 16:25:39 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/22
+2024-02-27 16:25:44 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 16:25:44 - myapp - INFO - main - process_bill_request - 71 - title: SB 22: Animal Cremation
+2024-02-27 16:25:44 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 16:25:44 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 16:25:44 - myapp - INFO - main - process_bill_request - 71 - govId: SB 22
+2024-02-27 16:25:44 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227162543_bill_text.pdf
+2024-02-27 16:25:57 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 16:25:57 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 16:25:57 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 16:25:58 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 16:26:36 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 16:26:36 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/719735e4-d336-4e76-94a3-10a71858b734/65318?path=65318.0~65318.3&active=~65318.3&action=new-con
+2024-02-27 16:26:36 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 16:29:48 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/44
+2024-02-27 16:29:48 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/44
+2024-02-27 16:29:53 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 16:29:53 - myapp - INFO - main - process_bill_request - 71 - title: SB 44: Public Restroom Requirements
+2024-02-27 16:29:53 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 16:29:53 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 16:29:53 - myapp - INFO - main - process_bill_request - 71 - govId: SB 44
+2024-02-27 16:29:53 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227162952_bill_text.pdf
+2024-02-27 16:30:04 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 16:30:04 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 16:30:04 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 16:30:05 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 16:30:44 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 16:30:44 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/b8962e92-a257-4fd2-aecd-4d9cc1561bc0/65319?path=65319.0~65319.3&active=~65319.3&action=new-con
+2024-02-27 16:30:44 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 16:34:31 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/52
+2024-02-27 16:34:31 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/52
+2024-02-27 16:34:34 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 16:34:34 - myapp - INFO - main - process_bill_request - 71 - title: SB 52: Anaphylaxis in Public Schools
+2024-02-27 16:34:34 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 16:34:34 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 16:34:34 - myapp - INFO - main - process_bill_request - 71 - govId: SB 52
+2024-02-27 16:34:34 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227163433_bill_text.pdf
+2024-02-27 16:34:41 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 16:34:41 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 16:34:41 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 16:34:43 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 16:35:22 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 16:35:22 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/2625119b-7c7b-4886-9cd7-84b856113b99/65320?path=65320.0~65320.3&active=~65320.3&action=new-con
+2024-02-27 16:35:22 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-27 16:42:13 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/54
+2024-02-27 16:42:13 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/54
+2024-02-27 16:42:16 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-27 16:42:16 - myapp - INFO - main - process_bill_request - 71 - title: SB 54: Expunction of Criminal History Records
+2024-02-27 16:42:16 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-27 16:42:16 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-27 16:42:16 - myapp - INFO - main - process_bill_request - 71 - govId: SB 54
+2024-02-27 16:42:16 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240227164215_bill_text.pdf
+2024-02-27 16:42:24 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-27 16:42:24 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-27 16:42:24 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-27 16:42:26 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-27 16:43:04 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-27 16:43:04 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/7e84ece4-9f88-458a-8922-212ce980ed25/65321?path=65321.0~65321.3&active=~65321.3&action=new-con
+2024-02-27 16:43:04 - myapp - INFO - main - process_bill_request - 105 - Creating Webflow item
+2024-02-29 16:22:34 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/68
+2024-02-29 16:22:34 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/68
+2024-02-29 16:23:25 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/68
+2024-02-29 16:23:25 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/68
+2024-02-29 16:23:28 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-29 16:23:28 - myapp - INFO - main - process_bill_request - 71 - title: SB 68: Social Work Licensure Compact
+2024-02-29 16:23:28 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-29 16:23:28 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-29 16:23:28 - myapp - INFO - main - process_bill_request - 71 - govId: SB 68
+2024-02-29 16:23:28 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240229162327_bill_text.pdf
+2024-02-29 16:25:11 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/100
+2024-02-29 16:25:11 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/100
+2024-02-29 16:25:13 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-29 16:25:13 - myapp - INFO - main - process_bill_request - 71 - title: SB 100: Pregnant Women in Custody
+2024-02-29 16:25:13 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-29 16:25:13 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-29 16:25:13 - myapp - INFO - main - process_bill_request - 71 - govId: SB 100
+2024-02-29 16:25:13 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240229162512_bill_text.pdf
+2024-02-29 16:25:25 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-29 16:25:25 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-29 16:25:25 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-29 16:25:27 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-29 16:25:56 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/100
+2024-02-29 16:25:56 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/100
+2024-02-29 16:25:57 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-29 16:25:57 - myapp - INFO - main - process_bill_request - 71 - title: SB 100: Pregnant Women in Custody
+2024-02-29 16:25:57 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-29 16:25:57 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-29 16:25:57 - myapp - INFO - main - process_bill_request - 71 - govId: SB 100
+2024-02-29 16:25:57 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240229162557_bill_text.pdf
+2024-02-29 16:26:07 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-29 16:26:07 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-29 16:26:07 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-29 16:26:08 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-29 16:26:46 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-29 16:26:46 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/305a6f89-c1fc-4f58-bb17-c95a270fa667/65333?path=65333.0~65333.3&active=~65333.3&action=new-con
+2024-02-29 16:26:46 - myapp - INFO - main - process_bill_request - 107 - Summary for Webflow: Page 1 provides details on pregnant women in custody, including the requirement for a pregnancy test within 72 hours of arrest upon request, the option for sentencing courts to delay incarceration for pregnant women, and the need for the courts to consider certain factors before granting a delay. Page 2 continues with details on the types of tests that can be administered and the procedures to be followed in detention facilities. Page 3 introduces the term "pregnant woman" and outlines conditions for staying a sentence for pregnant women, including considerations for their health and safety, and the granting of stays by the court with written explanations. Page 4 specifies the assessments and support services that must be offered to pregnant women after their incarceration stay, and the requirement for reporting on pregnant women's outcomes.
+2024-02-29 16:26:46 - myapp - INFO - main - process_bill_request - 109 - Creating Webflow item
+2024-02-29 16:34:45 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/108
+2024-02-29 16:34:45 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/108
+2024-02-29 16:34:47 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-29 16:34:47 - myapp - INFO - main - process_bill_request - 71 - title: SB 108: Lowell Correctional Institution Body Cameras Pilot Program
+2024-02-29 16:34:47 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-29 16:34:47 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-29 16:34:47 - myapp - INFO - main - process_bill_request - 71 - govId: SB 108
+2024-02-29 16:34:47 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240229163447_bill_text.pdf
+2024-02-29 16:34:56 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-29 16:34:56 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-29 16:34:56 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-29 16:34:57 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-29 16:35:13 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/108
+2024-02-29 16:35:13 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/108
+2024-02-29 16:35:15 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-02-29 16:35:15 - myapp - INFO - main - process_bill_request - 71 - title: SB 108: Lowell Correctional Institution Body Cameras Pilot Program
+2024-02-29 16:35:15 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-02-29 16:35:15 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-02-29 16:35:15 - myapp - INFO - main - process_bill_request - 71 - govId: SB 108
+2024-02-29 16:35:15 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240229163515_bill_text.pdf
+2024-02-29 16:35:22 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-02-29 16:35:22 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-02-29 16:35:22 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-02-29 16:35:23 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-02-29 16:36:01 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-02-29 16:36:01 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/49fc9fd1-b15f-4428-a222-f8afc0b1424e/65335?path=65335.0~65335.3&active=~65335.3&action=new-con
+2024-02-29 16:36:01 - myapp - INFO - main - process_bill_request - 107 - Summary for Webflow: This bill establishes the Lowell Correctional Institution Body Cameras Pilot Program for 3 years to ensure safety and accountability for inmates and staff. It requires correctional officers at the institution to wear body cameras while on duty and mandates the department to set policies for the use, maintenance, and storage of the cameras and data. The bill also includes requirements for training personnel on camera usage, storing data in accordance with public records laws, and submitting annual reports on the program's operation. The pilot program is set to expire on June 30, 2027.
+2024-02-29 16:36:01 - myapp - INFO - main - process_bill_request - 109 - Creating Webflow item
+2024-03-01 14:06:27 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/124
+2024-03-01 14:06:27 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/124
+2024-03-01 14:06:30 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-03-01 14:06:30 - myapp - INFO - main - process_bill_request - 71 - title: SB 124: Sudden Cardiac Arrest Informational Posters
+2024-03-01 14:06:30 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-03-01 14:06:30 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-03-01 14:06:30 - myapp - INFO - main - process_bill_request - 71 - govId: SB 124
+2024-03-01 14:06:30 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240301140629_bill_text.pdf
+2024-03-01 14:06:41 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-03-01 14:06:41 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-01 14:06:41 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-01 14:06:53 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-01 14:07:21 - myapp - INFO - main - process_bill_request - 62 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/124
+2024-03-01 14:07:21 - myapp - INFO - main - process_bill_request - 65 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/124
+2024-03-01 14:07:26 - myapp - INFO - main - process_bill_request - 69 - Bill details:
+2024-03-01 14:07:26 - myapp - INFO - main - process_bill_request - 71 - title: SB 124: Sudden Cardiac Arrest Informational Posters
+2024-03-01 14:07:26 - myapp - INFO - main - process_bill_request - 71 - description: 
+2024-03-01 14:07:26 - myapp - INFO - main - process_bill_request - 71 - pdf_path: bill_text.pdf
+2024-03-01 14:07:26 - myapp - INFO - main - process_bill_request - 71 - govId: SB 124
+2024-03-01 14:07:26 - myapp - INFO - main - process_bill_request - 71 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240301140724_bill_text.pdf
+2024-03-01 14:07:34 - myapp - INFO - main - process_bill_request - 94 - About to run Selenium script
+2024-03-01 14:07:34 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-01 14:07:34 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-01 14:07:36 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-01 14:08:15 - myapp - INFO - main - process_bill_request - 102 - Finished running Selenium script
+2024-03-01 14:08:15 - myapp - INFO - main - process_bill_request - 103 - Kialo URL: https://www.kialo.com/p/104c40dc-ed56-4899-a68a-450a4d42b0a0/65342?path=65342.0~65342.3&active=~65342.3&action=new-con
+2024-03-01 14:08:15 - myapp - INFO - main - process_bill_request - 107 - Summary for Webflow: This bill creates a requirement for the Department of Health to make an informational poster about sudden cardiac arrest treatment, listing signs, CPR steps, and AED use. The poster must be displayed in businesses or state agencies with 50 or more employees. The bill also defines "business" and "state agency" and sets the effective date for July 1, 2024.
+2024-03-01 14:08:15 - myapp - INFO - main - process_bill_request - 109 - Creating Webflow item
+2024-03-19 12:16:37 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:16:37 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:18:08 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:18:08 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:18:10 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 12:18:10 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 12:18:10 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 12:18:10 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 12:18:10 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 12:18:10 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319121809_bill_text.pdf
+2024-03-19 12:18:23 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 12:18:23 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 12:18:23 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 12:18:26 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 12:19:04 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 12:19:04 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/e9795c77-2aae-4973-abbe-32fa03241c9c/65510?path=65510.0~65510.3&active=~65510.3&action=new-con
+2024-03-19 12:19:04 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill aims to amend sections of the Florida Statutes related to the use or threatened use of force, removing provisions regarding the duty to retreat before using force and prohibiting the use of deadly force when it can be avoided safely. It repeals a section on immunity from prosecution for justifiable use of force, reenacts another section on ownership and possession of firearms, and introduces the "Self-Defense Restoration Act" as the short title. The bill allows the use of force in defense of persons or property, with specific guidelines on the use of deadly force.
+2024-03-19 12:19:04 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 12:35:00 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:35:00 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:35:04 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 12:35:04 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 12:35:04 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 12:35:04 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 12:35:04 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 12:35:04 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319123503_bill_text.pdf
+2024-03-19 12:35:16 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 12:35:16 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 12:35:16 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 12:35:17 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 12:35:33 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:35:33 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:35:36 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 12:35:36 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 12:35:36 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 12:35:36 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 12:35:36 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 12:35:36 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319123535_bill_text.pdf
+2024-03-19 12:35:45 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 12:35:45 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 12:35:45 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 12:35:46 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 12:39:52 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:39:52 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:39:54 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 12:39:54 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 12:39:54 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 12:39:54 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 12:39:54 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 12:39:54 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319123954_bill_text.pdf
+2024-03-19 12:40:04 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 12:40:04 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 12:40:04 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 12:40:05 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 12:42:58 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:42:58 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:43:01 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 12:43:01 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 12:43:01 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 12:43:01 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 12:43:01 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 12:43:01 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319124300_bill_text.pdf
+2024-03-19 12:43:12 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 12:43:12 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 12:43:12 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 12:43:13 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 12:44:03 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:44:03 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 12:44:05 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 12:44:05 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 12:44:05 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 12:44:05 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 12:44:05 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 12:44:05 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319124404_bill_text.pdf
+2024-03-19 12:44:20 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 12:44:20 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 12:44:20 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 12:44:21 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:31:47 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:31:47 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:31:50 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:31:50 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:31:50 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:31:50 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:31:50 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:31:50 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319163149_bill_text.pdf
+2024-03-19 16:32:03 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:32:03 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:32:03 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:32:04 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:32:36 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:32:36 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:32:38 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:32:38 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:32:38 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:32:38 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:32:38 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:32:38 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319163238_bill_text.pdf
+2024-03-19 16:32:47 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:32:47 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:32:47 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:32:48 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:34:12 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:34:12 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:34:15 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:34:15 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:34:15 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:34:15 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:34:15 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:34:15 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319163414_bill_text.pdf
+2024-03-19 16:34:24 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:34:24 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:34:24 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:34:25 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:37:04 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:37:04 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:37:07 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:37:07 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:37:07 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:37:07 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:37:07 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:37:07 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319163706_bill_text.pdf
+2024-03-19 16:37:17 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:37:17 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:37:17 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:37:18 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:40:40 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:40:40 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:40:42 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:40:42 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:40:42 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:40:42 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:40:42 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:40:42 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319164041_bill_text.pdf
+2024-03-19 16:40:51 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:40:51 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:40:51 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:40:52 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:41:31 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:41:31 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:41:33 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:41:33 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:41:33 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:41:33 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:41:33 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:41:33 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319164132_bill_text.pdf
+2024-03-19 16:41:42 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:41:42 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:41:42 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:41:43 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:43:39 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:43:39 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:43:42 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:43:42 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:43:42 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:43:42 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:43:42 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:43:42 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319164341_bill_text.pdf
+2024-03-19 16:43:51 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:43:51 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:43:51 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:43:52 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:44:35 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 16:44:35 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/63503f6b-6345-44af-9adb-c9c8093f7d07/65512?path=65512.0~65512.3&active=~65512.3&action=new-con
+2024-03-19 16:44:35 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill aims to modify existing statutes related to the use of force, specifically removing the duty to retreat before using force in defense of persons or property. It prohibits the use of deadly force when it can be avoided by retreating safely and repeals provisions granting immunity from prosecution for justifiable force. Additionally, the bill introduces the "Self-Defense Restoration Act" and outlines conditions under which deadly force can be justifiable in preventing death or harm.
+2024-03-19 16:44:35 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 16:50:13 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:50:13 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:50:16 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:50:16 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:50:16 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:50:16 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:50:16 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:50:16 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319165015_bill_text.pdf
+2024-03-19 16:50:26 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:50:26 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:50:26 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:50:27 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:58:51 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:58:51 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:58:54 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:58:54 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:58:54 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:58:54 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:58:54 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:58:54 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319165853_bill_text.pdf
+2024-03-19 16:59:03 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:59:03 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:59:03 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:59:04 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 16:59:26 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:59:26 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 16:59:27 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 16:59:27 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 16:59:27 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 16:59:27 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 16:59:27 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 16:59:27 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319165927_bill_text.pdf
+2024-03-19 16:59:38 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 16:59:38 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 16:59:38 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 16:59:39 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:18:49 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:18:49 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:18:53 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:18:53 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:18:53 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:18:53 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:18:53 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:18:53 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319171852_bill_text.pdf
+2024-03-19 17:19:03 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:19:03 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:19:03 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 17:19:05 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:22:13 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:22:13 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:22:17 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:22:17 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:22:17 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:22:17 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:22:17 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:22:17 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319172216_bill_text.pdf
+2024-03-19 17:22:27 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:22:27 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:22:27 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 17:22:28 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:23:12 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:23:12 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:23:18 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:23:18 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:23:18 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:23:18 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:23:18 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:23:18 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319172317_bill_text.pdf
+2024-03-19 17:23:27 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:23:27 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:23:27 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 17:23:28 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:27:21 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:27:21 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:27:24 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:27:24 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:27:24 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:27:24 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:27:24 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:27:24 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319172723_bill_text.pdf
+2024-03-19 17:27:33 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:27:33 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:27:33 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 17:27:34 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:30:00 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:30:00 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:30:04 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:30:04 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:30:04 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:30:04 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:30:04 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:30:04 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319173003_bill_text.pdf
+2024-03-19 17:30:14 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:30:14 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:30:14 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 17:30:16 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:30:58 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 17:30:58 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/c6523a27-bd4d-4d16-ae24-abb26403824c/65514/permissions?back=%2Fp%2Fc6523a27-bd4d-4d16-ae24-abb26403824c%2F65514%3Fpath%3D65514.0~65514.3%26active%3D~65514.3%26action%3Dnew-con
+2024-03-19 17:30:58 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill aims to amend provisions related to the use or threatened use of force in defense of persons or property, removing the duty to retreat before using force. It prohibits the use of deadly force if it can be avoided by retreating in complete safety, and repeals immunity from prosecution for justifiable use of force. The bill also introduces the "Self-Defense Restoration Act" and specifies conditions under which deadly force can be used without a duty to retreat.
+2024-03-19 17:30:58 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 17:33:47 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:33:47 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:33:50 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:33:50 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:33:50 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:33:50 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:33:50 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:33:50 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319173349_bill_text.pdf
+2024-03-19 17:34:00 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:34:00 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:34:00 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 17:34:01 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:34:47 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 17:34:47 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/0c7c7a57-2814-4ba8-b6e4-7e75c93272fd/65515/permissions?back=%2Fp%2F0c7c7a57-2814-4ba8-b6e4-7e75c93272fd%2F65515%3Fpath%3D65515.0~65515.3%26active%3D~65515.3%26action%3Dnew-con
+2024-03-19 17:34:47 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill aims to address the use or threatened use of force in Florida, specifically focusing on the duty to retreat before using force. It eliminates provisions that stated individuals had no duty to retreat before using force in defense of persons or property. Additionally, the bill prohibits the use of deadly force by individuals who can safely retreat and repeals immunity from criminal prosecution and civil action for justifiable use of force.
+2024-03-19 17:34:47 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 17:38:54 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:38:54 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:38:56 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:38:56 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:38:56 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:38:56 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:38:56 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:38:56 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319173856_bill_text.pdf
+2024-03-19 17:39:05 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:39:05 - myapp - INFO - selenium_script - run_selenium_script - 128 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:39:05 - myapp - INFO - selenium_script - run_selenium_script - 132 - chrome options confirmed
+2024-03-19 17:39:06 - myapp - INFO - selenium_script - run_selenium_script - 136 - chrome service & driver instantiated
+2024-03-19 17:40:05 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:40:05 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 17:40:08 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 17:40:08 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 17:40:08 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 17:40:08 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 17:40:08 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 17:40:08 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319174007_bill_text.pdf
+2024-03-19 17:40:21 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 17:40:21 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 17:40:21 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 17:40:22 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 17:41:08 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 17:41:08 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/e8fc4bb1-b335-4f1e-a238-7a54fb414b8a/65516/permissions?back=%2Fp%2Fe8fc4bb1-b335-4f1e-a238-7a54fb414b8a%2F65516%3Fpath%3D65516.0~65516.3%26active%3D~65516.3%26action%3Dnew-con
+2024-03-19 17:41:08 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill aims to amend sections related to the use or threatened use of force, deleting provisions regarding the duty to retreat before using force in defense of persons or property. It prohibits the use of deadly force by a person who can safely retreat, while also repealing immunity from prosecution for justifiable use of force. The bill allows for the lawful use of firearms and other weapons for self-defense and will be known as the "Self-Defense Restoration Act."
+2024-03-19 17:41:08 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 21:54:10 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 21:54:10 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 21:54:14 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 21:54:14 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 21:54:14 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 21:54:14 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 21:54:14 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 21:54:14 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319215413_bill_text.pdf
+2024-03-19 21:54:22 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 21:54:22 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 21:54:22 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 21:54:23 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 21:55:10 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 21:55:10 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/77ef4e8a-0422-4659-a56c-8d76e6c7c8cf/65518/permissions?back=%2Fp%2F77ef4e8a-0422-4659-a56c-8d76e6c7c8cf%2F65518%3Fpath%3D65518.0~65518.3%26active%3D~65518.3%26action%3Dnew-con
+2024-03-19 21:55:10 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill focuses on the use or threatened use of force, making amendments to Florida Statutes regarding self-defense. It removes provisions stating that individuals using force other than deadly force do not have a duty to retreat and prohibits the use of deadly force if it can be avoided with complete safety by retreating. The bill also repeals immunity from criminal prosecution and civil action related to justifiable use of force and incorporates these changes into existing laws on firearms and weapons possession.
+2024-03-19 21:55:10 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 22:03:13 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:03:13 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:07:14 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:07:14 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:07:17 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:07:17 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 22:07:17 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:07:17 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:07:17 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 22:07:17 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319220716_bill_text.pdf
+2024-03-19 22:07:27 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:07:27 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:07:27 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:07:28 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:08:26 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:08:26 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:08:29 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:08:29 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 22:08:29 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:08:29 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:08:29 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 22:08:29 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319220828_bill_text.pdf
+2024-03-19 22:08:38 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:08:38 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:08:38 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:08:39 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:09:26 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 22:09:26 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/d56dc50c-8de0-46f9-a945-01a91a7e3df3/65519/permissions?back=%2Fp%2Fd56dc50c-8de0-46f9-a945-01a91a7e3df3%2F65519%3Fpath%3D65519.0~65519.3%26active%3D~65519.3%26action%3Dnew-con
+2024-03-19 22:09:26 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill focuses on the use or threatened use of force, altering current laws. It removes the provision that individuals using force other than deadly force do not have a duty to retreat. Additionally, it prohibits the use of deadly force if the person can safely retreat. The bill also repeals a section related to immunity from prosecution for the use of force, and reenacts a section concerning lawful ownership and use of firearms to reflect the changes made.
+2024-03-19 22:09:26 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 22:11:15 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:11:15 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:11:17 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:11:17 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 22:11:17 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:11:17 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:11:17 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 22:11:17 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319221116_bill_text.pdf
+2024-03-19 22:11:24 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:11:24 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:11:24 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:11:26 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:12:12 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 22:12:12 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/d8bdd5c7-b76f-498a-b1f3-689409f36a11/65520/permissions?back=%2Fp%2Fd8bdd5c7-b76f-498a-b1f3-689409f36a11%2F65520%3Fpath%3D65520.0~65520.3%26active%3D~65520.3%26action%3Dnew-con
+2024-03-19 22:12:12 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill eliminates the duty to retreat before using force for defense of persons or property and prohibits the use of deadly force if it can be avoided safely by retreating. It also repeals immunity from prosecution for justifiable use of force and includes amendments relating to firearms ownership. The act may be cited as the "Self-Defense Restoration Act" and will take effect upon becoming a law.
+2024-03-19 22:12:12 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 22:12:52 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/27
+2024-03-19 22:12:52 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/27
+2024-03-19 22:12:55 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:12:55 - myapp - INFO - main - process_bill_request - 68 - title: HB 27: Citizen's Arrest
+2024-03-19 22:12:55 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:12:55 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:12:55 - myapp - INFO - main - process_bill_request - 68 - govId: HB 27
+2024-03-19 22:12:55 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319221254_bill_text.pdf
+2024-03-19 22:13:02 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:13:02 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:13:02 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:13:04 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:27:26 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/27
+2024-03-19 22:27:26 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/27
+2024-03-19 22:27:29 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:27:29 - myapp - INFO - main - process_bill_request - 68 - title: HB 27: Citizen's Arrest
+2024-03-19 22:27:29 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:27:29 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:27:29 - myapp - INFO - main - process_bill_request - 68 - govId: HB 27
+2024-03-19 22:27:29 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319222728_bill_text.pdf
+2024-03-19 22:27:38 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:27:38 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:27:38 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:27:39 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:28:22 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/27
+2024-03-19 22:28:22 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/27
+2024-03-19 22:28:24 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:28:24 - myapp - INFO - main - process_bill_request - 68 - title: HB 27: Citizen's Arrest
+2024-03-19 22:28:24 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:28:24 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:28:24 - myapp - INFO - main - process_bill_request - 68 - govId: HB 27
+2024-03-19 22:28:24 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319222824_bill_text.pdf
+2024-03-19 22:28:30 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:28:30 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:28:30 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:28:32 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:29:18 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 22:29:18 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/5ec549dc-a7fa-4295-b3fa-b610f52c0eff/65524/permissions?back=%2Fp%2F5ec549dc-a7fa-4295-b3fa-b610f52c0eff%2F65524%3Fpath%3D65524.0~65524.3%26active%3D~65524.3%26action%3Dnew-con
+2024-03-19 22:29:18 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: This bill relates to citizen's arrest by prohibiting citizen's arrests in Florida, abrogating common law, creating exceptions for law enforcement officers acting outside their jurisdiction or detaining someone who has illegally entered their property. It establishes that private individuals who are not law enforcement officers may not arrest others for violating state laws. The bill will take effect on July 1, 2024.
+2024-03-19 22:29:18 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 22:35:06 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:35:06 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:35:09 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:35:09 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 22:35:09 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:35:09 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:35:09 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 22:35:09 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319223509_bill_text.pdf
+2024-03-19 22:35:21 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:35:21 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:35:21 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:35:23 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:37:55 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:37:55 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 22:37:59 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 22:37:59 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 22:37:59 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 22:37:59 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 22:37:59 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 22:37:59 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319223758_bill_text.pdf
+2024-03-19 22:38:06 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 22:38:06 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 22:38:06 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 22:38:08 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 22:38:56 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 22:38:56 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/8009da7e-e755-4b39-ad43-23e51e10233f/65526/permissions?back=%2Fp%2F8009da7e-e755-4b39-ad43-23e51e10233f%2F65526%3Fpath%3D65526.0~65526.3%26active%3D~65526.3%26action%3Dnew-con
+2024-03-19 22:38:56 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill addresses the use or threatened use of force, removing the duty to retreat before using force in defense of persons or property. It prohibits the use of deadly force if the person can safely retreat and repeals immunity from criminal prosecution for justifiable use of force. The bill also includes amendments to sections regarding self-defense and possession of firearms, incorporating changes to stand your ground laws.
+2024-03-19 22:38:56 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item

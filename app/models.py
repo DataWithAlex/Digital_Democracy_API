@@ -28,3 +28,5 @@ class BillMeta(Base):
 
     # Relationship to link back to the bill
     bill = relationship("Bill")
+
+

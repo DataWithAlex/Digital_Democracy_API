@@ -6,6 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
+
 import os
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -185,6 +187,9 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'radio-option__input')))
     element.click()
 
+    #public_radio_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@type='radio'][@data-id='1']")))
+    #public_radio_button.click()
+
 
     # Note: Assuming 'Next' button needs to be clicked if changing the option or for the form submission.
     # Find and click the 'Next' button
@@ -216,6 +221,59 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
     next_button.click()
 
+    ### HERE we are in the file upload section
+
+    #import os
+
+    # Get the absolute path to the image file
+    #image_path = os.path.abspath('/Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/image.png')
+    # Get the directory of the current script file. This works even if you run the script from a different directory
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Now, construct the path to the image.png assuming it's in the same directory as this script
+    image_path = os.path.join(script_directory, 'image.png')
+
+    # Locate the file input element which is likely hidden
+    file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
+
+    # Before interacting, make sure the input is interactable by removing any 'hidden' attributes or styles via JavaScript
+    driver.execute_script("""
+        arguments[0].style.height='1px';
+        arguments[0].style.width='1px';
+        arguments[0].style.opacity=1;
+        arguments[0].removeAttribute('hidden');
+    """, file_input)
+
+    # Now, send the file path to the file input element, this should open the file selector dialog and select the file
+    file_input.send_keys(image_path)
+
+    # Some applications rely on change events to detect when a file has been selected
+    # Trigger the change event just in case the application needs it
+    driver.execute_script("arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }));", file_input)
+
+    # If there is a button that needs to be clicked to finalize the upload after the file is selected, do that here.
+    # You mentioned the aria-label contains "Drag and drop or click" for the upload element,
+    # so if needed, find that element and click it to initiate the upload.
+    upload_button = driver.find_element(By.XPATH, "//button[contains(@aria-label, 'Drag and drop or click')]")
+    upload_button.click()
+
+    # Note: The final click on the 'upload_button' might not be necessary if the application starts uploading immediately after the file selection.
+
+    ###
+
+        # Wait for the tags input field to be clickable
+    tags_input_field = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input.pill-editor-input")))
+
+    # Clear the input field in case there's any pre-filled text
+    tags_input_field.clear()
+
+    # Enter the text "DDP" into the input field
+    tags_input_field.send_keys("DDP")
+
+    # To submit the tag, you would typically press Enter or click an add button.
+    # If pressing Enter submits the tag, use this line:
+    tags_input_field.send_keys(Keys.ENTER)
+
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
     next_button.click()
 
@@ -246,7 +304,9 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     time.sleep(1)
     #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(@class, "notranslate") and contains(@dir, "auto")]')))
     #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S")]')))
-    bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "Test Thesis")]')))
+    bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H")]')))
+
+    #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "Test Thesis")]')))
 
     bill_summary.clear()
     bill_summary.send_keys(bill_summary_text)
@@ -358,6 +418,29 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     time.sleep(1)
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@aria-label, "Add a new con claim") and contains(@class, "hoverable")]')))
     next_button.click()
+
+    time.sleep(1)
+    # Wait for the button with the specific aria-label to be clickable and click it
+    share_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Share']")))
+    share_button.click()
+
+    time.sleep(1)
+    # Wait for the button with the specific aria-label to be clickable and click it
+    share_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Publish Discussion']")))
+    share_button.click()
+
+    time.sleep(1)
+    next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
+    next_button.click()
+
+    time.sleep(1)
+    next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
+    next_button.click()
+
+    time.sleep(1)
+    next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Publish")]')))
+    next_button.click()
+
     # Retrieve the logs
     logs = driver.get_log("browser")
 
@@ -367,8 +450,14 @@ def run_selenium_script(title, summary, pros_text, cons_text):
             # Example of formatting the log entry as a string before writing it
             log_entry = f"{log['timestamp']}: {log['level']} - {log['message']}\n"
             file.write(log_entry)
+    
+    current_url = driver.current_url
 
     driver.quit()
+
+    return current_url
+
+    
 
 
 

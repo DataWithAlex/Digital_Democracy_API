@@ -9,6 +9,7 @@ from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta
 import openai
+from .webflow import WebflowAPI
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -37,6 +38,13 @@ db_port = 3306
 # SQLAlchemy engine and session maker
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Initialize WebflowAPI
+webflow_api = WebflowAPI(
+    api_key= os.getenv("WEBFLOW_KEY"),
+    collection_id= os.getenv("WEBFLOW_COLLECTION_KEY"),
+    site_id= os.getenv("WEBFLOW_SITE_ID")
+)
 
 # Exception handlers
 @app.exception_handler(Exception)
@@ -82,13 +90,23 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 
         logger.info("About to run Selenium script")
         # Run the Selenium script after generating the summary
-        run_selenium_script(
+        kialo_url = run_selenium_script(
             title=bill_details['govId'],
             summary=summary,
             pros_text=pros,
             cons_text=cons
         )
         logger.info("Finished running Selenium script")
+        logger.info(f"Kialo URL: {kialo_url}")
+
+        # Update bill_details with summary for Webflow item creation
+        bill_details['description'] = summary  # Update description with summary
+        logger.info(f"Summary for Webflow: {summary}")
+
+        logger.info("Creating Webflow item")
+        # Now, create a Webflow CMS item with the returned details
+        webflow_item_id = webflow_api.create_collection_item(bill_request.url, bill_details, kialo_url)
+        #webflow_item_id = webflow_api.create_collection_item(bill_details, kialo_url, bill_url=bill_request.url)
 
         # Check if PDF was successfully created
         if pdf_path and os.path.exists(pdf_path):
@@ -119,3 +137,8 @@ async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)
     
     # Invoke the process_bill_request function with the constructed URL and English language
     return process_bill_request(BillRequest(url=bill_url, lan="en"), db)
+
+
+
+
+

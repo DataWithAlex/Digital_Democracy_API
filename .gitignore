@@ -15,6 +15,7 @@ secret_testing/
 .secret_testing
 
 Alex_Tests/
+Alex_Testing/
 myenv/
 .myenv
 __pycache__/
