@@ -469,12 +469,15 @@ def run_selenium_script(title, summary, pros_text, cons_text):
             log_entry = f"{log['timestamp']}: {log['level']} - {log['message']}\n"
             file.write(log_entry)
     
+    
     current_url = driver.current_url
+    modified_url = current_url.replace('%26action%3Dnew-con', '')
+    print("Modified URL:", modified_url)
+
 
     driver.quit()
 
-    return current_url
-
+    return modified_url
     
 
 
