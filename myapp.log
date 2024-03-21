@@ -862,3 +862,132 @@
 2024-03-19 22:38:56 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/8009da7e-e755-4b39-ad43-23e51e10233f/65526/permissions?back=%2Fp%2F8009da7e-e755-4b39-ad43-23e51e10233f%2F65526%3Fpath%3D65526.0~65526.3%26active%3D~65526.3%26action%3Dnew-con
 2024-03-19 22:38:56 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill addresses the use or threatened use of force, removing the duty to retreat before using force in defense of persons or property. It prohibits the use of deadly force if the person can safely retreat and repeals immunity from criminal prosecution for justifiable use of force. The bill also includes amendments to sections regarding self-defense and possession of firearms, incorporating changes to stand your ground laws.
 2024-03-19 22:38:56 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-19 23:02:06 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 23:02:06 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 23:02:09 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 23:02:09 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 23:02:09 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 23:02:09 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 23:02:09 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 23:02:09 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319230208_bill_text.pdf
+2024-03-19 23:02:18 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 23:02:18 - myapp - INFO - selenium_script - run_selenium_script - 95 - Selenium Confirmed to be running on EC2
+2024-03-19 23:02:18 - myapp - INFO - selenium_script - run_selenium_script - 98 - Initializing ChromeDriver with headless options
+2024-03-19 23:02:18 - myapp - INFO - selenium_script - run_selenium_script - 112 - Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed
+2024-03-19 23:02:47 - myapp - INFO - main - process_bill_request - 59 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 23:02:47 - myapp - INFO - main - process_bill_request - 62 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-19 23:02:49 - myapp - INFO - main - process_bill_request - 66 - Bill details:
+2024-03-19 23:02:49 - myapp - INFO - main - process_bill_request - 68 - title: SB 96: Use or Threatened Use of Force
+2024-03-19 23:02:49 - myapp - INFO - main - process_bill_request - 68 - description: 
+2024-03-19 23:02:49 - myapp - INFO - main - process_bill_request - 68 - pdf_path: bill_text.pdf
+2024-03-19 23:02:49 - myapp - INFO - main - process_bill_request - 68 - govId: SB 96
+2024-03-19 23:02:49 - myapp - INFO - main - process_bill_request - 68 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240319230249_bill_text.pdf
+2024-03-19 23:02:58 - myapp - INFO - main - process_bill_request - 91 - About to run Selenium script
+2024-03-19 23:02:58 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-19 23:02:58 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-19 23:02:59 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-19 23:03:01 - myapp - INFO - selenium_script - run_selenium_script - 174 - Logging in to Kialo
+2024-03-19 23:03:01 - myapp - INFO - selenium_script - run_selenium_script - 180 - Logged in to Kialo
+2024-03-19 23:03:02 - myapp - INFO - selenium_script - run_selenium_script - 185 - Creating Discussion
+2024-03-19 23:03:02 - myapp - INFO - selenium_script - run_selenium_script - 193 - Select Private Discussion
+2024-03-19 23:03:02 - myapp - INFO - selenium_script - run_selenium_script - 203 - Next Page
+2024-03-19 23:03:02 - myapp - INFO - selenium_script - run_selenium_script - 220 - Filled our Name and Thesis
+2024-03-19 23:03:03 - myapp - INFO - selenium_script - run_selenium_script - 227 - Next Page
+2024-03-19 23:03:03 - myapp - INFO - selenium_script - run_selenium_script - 233 - Next Page
+2024-03-19 23:03:03 - myapp - INFO - selenium_script - run_selenium_script - 247 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-19 23:03:03 - myapp - INFO - selenium_script - run_selenium_script - 260 - About to upload image
+2024-03-19 23:03:03 - myapp - INFO - selenium_script - run_selenium_script - 265 - Uploaded Image
+2024-03-19 23:03:03 - myapp - INFO - selenium_script - run_selenium_script - 280 - About to add tags
+2024-03-19 23:03:46 - myapp - INFO - main - process_bill_request - 99 - Finished running Selenium script
+2024-03-19 23:03:46 - myapp - INFO - main - process_bill_request - 100 - Kialo URL: https://www.kialo.com/p/462507c9-1348-4e36-b9fa-662272d8e183/65530/permissions?back=%2Fp%2F462507c9-1348-4e36-b9fa-662272d8e183%2F65530%3Fpath%3D65530.0~65530.3%26active%3D~65530.3%26action%3Dnew-con
+2024-03-19 23:03:46 - myapp - INFO - main - process_bill_request - 104 - Summary for Webflow: The bill eliminates provisions that stated individuals using or threatening force, aside from deadly force, do not need to retreat before acting in defense. It also prohibits the use of deadly force by someone who can safely retreat, taking away the right to stand their ground in certain circumstances. The bill repeals immunity from criminal prosecution and civil action for the use or threatened use of force and reenacts a section on lawful ownership, possession, and use of firearms to reflect the changes.
+2024-03-19 23:03:46 - myapp - INFO - main - process_bill_request - 106 - Creating Webflow item
+2024-03-21 01:12:20 - myapp - INFO - main - process_bill_request - 60 - Received request to generate bill summary for URL: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-21 01:12:20 - myapp - INFO - main - process_bill_request - 63 - About to run fetch_bill_details() with url: https://www.flsenate.gov/Session/Bill/2024/96
+2024-03-21 01:12:23 - myapp - INFO - main - process_bill_request - 67 - Bill details:
+2024-03-21 01:12:23 - myapp - INFO - main - process_bill_request - 69 - title: SB 96: Use or Threatened Use of Force
+2024-03-21 01:12:23 - myapp - INFO - main - process_bill_request - 69 - description: 
+2024-03-21 01:12:23 - myapp - INFO - main - process_bill_request - 69 - pdf_path: bill_text.pdf
+2024-03-21 01:12:23 - myapp - INFO - main - process_bill_request - 69 - govId: SB 96
+2024-03-21 01:12:23 - myapp - INFO - main - process_bill_request - 69 - billTextPath: https://ddp-bills.s3.amazonaws.com/bill_details/20240321011222_bill_text.pdf
+2024-03-21 01:12:31 - myapp - INFO - main - process_bill_request - 92 - About to run Selenium script
+2024-03-21 01:12:31 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 01:12:31 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 01:12:40 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 01:12:42 - myapp - INFO - selenium_script - run_selenium_script - 174 - Logging in to Kialo
+2024-03-21 01:12:42 - myapp - INFO - selenium_script - run_selenium_script - 180 - Logged in to Kialo
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 185 - Creating Discussion
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 193 - Select Private Discussion
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 203 - Next Page
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 220 - Filled our Name and Thesis
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 227 - Next Page
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 233 - Next Page
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 247 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 260 - About to upload image
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 265 - Uploaded Image
+2024-03-21 01:12:44 - myapp - INFO - selenium_script - run_selenium_script - 280 - About to add tags
+2024-03-21 01:13:29 - myapp - INFO - main - process_bill_request - 100 - Finished running Selenium script
+2024-03-21 01:13:29 - myapp - INFO - main - process_bill_request - 101 - Kialo URL: https://www.kialo.com/p/4224d2fe-7031-44cd-9baa-b47878f1f1d6/65549/permissions?back=%2Fp%2F4224d2fe-7031-44cd-9baa-b47878f1f1d6%2F65549%3Fpath%3D65549.0~65549.3%26active%3D~65549.3%26action%3Dnew-con
+2024-03-21 01:13:29 - myapp - INFO - main - process_bill_request - 105 - Summary for Webflow: The bill aims to restrict the use of deadly force and the duty to retreat in self-defense situations by deleting certain provisions from current statutes. It repeals immunity from criminal prosecution and civil action for justifiable use of force and introduces a requirement to retreat if one can avoid using deadly force safely. The bill also amends laws regarding the use of force in defense of person and property and reenacts a section related to ownership and lawful possession of firearms.
+2024-03-21 01:13:29 - myapp - INFO - main - process_bill_request - 107 - Creating Webflow item
+2024-03-21 01:26:17 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 01:26:17 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 01:26:18 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 01:29:59 - myapp - INFO - main - update_bill - 149 - Bill with history 202496 already exists. Process not run.
+2024-03-21 01:31:55 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 01:31:55 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 01:31:57 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 01:37:48 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 01:37:48 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 01:37:49 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 01:44:10 - myapp - INFO - main - update_bill - 152 - Bill with history 202497 already exists. Process not run.
+2024-03-21 01:44:37 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 01:44:37 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 01:44:38 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 01:44:38 - myapp - ERROR - main - update_bill - 190 - An error occurred during bill processing: list index out of range
+2024-03-21 01:46:40 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 01:46:40 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 01:46:41 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 01:46:43 - myapp - INFO - selenium_script - run_selenium_script - 179 - Logging in to Kialo
+2024-03-21 01:46:43 - myapp - INFO - selenium_script - run_selenium_script - 185 - Logged in to Kialo
+2024-03-21 01:46:44 - myapp - INFO - selenium_script - run_selenium_script - 190 - Creating Discussion
+2024-03-21 01:46:44 - myapp - INFO - selenium_script - run_selenium_script - 198 - Select Private Discussion
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 208 - Next Page
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 225 - Filled our Name and Thesis
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 232 - Next Page
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 238 - Next Page
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 252 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 265 - About to upload image
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 270 - Uploaded Image
+2024-03-21 01:46:45 - myapp - INFO - selenium_script - run_selenium_script - 285 - About to add tags
+2024-03-21 01:50:18 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 01:50:18 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 01:50:19 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 01:50:21 - myapp - INFO - selenium_script - run_selenium_script - 174 - Logging in to Kialo
+2024-03-21 01:50:21 - myapp - INFO - selenium_script - run_selenium_script - 180 - Logged in to Kialo
+2024-03-21 01:50:22 - myapp - INFO - selenium_script - run_selenium_script - 185 - Creating Discussion
+2024-03-21 01:50:22 - myapp - INFO - selenium_script - run_selenium_script - 193 - Select Private Discussion
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 203 - Next Page
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 220 - Filled our Name and Thesis
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 227 - Next Page
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 233 - Next Page
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 247 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 260 - About to upload image
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 265 - Uploaded Image
+2024-03-21 01:50:23 - myapp - INFO - selenium_script - run_selenium_script - 280 - About to add tags
+2024-03-21 01:51:23 - myapp - INFO - main - update_bill - 150 - Bill with history 2024101 already exists. Process not run.
+2024-03-21 02:00:26 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-21 02:00:26 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-21 02:00:28 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-21 02:00:29 - myapp - INFO - selenium_script - run_selenium_script - 174 - Logging in to Kialo
+2024-03-21 02:00:29 - myapp - INFO - selenium_script - run_selenium_script - 180 - Logged in to Kialo
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 185 - Creating Discussion
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 193 - Select Private Discussion
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 203 - Next Page
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 220 - Filled our Name and Thesis
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 227 - Next Page
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 233 - Next Page
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 247 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 260 - About to upload image
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 265 - Uploaded Image
+2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 280 - About to add tags

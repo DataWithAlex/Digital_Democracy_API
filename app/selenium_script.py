@@ -82,8 +82,8 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     #logger.info(f"Accessed RUN_ENV: {run_env}")
 
     # DETERMINE VARIABLES HERE
-    run_env = 'ec2'
-    #run_env = 'local'
+    #run_env = 'ec2'
+    run_env = 'local'
 
     #run_env = os.getenv('RUN_ENV', 'local').lower()
     #print(f"Current RUN_ENV: {run_env}")

@@ -10,6 +10,8 @@ from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta
 import openai
 from .webflow import WebflowAPI
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -126,19 +128,46 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
     finally:
         db.close()
 
-@app.post("/generate-bill-summary/", response_class=Response)
-async def generate_bill_summary(bill_request: BillRequest, db: Session = Depends(get_db)):
-    return process_bill_request(bill_request, db)
+from fastapi.responses import JSONResponse  # Import JSONResponse
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)):
-    # Construct URL for the bill
+    history_value = f"{year}{bill_number}"
+
+    # Check if the history value exists
+    existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
+    if existing_bill:
+        logger.info(f"Bill with history {history_value} already exists. Process not run.")
+        return JSONResponse(content={"message": f"Bill with history {history_value} already exists. Process not run."}, status_code=200)
+
     bill_url = f"https://www.flsenate.gov/Session/Bill/{year}/{bill_number}"
-    
-    # Invoke the process_bill_request function with the constructed URL and English language
-    return process_bill_request(BillRequest(url=bill_url, lan="en"), db)
+    bill_details = fetch_bill_details(bill_url)
 
+    # Add check for required bill details
+    if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
+        raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
+    new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"], history=history_value)
+    db.add(new_bill)
+    db.commit()
 
+    # Generate PDF and insert summary, pros, cons
 
+    pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
 
+    # Insert summary, pros, and cons into bill_meta
+    for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+        new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")  # Assume English for simplicity
+        db.add(new_meta)
+    db.commit()
+
+    kialo_url = run_selenium_script(
+        title=bill_details['govId'],
+        summary=summary,
+        pros_text=pros,
+        cons_text=cons
+    )
+
+    webflow_item_id = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
+
+    return JSONResponse(content={"message": "Bill processed successfully", "kialo_url": kialo_url, "webflow_item_id": webflow_item_id}, status_code=200)
