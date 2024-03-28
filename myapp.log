@@ -991,3 +991,52 @@
 2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 260 - About to upload image
 2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 265 - Uploaded Image
 2024-03-21 02:00:31 - myapp - INFO - selenium_script - run_selenium_script - 280 - About to add tags
+2024-03-28 15:06:25 - myapp - INFO - selenium_script - run_selenium_script - 95 - Selenium Confirmed to be running on EC2
+2024-03-28 15:06:25 - myapp - INFO - selenium_script - run_selenium_script - 98 - Initializing ChromeDriver with headless options
+2024-03-28 15:06:25 - myapp - INFO - selenium_script - run_selenium_script - 112 - Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed
+2024-03-28 15:07:01 - myapp - INFO - main - update_bill - 140 - Bill with history 2024204 already exists. Process not run.
+2024-03-28 15:07:31 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-28 15:07:31 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-28 15:07:40 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-28 15:07:43 - myapp - INFO - selenium_script - run_selenium_script - 174 - Logging in to Kialo
+2024-03-28 15:07:43 - myapp - INFO - selenium_script - run_selenium_script - 180 - Logged in to Kialo
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 185 - Creating Discussion
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 193 - Select Private Discussion
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 203 - Next Page
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 220 - Filled our Name and Thesis
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 227 - Next Page
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 233 - Next Page
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 247 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 260 - About to upload image
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 265 - Uploaded Image
+2024-03-28 15:07:45 - myapp - INFO - selenium_script - run_selenium_script - 280 - About to add tags
+2024-03-28 15:12:15 - myapp - INFO - selenium_script - run_selenium_script - 130 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-28 15:12:15 - myapp - INFO - selenium_script - run_selenium_script - 134 - chrome options confirmed
+2024-03-28 15:12:16 - myapp - INFO - selenium_script - run_selenium_script - 138 - chrome service & driver instantiated
+2024-03-28 15:12:18 - myapp - INFO - selenium_script - run_selenium_script - 174 - Logging in to Kialo
+2024-03-28 15:12:18 - myapp - INFO - selenium_script - run_selenium_script - 180 - Logged in to Kialo
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 185 - Creating Discussion
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 193 - Select Private Discussion
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 203 - Next Page
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 220 - Filled our Name and Thesis
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 227 - Next Page
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 233 - Next Page
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 247 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 260 - About to upload image
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 265 - Uploaded Image
+2024-03-28 15:12:20 - myapp - INFO - selenium_script - run_selenium_script - 280 - About to add tags
+2024-03-28 15:25:03 - myapp - INFO - selenium_script - run_selenium_script - 135 - Selenium Confirmed to be running on Local @run_selenium_script
+2024-03-28 15:25:03 - myapp - INFO - selenium_script - run_selenium_script - 139 - chrome options confirmed
+2024-03-28 15:25:05 - myapp - INFO - selenium_script - run_selenium_script - 143 - chrome service & driver instantiated
+2024-03-28 15:25:06 - myapp - INFO - selenium_script - run_selenium_script - 179 - Logging in to Kialo
+2024-03-28 15:25:07 - myapp - INFO - selenium_script - run_selenium_script - 185 - Logged in to Kialo
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 190 - Creating Discussion
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 198 - Select Private Discussion
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 208 - Next Page
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 225 - Filled our Name and Thesis
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 232 - Next Page
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 238 - Next Page
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 252 - Uploading Image for Discussion /Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/app/image.png
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 265 - About to upload image
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 270 - Uploaded Image
+2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 285 - About to add tags

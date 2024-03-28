@@ -16,6 +16,8 @@ class Bill(Base):
     govId = Column(String(10))
     billTextPath = Column(String(255))
     history = Column(String(255))  # New history column
+    webflow_link = Column(String(255))
+
 
 class BillMeta(Base):
     __tablename__ = 'bill_meta'

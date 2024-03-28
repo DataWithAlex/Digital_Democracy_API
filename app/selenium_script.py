@@ -66,6 +66,11 @@ def split_pros_cons(text):
 
 import os
 
+def clean_url(url):
+    # Split the URL by "/permissions" and take the first part
+    cleaned_url = url.split("/permissions")[0] + "/"
+    return cleaned_url
+
 
 def run_selenium_script(title, summary, pros_text, cons_text):
 #    chrome_options = Options()
@@ -471,7 +476,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     
     
     current_url = driver.current_url
-    modified_url = current_url.replace('%26action%3Dnew-con', '')
+    modified_url = clean_url(current_url)
     print("Modified URL:", modified_url)
 
 

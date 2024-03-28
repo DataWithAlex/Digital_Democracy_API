@@ -143,7 +143,6 @@ async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)
     bill_url = f"https://www.flsenate.gov/Session/Bill/{year}/{bill_number}"
     bill_details = fetch_bill_details(bill_url)
 
-    # Add check for required bill details
     if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
         raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
@@ -151,23 +150,20 @@ async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)
     db.add(new_bill)
     db.commit()
 
-    # Generate PDF and insert summary, pros, cons
-
     pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
 
-    # Insert summary, pros, and cons into bill_meta
     for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-        new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")  # Assume English for simplicity
+        new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
         db.add(new_meta)
     db.commit()
 
-    kialo_url = run_selenium_script(
-        title=bill_details['govId'],
-        summary=summary,
-        pros_text=pros,
-        cons_text=cons
-    )
+    kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
-    webflow_item_id = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
+    webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
+    webflow_url = f"https://digitaldemocracyproject.org/bills-copy/{slug}"
 
-    return JSONResponse(content={"message": "Bill processed successfully", "kialo_url": kialo_url, "webflow_item_id": webflow_item_id}, status_code=200)
+    # Update the newly created Bill instance with webflow_link
+    new_bill.webflow_link = webflow_url
+    db.commit()
+
+    return JSONResponse(content={"message": "Bill processed successfully", "kialo_url": kialo_url, "webflow_item_id": webflow_item_id, "webflow_url": webflow_url}, status_code=200)

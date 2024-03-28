@@ -115,7 +115,7 @@ class WebflowAPI:
             print("Collection item created successfully, ID:", item_id)
             self.publish_collection_item(item_id)
             print(f"https://digitaldemocracyproject.org/bills-copy/{slug}")
-            return item_id
+            return item_id, slug
         else:
             print(f"Failed to create collection item: {response.status_code} - {response.text}")
             return None
