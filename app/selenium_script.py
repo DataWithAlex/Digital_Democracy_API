@@ -478,7 +478,8 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     current_url = driver.current_url
     modified_url = clean_url(current_url)
     print("Modified URL:", modified_url)
-
+    logger.info(f"here is the Kialo URL:{modified_url}")
+    logger.info("*** EXITING selenium_script.py ***")
 
     driver.quit()
 

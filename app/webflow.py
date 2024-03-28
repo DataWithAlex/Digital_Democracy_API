@@ -3,6 +3,7 @@ import logging
 import json
 import re
 from typing import Dict, Optional
+from .logger_config import logger
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
@@ -83,6 +84,7 @@ class WebflowAPI:
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
         print(bill_details['description'])
+        logger.info(f"slug{slug}, title{title}, kialo_url{kialo_url}, description{bill_details['description']}")
 
         data = {
             "fields": {
@@ -103,21 +105,27 @@ class WebflowAPI:
         
         # Debugging: Print the JSON payload to verify the structure before sending
         print(json.dumps(data, indent=4))
+        logger.info(f"JSON{json.dumps(data, indent=4)}")
 
         # Endpoint to create a new collection item
+        logger.info("Creating item")
         create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
 
+        logger.info("POST Webflow Item")
         # Making the POST request to create the collection item
         response = requests.post(create_item_endpoint, headers=self.headers, data=json.dumps(data))
         
         if response.status_code in [200, 201]:
             item_id = response.json()['_id']
             print("Collection item created successfully, ID:", item_id)
+            logger.info(f"Collection item created successfully, ID: {item_id}")
             self.publish_collection_item(item_id)
             print(f"https://digitaldemocracyproject.org/bills-copy/{slug}")
+            logger.info(f"https://digitaldemocracyproject.org/bills-copy/{slug}")
             return item_id, slug
         else:
             print(f"Failed to create collection item: {response.status_code} - {response.text}")
             return None
+        
     
     # You can add more methods here to interact with Webflow API as needed.

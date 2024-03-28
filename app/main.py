@@ -12,6 +12,7 @@ import openai
 from .webflow import WebflowAPI
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from .logger_config import logger
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -134,6 +135,8 @@ from fastapi.responses import JSONResponse  # Import JSONResponse
 async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)):
     history_value = f"{year}{bill_number}"
 
+    logger.info(f"Starting update-bill() for bill: {history_value}")
+
     # Check if the history value exists
     existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
     if existing_bill:
@@ -142,6 +145,7 @@ async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)
 
     bill_url = f"https://www.flsenate.gov/Session/Bill/{year}/{bill_number}"
     bill_details = fetch_bill_details(bill_url)
+    logger.info(f"Obtained bill_details for: {bill_url}")
 
     if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
         raise HTTPException(status_code=500, detail="Required bill details are missing.")
@@ -151,17 +155,22 @@ async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)
     db.commit()
 
     pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+    logger.info("Generated Summary")
 
     for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
         new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
         db.add(new_meta)
     db.commit()
 
+    logger.info("*** LEAVING main.py TO RUN selenium_script.py ***")
     kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
-
+    
+    logger.info("*** LEAVING main.py TO webflow.py  ***")
+    logger.info(f"running create_collection_item() with: bill_url{bill_url}, kialo_url{kialo_url}")
     webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
     webflow_url = f"https://digitaldemocracyproject.org/bills-copy/{slug}"
 
+    logger.info("*** LEAVING webflow.py TO main.py  ***")
     # Update the newly created Bill instance with webflow_link
     new_bill.webflow_link = webflow_url
     db.commit()
