@@ -49,6 +49,8 @@ webflow_api = WebflowAPI(
     site_id= os.getenv("WEBFLOW_SITE_ID")
 )
 
+logger.info(f"WEBFLOW_KEY  {os.getenv("WEBFLOW_SITE_ID")}  WEBFLOW_COLLECTION_KEY  {os.getenv("WEBFLOW_COLLECTION_KEY")}  WEBFLOW_SITE_ID {os.getenv("WEBFLOW_SITE_ID")}")
+
 # Exception handlers
 @app.exception_handler(Exception)
 async def universal_exception_handler(request: Request, exc: Exception):
