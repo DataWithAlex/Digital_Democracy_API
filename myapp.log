@@ -1041,3 +1041,4 @@
 2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 270 - Uploaded Image
 2024-03-28 15:25:08 - myapp - INFO - selenium_script - run_selenium_script - 285 - About to add tags
 2024-03-28 16:37:03 - myapp - INFO - main - <module> - 52 - WEBFLOW_KEY  62d84206d8adc10285c94e0a  WEBFLOW_COLLECTION_KEY  6578d8f7184c99cedfe92ead  WEBFLOW_SITE_ID 62d84206d8adc10285c94e0a
+2024-03-28 16:43:53 - myapp - INFO - main - <module> - 52 - WEBFLOW_KEY 62d84206d8adc10285c94e0a WEBFLOW_COLLECTION_KEY 6578d8f7184c99cedfe92ead WEBFLOW_SITE_ID 62d84206d8adc10285c94e0a
