@@ -114,6 +114,7 @@ class WebflowAPI:
         logger.info("POST Webflow Item")
         # Making the POST request to create the collection item
         response = requests.post(create_item_endpoint, headers=self.headers, data=json.dumps(data))
+        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
         
         if response.status_code in [200, 201]:
             item_id = response.json()['_id']
