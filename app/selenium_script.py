@@ -157,9 +157,24 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     pro_1, pro_2, pro_3 = pros[0], pros[1], pros[2]
 
     # title = "HB 23: Water and Wastewater Facility Operators"
+
+    ## OLD WORKING CODE:
+    #bill_summary_text = summary
+    #if len(bill_summary_text) > 500:
+    #    bill_summary_text = bill_summary_text[:500]
+
     bill_summary_text = summary
     if len(bill_summary_text) > 500:
-        bill_summary_text = bill_summary_text[:500]
+        # Find the last period before the 500 character mark
+        last_period_index = bill_summary_text.rfind('.', 0, 500)
+        
+        # If a period is found, truncate the string up to that point
+        if last_period_index != -1:
+            bill_summary_text = bill_summary_text[:last_period_index + 1]
+        else:
+            # If no period is found, truncate at 500 characters
+            bill_summary_text = bill_summary_text[:500]
+
 
     # Navigate to the Kialo login page
     driver.get("https://www.kialo.com/my")
@@ -327,12 +342,12 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     time.sleep(1)
     #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(@class, "notranslate") and contains(@dir, "auto")]')))
     #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S")]')))
-    bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H")]')))
+    bill_summary_ = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H")]')))
 
     #bill_summary = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "Test Thesis")]')))
 
-    bill_summary.clear()
-    bill_summary.send_keys(bill_summary_text)
+    bill_summary_.clear()
+    bill_summary_.send_keys(bill_summary_text)
 
     time.sleep(1)
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))

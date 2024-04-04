@@ -4,7 +4,7 @@ import os
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-def summarize_with_openai_chat(text, model="gpt-3.5-turbo"):
+def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
     """
     Summarizes a given text using OpenAI's Chat Completion API.
 
@@ -23,7 +23,7 @@ def summarize_with_openai_chat(text, model="gpt-3.5-turbo"):
     return content
 
 
-def full_summarize_with_openai_chat(full_text, model="gpt-3.5-turbo"):
+def full_summarize_with_openai_chat(full_text, model="gpt-4-turbo-preview"):
     """
     Summarizes a given text using OpenAI's Chat Completion API.
 
@@ -41,7 +41,7 @@ def full_summarize_with_openai_chat(full_text, model="gpt-3.5-turbo"):
     summary = response['choices'][0]['message']['content']
     return summary
 
-def full_summarize_with_openai_chat_spanish(full_text, model="gpt-3.5-turbo"):
+def full_summarize_with_openai_chat_spanish(full_text, model="gpt-4-turbo-preview"):
     """
     Summarizes a given text using OpenAI's Chat Completion API.
 

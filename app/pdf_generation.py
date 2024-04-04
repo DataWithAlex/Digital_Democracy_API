@@ -19,14 +19,12 @@ from reportlab.lib.styles import getSampleStyleSheet
 import fitz  # PyMuPDF
 import os
 
-
-
 openai.api_key = openai_api_key
 
 def generate_pros_and_cons(full_text):
     # Generate pros
     pros_response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo-preview",
         messages=[
             {"role": "system", "content": "You are a helpful assistant designed to generate pros for supporting a bill based on its summary. You must specifically have 3 Pros, seperated by numbers--no exceptions. Numbers seperated as 1) 2) 3)"},
             {"role": "user", "content": f"What are the pros of supporting this bill? make it no more than 2 sentences \n\n{full_text}"}
@@ -36,7 +34,7 @@ def generate_pros_and_cons(full_text):
 
     # Generate cons
     cons_response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo-preview",
         messages=[
             {"role": "system", "content": "You are a helpful assistant designed to generate cons against supporting a bill based on its summary. You must have specifically 3 Cons, seperated by numbers--no excpetions. Numbers seperated as 1) 2) 3)"},
             {"role": "user", "content": f"What are the cons of supporting this bill? Make it no more than 2 sentences \n\n{full_text}"}
@@ -49,7 +47,7 @@ def generate_pros_and_cons(full_text):
 def generate_pros_and_cons_spanish(full_text):
     # Generate pros
     pros_response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo-preview",
         messages=[
             {"role": "system", "content": "Eres un asistente útil diseñado para generar ventajas para respaldar una factura en función de su resumen. Debes tener específicamente 3 profesionales, separados por números, sin excepciones. Números separados como 1) 2) 3)"},
             {"role": "user", "content": f"¿Cuáles son las ventajas de apoyar este proyecto de ley? que no sean más de 2 oraciones \n\n{full_text}"}
@@ -59,7 +57,7 @@ def generate_pros_and_cons_spanish(full_text):
 
     # Generate cons
     cons_response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo-preview",
         messages=[
             {"role": "system", "content": "Usted es un asistente útil diseñado para generar desventajas contra el respaldo de un proyecto de ley en función de su resumen. Debes tener específicamente 3 desventajas, separadas por números, sin excepciones. Números separados como 1) 2) 3)"},
             {"role": "user", "content": f"¿Cuáles son las desventajas de apoyar este proyecto de ley? Que no tenga más de 2 oraciones. \n\n{full_text}"}
@@ -68,7 +66,6 @@ def generate_pros_and_cons_spanish(full_text):
     cons = cons_response['choices'][0]['message']['content']
 
     return pros, cons
-
 
 def create_summary_pdf(input_pdf_path, output_pdf_path, title):
     width, height = letter
