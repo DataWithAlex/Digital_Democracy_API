@@ -25,8 +25,11 @@ logging.basicConfig(level=logging.INFO)
 
 # Dependency
 def get_db():
+    logger.info("called get_db")
     db = SessionLocal()
+    logger.info("created db variable")
     try:
+        logger.info("trying yield")
         yield db
     finally:
         db.close()
@@ -52,7 +55,6 @@ logger.info(f"DB_USER: {os.getenv('DB_USER')}")
 logger.info(f"DB_PASSWORD: {os.getenv('DB_PASSWORD')}")
 logger.info(f"DB_PORT: {os.getenv('DB_PORT')}")
 
-
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 
@@ -76,9 +78,6 @@ logger.info(f"WEBFLOW_KEY {os.getenv('WEBFLOW_SITE_ID')} WEBFLOW_COLLECTION_KEY 
 async def universal_exception_handler(request: Request, exc: Exception):
     logging.error(f"Unhandled exception occurred: {exc}", exc_info=True)
     return {"message": "An internal server error occurred."}
-
-# Define logger
-from .logger_config import logger
 
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
