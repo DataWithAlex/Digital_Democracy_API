@@ -42,6 +42,13 @@ db_port = os.getenv('DB_PORT')
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 # Initialize WebflowAPI
 webflow_api = WebflowAPI(
     api_key= os.getenv("WEBFLOW_KEY"),
