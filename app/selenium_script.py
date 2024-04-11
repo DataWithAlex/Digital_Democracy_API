@@ -117,7 +117,14 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         logger.info("Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed")
 
         # Update the path to where your ChromeDriver is located
-        service = Service("/home/ec2-user/.wdm/drivers/chromedriver/linux64/121.0.6167.184/chromedriver-linux64/chromedriver")
+
+        # FOR OLD EC2
+        # service = Service("/home/ec2-user/.wdm/drivers/chromedriver/linux64/121.0.6167.184/chromedriver-linux64/chromedriver")
+        #driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        # NEW EC2
+
+        service = Service(executable_path="/usr/local/bin/chromedriver")
         driver = webdriver.Chrome(service=service, options=chrome_options)
 
         logger.info("ChromeDriver initialized successfully")

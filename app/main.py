@@ -23,20 +23,20 @@ app = FastAPI()
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Depnoti
 
 # Database connection details
-db_host = 'ddp-api.czqcac8oivov.us-east-1.rds.amazonaws.com'
-db_name = 'digital_democracy'
-db_user = 'DataWithAlex'
-db_password = '%Mineguy29'
-db_port = 3306
+#db_host = 'ddp-api.czqcac8oivov.us-east-1.rds.amazonaws.com'
+#db_name = 'digital_democracy'
+#db_user = 'DataWithAlex'
+#db_password = '%Mineguy29'
+#db_port = 3306
+
+db_host = os.getenv('DB_HOST')
+db_name = os.getenv('DB_NAME')
+db_user = os.getenv('DB_USER')
+db_password = os.getenv('DB_PASSWORD')
+db_port = os.getenv('DB_PORT')
 
 # SQLAlchemy engine and session maker
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
