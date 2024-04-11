@@ -41,7 +41,7 @@ db_port = os.getenv('DB_PORT')
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 
-DATABASE_URL = "mysql+mysqlconnector://{user}:{password}@{host}:{port}/{db_name}"
+DATABASE_URL = "mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{dp_port}/{db_name}"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
