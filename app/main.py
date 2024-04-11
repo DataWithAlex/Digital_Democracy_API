@@ -46,12 +46,21 @@ db_user = os.getenv('DB_USER')
 db_password = os.getenv('DB_PASSWORD')
 db_port = os.getenv('DB_PORT')
 
+logger.info(f"DB_HOST: {os.getenv('DB_HOST')}")
+logger.info(f"DB_NAME: {os.getenv('DB_NAME')}")
+logger.info(f"DB_USER: {os.getenv('DB_USER')}")
+logger.info(f"DB_PASSWORD: {os.getenv('DB_PASSWORD')}")
+logger.info(f"DB_PORT: {os.getenv('DB_PORT')}")
+
+
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 
 # SQLAlchemy engine and session maker
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
+logger.info("Engine Created")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+logger.info("Session Local Created")
 
 # Initialize WebflowAPI
 webflow_api = WebflowAPI(
