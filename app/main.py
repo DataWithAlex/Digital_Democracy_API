@@ -38,8 +38,11 @@ db_user = os.getenv('DB_USER')
 db_password = os.getenv('DB_PASSWORD')
 db_port = os.getenv('DB_PORT')
 
-# SQLAlchemy engine and session maker
-engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import create_engine
+
+DATABASE_URL = "mysql+mysqlconnector://{user}:{password}@{host}:{port}/{db_name}"
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
