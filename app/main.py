@@ -23,6 +23,14 @@ app = FastAPI()
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 # Depnoti
 
 # Database connection details
@@ -41,16 +49,9 @@ db_port = os.getenv('DB_PORT')
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 
-DATABASE_URL = "mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{dp_port}/{db_name}"
-engine = create_engine(DATABASE_URL)
+# SQLAlchemy engine and session maker
+engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Initialize WebflowAPI
 webflow_api = WebflowAPI(
