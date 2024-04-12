@@ -61,6 +61,6 @@ def fetch_bill_details(bill_page_url):
             bill_details["pdf_path"] = local_pdf_path
 
             # Upload to S3 and get the URL
-            bill_details["billTextPath"] = upload_to_s3('llm-model-data-and-results', local_pdf_path)  # Adjust as needed
+            bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)  # Adjust as needed
 
     return bill_details
