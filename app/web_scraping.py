@@ -5,12 +5,21 @@ import re
 import boto3
 from datetime import datetime
 
+#def upload_to_s3(bucket_name, file_path):
+#    s3_client = boto3.client('s3')
+#    # Generate a unique file key using the current timestamp
+#    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+#    file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
+#    s3_client.upload_file(file_path, bucket_name, file_key, ExtraArgs={'ACL': 'public-read'})
+#    object_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
+#    return object_url
+
 def upload_to_s3(bucket_name, file_path):
     s3_client = boto3.client('s3')
     # Generate a unique file key using the current timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
-    s3_client.upload_file(file_path, bucket_name, file_key, ExtraArgs={'ACL': 'public-read'})
+    s3_client.upload_file(file_path, bucket_name, file_key)  # Removed ExtraArgs
     object_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
     return object_url
 
