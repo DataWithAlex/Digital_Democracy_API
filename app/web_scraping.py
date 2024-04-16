@@ -5,18 +5,26 @@ import re
 import boto3
 from datetime import datetime
 
-def upload_to_s3(access_point_name, file_path):
+def upload_to_s3(file_path):
     s3_client = boto3.client('s3')
+    access_point_arn = 'arn:aws:s3:us-east-1:350941939790:accesspoint/ddp-bills-access'
+    
     # Generate a unique file key using the current timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
+
+    # Note: Removed the ACL 'public-read' as it might not be needed or could cause permission issues
+    # If the access point is configured to allow public access, you won't need to set this ACL
+    s3_client.upload_file(file_path, access_point_arn, file_key)
     
-    # Use the access point to upload the file instead of the bucket name
-    s3_client.upload_file(file_path, access_point_name, file_key, ExtraArgs={'ACL': 'public-read'})
-    
-    # Construct the object URL using the access point URL format
-    object_url = f"https://{access_point_name}.s3-accesspoint.us-east-1.amazonaws.com/{file_key}"
+    # The following URL assumes that the access point allows public access
+    # If it does not, this URL will not be valid and you would need to use presigned URLs or another method to access the file
+    object_url = f"https://{access_point_arn}.s3-accesspoint.us-east-1.amazonaws.com/{file_key}"
     return object_url
+
+# Your other code remains unchanged
+
+
 
 
 #def upload_to_s3(bucket_name, file_path):
@@ -74,8 +82,9 @@ def fetch_bill_details(bill_page_url):
             local_pdf_path = download_pdf(pdf_url)
             bill_details["pdf_path"] = local_pdf_path
 
-            # Replace 'ddp-bills-2' with the access point name provided by your boss
-            bill_details["billTextPath"] = upload_to_s3('ddp-bills-access', local_pdf_path)  # Adjust as needed
+            # No longer need to pass 'ddp-bills-access' as the function uses the hard-coded ARN
+            bill_details["billTextPath"] = upload_to_s3(local_pdf_path)  # Adjust as needed
+
 
 
     return bill_details
