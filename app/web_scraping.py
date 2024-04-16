@@ -6,21 +6,22 @@ import boto3
 from datetime import datetime
 
 def upload_to_s3(file_path):
-    s3_client = boto3.client('s3')
-    # Use the access point alias provided
-    access_point_alias = 'ddp-bills-access-x7404u3fp4fdtuscyp5fcyt5dyb91usela-s3alias'
+    s3_client = boto3.client('s3', region_name='us-east-1')
+    access_point_arn = 'arn:aws:s3:us-east-1:350941939790:accesspoint/ddp-bills-access'
     
     # Generate a unique file key using the current timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
     
-    # Use the access point alias to upload the file
-    # ACL 'public-read' has been removed; add it back if required and if the bucket policy allows it
-    s3_client.upload_file(file_path, access_point_alias, file_key)
+    # Use the access point ARN to upload the file
+    s3_client.upload_file(file_path, access_point_arn, file_key)
     
-    # Construct the object URL using the access point alias
-    object_url = f"https://{access_point_alias}.s3-accesspoint.us-east-1.amazonaws.com/{file_key}"
+    # Construct the object URL using the access point ARN. Note that the URL format may vary
+    # if the access point is configured with a VPC endpoint or if the bucket has a policy that
+    # restricts access based on the source IP or VPC.
+    object_url = f"https://{access_point_arn}.s3-accesspoint.us-east-1.amazonaws.com/{file_key}"
     return object_url
+
 
 
 
