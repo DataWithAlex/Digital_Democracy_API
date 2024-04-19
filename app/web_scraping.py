@@ -5,36 +5,36 @@ import re
 import boto3
 from datetime import datetime
 
-def upload_to_s3(file_path):
-    s3_client = boto3.client('s3', region_name='us-east-1')
-    access_point_arn = 'arn:aws:s3:us-east-1:350941939790:accesspoint/ddp-bills-access'
-    
-    # Generate a unique file key using the current timestamp
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
-    
-    # Use the access point ARN to upload the file
-    s3_client.upload_file(file_path, access_point_arn, file_key)
-    
-    # Construct the object URL using the access point ARN. Note that the URL format may vary
-    # if the access point is configured with a VPC endpoint or if the bucket has a policy that
-    # restricts access based on the source IP or VPC.
-    object_url = f"https://{access_point_arn}.s3-accesspoint.us-east-1.amazonaws.com/{file_key}"
-    return object_url
-
-
-
-
-
-
-#def upload_to_s3(bucket_name, file_path):
-#    s3_client = boto3.client('s3')
+#def upload_to_s3(file_path):
+#    s3_client = boto3.client('s3', region_name='us-east-1')
+#    access_point_arn = 'arn:aws:s3:us-east-1:350941939790:accesspoint/ddp-bills-access'
+#    
 #    # Generate a unique file key using the current timestamp
 #    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 #    file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
-#    s3_client.upload_file(file_path, bucket_name, file_key)  # Removed ExtraArgs
-#    object_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
+#    
+#    # Use the access point ARN to upload the file
+#    s3_client.upload_file(file_path, access_point_arn, file_key)
+#    
+#    # Construct the object URL using the access point ARN. Note that the URL format may vary
+#    # if the access point is configured with a VPC endpoint or if the bucket has a policy that
+#    # restricts access based on the source IP or VPC.
+#    object_url = f"https://{access_point_arn}.s3-accesspoint.us-east-1.amazonaws.com/{file_key}"
 #    return object_url
+
+
+
+
+
+
+def upload_to_s3(bucket_name, file_path):
+    s3_client = boto3.client('s3')
+    # Generate a unique file key using the current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
+    s3_client.upload_file(file_path, bucket_name, file_key)  # Removed ExtraArgs
+    object_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
+    return object_url
 
 def download_pdf(pdf_url, local_path="bill_text.pdf"):
     response = requests.get(pdf_url)
