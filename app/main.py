@@ -28,6 +28,11 @@ aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")  # Be careful with logging this
 aws_region = os.getenv("AWS_DEFAULT_REGION")
 
+logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
+logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
+logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
+
+
 if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
     logger.error("AWS credentials are not set correctly.")
 else:
