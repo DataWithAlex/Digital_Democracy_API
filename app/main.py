@@ -69,11 +69,7 @@ webflow_api = WebflowAPI(
 logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
 logger.info(f"WEBFLOW_COLLECTION_KEY: {os.getenv('WEBFLOW_COLLECTION_KEY')}")
 logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
-# Exception handlers
-@app.exception_handler(Exception)
-async def universal_exception_handler(request: Request, exc: Exception):
-    logging.error(f"Unhandled exception occurred: {exc}", exc_info=True)
-    return {"message": "An internal server error occurred."}
+
 
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
