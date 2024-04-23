@@ -23,15 +23,25 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # FastAPI app initialization
 app = FastAPI()
+# Check and log AWS credentials
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")  # Be careful with logging this
+aws_region = os.getenv("AWS_DEFAULT_REGION")
 
-# AWS S3 Client Configuration
+if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
+    logger.error("AWS credentials are not set correctly.")
+else:
+    logger.info("AWS credentials are set correctly.")
+
+# Initialize S3 client
 s3_client = boto3.client(
-    's3',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    region_name=os.getenv('AWS_DEFAULT_REGION')
+    "s3",
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+    region_name=aws_region
 )
-BUCKET_NAME = 'ddp-bills-2'  # Replace with your actual S3 bucket name
+
+BUCKET_NAME = "ddp-bills-2"  # Confirm this is the correct bucket name
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -85,21 +95,21 @@ logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
 @app.post("/upload-file/")
 async def upload_file():
-    file_path = 'test.txt'  # Path to the file to upload
+    file_path = 'test.txt'  # Confirm the file path is correct and accessible
     try:
-        # Upload the file to S3
-        s3_client.upload_file(Filename=file_path, Bucket=BUCKET_NAME, Key='test.txt')
-        return {"message": "File uploaded successfully"}
+        response = s3_client.upload_file(Filename=file_path, Bucket=BUCKET_NAME, Key='test.txt')
+        return {"message": "File uploaded successfully", "response": str(response)}
     except Exception as e:
+        logger.error(f"Failed to upload file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/delete-file/")
 async def delete_file():
     try:
-        # Delete the file from S3
-        s3_client.delete_object(Bucket=BUCKET_NAME, Key='test.txt')
-        return {"message": "File deleted successfully"}
+        response = s3_client.delete_object(Bucket=BUCKET_NAME, Key='test.txt')
+        return {"message": "File deleted successfully", "response": str(response)}
     except Exception as e:
+        logger.error(f"Failed to delete file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
