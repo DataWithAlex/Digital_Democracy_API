@@ -13,12 +13,25 @@ from .webflow import WebflowAPI
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from .logger_config import logger
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
+from sqlalchemy.orm import Session
+import boto3
+
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # FastAPI app initialization
 app = FastAPI()
+
+# AWS S3 Client Configuration
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.getenv('AWS_DEFAULT_REGION')
+)
+BUCKET_NAME = 'ddp-bills-2'  # Replace with your actual S3 bucket name
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -70,6 +83,24 @@ logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
 logger.info(f"WEBFLOW_COLLECTION_KEY: {os.getenv('WEBFLOW_COLLECTION_KEY')}")
 logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
+@app.post("/upload-file/")
+async def upload_file():
+    file_path = 'test.txt'  # Path to the file to upload
+    try:
+        # Upload the file to S3
+        s3_client.upload_file(Filename=file_path, Bucket=BUCKET_NAME, Key='test.txt')
+        return {"message": "File uploaded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/delete-file/")
+async def delete_file():
+    try:
+        # Delete the file from S3
+        s3_client.delete_object(Bucket=BUCKET_NAME, Key='test.txt')
+        return {"message": "File deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
