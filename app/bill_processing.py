@@ -12,6 +12,20 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+import re
+import boto3
+from datetime import datetime
+
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+import re
+import boto3
+from datetime import datetime
+import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -52,26 +66,30 @@ def fetch_bill_details(bill_page_url):
     """
     Fetches details of a bill from the Florida Senate Bill page.
     """
-    base_url = 'https://www.flsenate.gov'
-    response = requests.get(urljoin(base_url, bill_page_url))
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        bill_title_tag = soup.find('div', id='prevNextBillNav').find_next('h2')
-        bill_pdf_link = soup.find('a', class_='lnk_BillTextPDF')
-        
-        title = bill_title_tag.get_text(strip=True) if bill_title_tag else ''
-        gov_id = re.search(r"([A-Z]{2} \d+):", title).group(1) if title else ''
-        pdf_url = urljoin(base_url, bill_pdf_link['href']) if bill_pdf_link else ''
-        local_pdf_path = download_pdf(pdf_url)
-        s3_pdf_path = upload_to_s3(local_pdf_path)
+    try:
+        base_url = 'https://www.flsenate.gov'
+        response = requests.get(urljoin(base_url, bill_page_url))
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            bill_title_tag = soup.find('div', id='prevNextBillNav').find_next('h2')
+            bill_pdf_link = soup.find('a', class_='lnk_BillTextPDF')
+            
+            title = bill_title_tag.get_text(strip=True) if bill_title_tag else ''
+            gov_id = re.search(r"([A-Z]{2} \d+):", title).group(1) if title else ''
+            pdf_url = urljoin(base_url, bill_pdf_link['href']) if bill_pdf_link else ''
+            local_pdf_path = download_pdf(pdf_url)
+            s3_pdf_path = upload_to_s3(local_pdf_path)
 
-        return {
-            "title": title,
-            "govId": gov_id,
-            "pdf_path": s3_pdf_path
-        }
-    else:
-        raise Exception("Failed to fetch bill details due to HTTP error.")
+            return {
+                "title": title,
+                "govId": gov_id,
+                "pdf_path": s3_pdf_path
+            }
+        else:
+            raise Exception("Failed to fetch bill details due to HTTP error.")
+    except Exception as e:
+        logging.error(f"Error fetching bill details: {e}")
+        raise
 
 def generate_pros_and_cons(full_text, language='EN'):
     """
