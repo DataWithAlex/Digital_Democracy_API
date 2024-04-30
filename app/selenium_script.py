@@ -20,6 +20,8 @@ logging.basicConfig(level=logging.INFO)
 # Define logger
 logger = logging.getLogger(__name__)
 
+
+
 def split_pros_cons(text):
     # Regular expression pattern to match the numbered points
     pattern = r'\d+\)\s'
@@ -161,7 +163,16 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     # Now, construct the path to the image.png assuming it's in the same directory as this script
     image_path = os.path.join(script_directory, 'image.png')
 
-    logger.info(f"Uploading Image for Discussion {image_path}")
+    #import os
+
+    image_path = os.path.join(script_directory, 'image.png')
+
+    # Verify that the file exists before proceeding
+    if not os.path.exists(image_path):
+        logger.error(f"File not found at {image_path}")
+        return  # Exit or handle the missing file appropriately
+    else:
+        logger.info(f"File exists, proceeding with upload: {image_path}")
 
     # Locate the file input element which is likely hidden
     file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
