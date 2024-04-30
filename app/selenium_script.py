@@ -313,9 +313,22 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@aria-label, "Add a new con claim") and contains(@class, "hoverable")]')))
     next_button.click()
 
-    time.sleep(15)
-    share_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Share']")))
-    share_button.click()
+
+    # First, wait for the anchor element to be visible
+    share_link = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[contains(@class,'share-discussion-button')]")))
+
+    # Extract the URL from the 'href' attribute of the anchor tag
+    kialo_discussion_url = share_link.get_attribute('href')
+
+    # Print the URL to the console for verification
+    print("Navigating to Kialo Discussion URL:", kialo_discussion_url)
+
+    # Use the WebDriver to navigate to the extracted URL
+    driver.get(kialo_discussion_url)
+
+    #time.sleep(15)
+    #share_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Share']")))
+    #share_button.click()
 
     time.sleep(1)
     share_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Publish Discussion']")))
