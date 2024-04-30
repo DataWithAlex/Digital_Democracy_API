@@ -313,7 +313,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@aria-label, "Add a new con claim") and contains(@class, "hoverable")]')))
     next_button.click()
 
-    time.sleep(1)
+    time.sleep(15)
     share_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Share']")))
     share_button.click()
 
