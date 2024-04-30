@@ -1,79 +1,21 @@
-
-import openai
-from .dependencies import openai_api_key
 import os
-
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
-def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
-    """
-    Summarizes a given text using OpenAI's Chat Completion API.
-
-    :param text: The text to summarize.
-    :param model: The OpenAI model to use for summarization.
-    :return: A summary of the provided text.
-    """
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": "You are going to generate a 1-3 sentence response summarizing each page of a bill passed in the Florida senate. You will receive the raw text of each page."},
-            {"role": "user", "content": text}
-        ]
-    )
-    content = response['choices'][0]['message']['content']
-    return content
-
-
-def full_summarize_with_openai_chat(full_text, model="gpt-4-turbo-preview"):
-    """
-    Summarizes a given text using OpenAI's Chat Completion API.
-
-    :param text: The text to summarize.
-    :param model: The OpenAI model to use for summarization.
-    :return: A summary of the provided text.
-    """
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": "You are going to generate a 3-4 sentence response summarizing each page of a bill passed in the florida senate. You will recieve the raw text of each page. Do not include the title of the bills in the summary or the reference numbers. do not mention bill number either. dont include HB "},
-            {"role": "user", "content": f"Please summarize the following text:\n\n{full_text}"}
-        ]
-    )
-    summary = response['choices'][0]['message']['content']
-    return summary
-
-def full_summarize_with_openai_chat_spanish(full_text, model="gpt-4-turbo-preview"):
-    """
-    Summarizes a given text using OpenAI's Chat Completion API.
-
-    :param text: The text to summarize.
-    :param model: The OpenAI model to use for summarization.
-    :return: A summary of the provided text.
-    """
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": "Vas a generar una respuesta de 3 a 4 oraciones que resuma cada página de un proyecto de ley aprobado en el Senado de Florida. Recibirá el texto sin formato de cada página. No incluir el título de los proyectos de ley en el resumen ni los números de referencia. Tampoco menciones el número de factura. "},
-            {"role": "user", "content": f"Por favor resuma el siguiente texto:\n\n{full_text}"}
-        ]
-    )
-    summary = response['choices'][0]['message']['content']
-    return summary
-
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 import re
-import boto3
-from datetime import datetime
-
-import requests
-from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import re
-import boto3
 from datetime import datetime
 import logging
+import boto3
+import requests
+from bs4 import BeautifulSoup
+import fitz  # PyMuPDF
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+import openai
+
+# Configure OpenAI API key
+from .dependencies import openai_api_key
+openai.api_key = openai_api_key
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -146,32 +88,63 @@ def fetch_bill_details(bill_page_url):
         logging.error(f"Error fetching bill details: {e}")
         raise
 
-import fitz  # PyMuPDF
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-import openai
-from .dependencies import openai_api_key
-from .translation import translate_to_spanish
-import os
-import logging
+def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
+    """
+    Summarizes a given text using OpenAI's Chat Completion API.
+    :param text: The text to summarize.
+    :param model: The OpenAI model to use for summarization.
+    :return: A summary of the provided text.
+    """
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "You are going to generate a 1-3 sentence response summarizing each page of a bill passed in the Florida senate. You will receive the raw text of each page."},
+            {"role": "user", "content": text}
+        ]
+    )
+    content = response['choices'][0]['message']['content']
+    return content
 
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-import fitz  # PyMuPDF
-import os
+def full_summarize_with_openai_chat(full_text, model="gpt-4-turbo-preview"):
+    """
+    Summarizes a given text using OpenAI's Chat Completion API.
+    :param text: The text to summarize.
+    :param model: The OpenAI model to use for summarization.
+    :return: A summary of the provided text.
+    """
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "You are going to generate a 3-4 sentence response summarizing each page of a bill passed in the Florida senate. You will receive the raw text of each page. Do not include the title of the bills in the summary or the reference numbers. do not mention bill number either. dont include HB "},
+            {"role": "user", "content": f"Please summarize the following text:\n\n{full_text}"}
+        ]
+    )
+    summary = response['choices'][0]['message']['content']
+    return summary
 
-openai.api_key = openai_api_key
+def full_summarize_with_openai_chat_spanish(full_text, model="gpt-4-turbo-preview"):
+    """
+    Summarizes a given text using OpenAI's Chat Completion API.
+    :param text: The text to summarize.
+    :param model: The OpenAI model to use for summarization.
+    :return: A summary of the provided text.
+    """
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "Vas a generar una respuesta de 3 a 4 oraciones que resuma cada página de un proyecto de ley aprobado en el Senado de Florida. Recibirá el texto sin formato de cada página. No incluir el título de los proyectos de ley en el resumen ni los números de referencia. Tampoco menciones el número de factura. "},
+            {"role": "user", "content": f"Por favor resuma el siguiente texto:\n\n{full_text}"}
+        ]
+    )
+    summary = response['choices'][0]['message']['content']
+    return summary
 
 def generate_pros_and_cons(full_text):
     # Generate pros
     pros_response = openai.ChatCompletion.create(
         model="gpt-4-turbo-preview",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant designed to generate pros for supporting a bill based on its summary. You must specifically have 3 Pros, seperated by numbers--no exceptions. Numbers seperated as 1) 2) 3)"},
+            {"role": "system", "content": "You are a helpful assistant designed to generate pros for supporting a bill based on its summary. You must specifically have 3 Pros, separated by numbers--no exceptions. Numbers separated as 1) 2) 3)"},
             {"role": "user", "content": f"What are the pros of supporting this bill? make it no more than 2 sentences \n\n{full_text}"}
         ]
     )
@@ -181,7 +154,7 @@ def generate_pros_and_cons(full_text):
     cons_response = openai.ChatCompletion.create(
         model="gpt-4-turbo-preview",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant designed to generate cons against supporting a bill based on its summary. You must have specifically 3 Cons, seperated by numbers--no excpetions. Numbers seperated as 1) 2) 3)"},
+            {"role": "system", "content": "You are a helpful assistant designed to generate cons against supporting a bill based on its summary. You must have specifically 3 Cons, separated by numbers--no excpetions. Numbers separated as 1) 2) 3)"},
             {"role": "user", "content": f"What are the cons of supporting this bill? Make it no more than 2 sentences \n\n{full_text}"}
         ]
     )
