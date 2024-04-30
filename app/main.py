@@ -9,6 +9,8 @@ from .logger_config import logger
 import boto3
 from .bill_processing import fetch_bill_details, create_summary_pdf, generate_pros_and_cons
 from .selenium_script import run_selenium_script
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
 # FastAPI app initialization
 app = FastAPI()
