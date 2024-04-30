@@ -1,5 +1,4 @@
 # Import Selenium components
-# from test_selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -7,42 +6,13 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
-
-import os
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-#from selenium.webdriver.common.keys import 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 import time
-from selenium.webdriver.chrome.service import Service
-from selenium import webdriver
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import os
-
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 import re
 import logging
-
-# selenium_script.py
-# from .logger_config import get_logger
-#from .logger_config import logger
-from .logger_config import logger
-
-# Logging configuration
-logging.basicConfig(level=logging.INFO)
-
+import os
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -179,14 +149,24 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     next_button.click()
     logger.info("Next Page")
 
-    # File upload section
+    ### HERE we are in the file upload section
+
+    #import os
+
+    # Get the absolute path to the image file
+    #image_path = os.path.abspath('/Users/alexsciuto/Library/Mobile Documents/com~apple~CloudDocs/DataWithAlex/ddp-api/Digital_Democracy_API/image.png')
+    # Get the directory of the current script file. This works even if you run the script from a different directory
     script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Now, construct the path to the image.png assuming it's in the same directory as this script
     image_path = os.path.join(script_directory, 'image.png')
 
     logger.info(f"Uploading Image for Discussion {image_path}")
 
+    # Locate the file input element which is likely hidden
     file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
 
+    # Before interacting, make sure the input is interactable by removing any 'hidden' attributes or styles via JavaScript
     driver.execute_script("""
         arguments[0].style.height='1px';
         arguments[0].style.width='1px';
@@ -194,7 +174,12 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         arguments[0].removeAttribute('hidden');
     """, file_input)
 
+    logger.info(f"About to upload image")
+
+    # Now, send the file path to the file input element, this should open the file selector dialog and select the file
     file_input.send_keys(image_path)
+
+    logger.info(f"Uploaded Image")
 
     logger.info(f"About to upload image")
 
