@@ -12,20 +12,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import re
-import boto3
-from datetime import datetime
-
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import re
-import boto3
-from datetime import datetime
-import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -114,46 +100,59 @@ def generate_pros_and_cons(full_text, language='EN'):
 
     return pros, cons
 
-def create_summary_pdf(input_pdf_path, output_pdf_path, title):
+def create_summary_pdf(bill_page_url, output_pdf_path):
     """
     Creates a PDF summary of a bill.
     """
-    width, height = letter
-    styles = getSampleStyleSheet()
-    doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
-    story = []
+    try:
+        bill_details = fetch_bill_details(bill_page_url)
+        title = bill_details["title"]
+        pdf_url = bill_details["pdf_path"]
+        full_text_path = download_pdf(pdf_url)
+        
+        width, height = letter
+        styles = getSampleStyleSheet()
+        doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
+        story = []
 
-    # Add title
-    story.append(Paragraph(title, styles['Title']))
-    story.append(Spacer(1, 12))
+        # Add title
+        story.append(Paragraph(title, styles['Title']))
+        story.append(Spacer(1, 12))
 
-    # Extract text from PDF
-    full_text = ""
-    with fitz.open(input_pdf_path) as pdf:
-        for page in pdf:
-            full_text += page.get_text()
+        # Extract text from PDF
+        with fitz.open(full_text_path) as pdf:
+            full_text = ""
+            for page in pdf:
+                full_text += page.get_text()
 
-    summary, pros, cons = generate_pros_and_cons(full_text)
+        summary, pros, cons = generate_pros_and_cons(full_text)
 
-    # Add content to the document
-    story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
-    story.append(Spacer(1, 12))
+        # Add content to the document
+        story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
+        story.append(Spacer(1, 12))
 
-    # Creating a table for pros and cons
-    data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
-    col_widths = [width * 0.45, width * 0.45]
-    t = Table(data, colWidths=col_widths)
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
-    ]))
-    story.append(t)
+        # Creating a table for pros and cons
+        data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
+        col_widths = [width * 0.45, width * 0.45]
+        t = Table(data, colWidths=col_widths)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+            ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ]))
+        story.append(t)
 
-    # Build the PDF
-    doc.build(story)
+        # Build the PDF
+        doc.build(story)
+        logging.info(f"Summary PDF created at {output_pdf_path}")
 
-    return os.path.abspath(output_pdf_path), summary, pros, cons
+    except Exception as e:
+        logging.error(f"Error creating summary PDF: {e}")
+        raise
+
+# Example usage
+bill_page_url = "/Session/Bill/2022/1468"
+create_summary_pdf(bill_page_url, "bill_summary.pdf")
