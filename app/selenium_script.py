@@ -1,4 +1,5 @@
 # Import Selenium components
+# from test_selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -6,13 +7,42 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+
+import os
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+#from selenium.webdriver.common.keys import 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 import time
+from selenium.webdriver.chrome.service import Service
+from selenium import webdriver
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import os
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 import re
 import logging
-import os
+
+# selenium_script.py
+# from .logger_config import get_logger
+#from .logger_config import logger
+from .logger_config import logger
+
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -67,7 +97,6 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
         logger.info("Chrome options: --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080 --remote-debugging-port=9222 --disable-extensions --disable-setuid-sandbox --disable-infobars confirmed")
 
-        # Update the path to where your ChromeDriver is located
         service = Service(executable_path="/usr/local/bin/chromedriver")
         driver = webdriver.Chrome(service=service, options=chrome_options)
 
