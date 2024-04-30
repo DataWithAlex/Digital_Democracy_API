@@ -163,16 +163,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     # Now, construct the path to the image.png assuming it's in the same directory as this script
     image_path = os.path.join(script_directory, 'image.png')
 
-    #import os
-
-    image_path = os.path.join(script_directory, 'image.png')
-
-    # Verify that the file exists before proceeding
-    if not os.path.exists(image_path):
-        logger.error(f"File not found at {image_path}")
-        return  # Exit or handle the missing file appropriately
-    else:
-        logger.info(f"File exists, proceeding with upload: {image_path}")
+    logger.info(f"Uploading Image for Discussion {image_path}")
 
     # Locate the file input element which is likely hidden
     file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
@@ -192,14 +183,19 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
     logger.info(f"Uploaded Image")
 
-    logger.info(f"About to upload image")
+    # Some applications rely on change events to detect when a file has been selected
+    # Trigger the change event just in case the application needs it
+    driver.execute_script("arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }));", file_input)
 
-    file_input.send_keys(Keys.ENTER)
-
+    # If there is a button that needs to be clicked to finalize the upload after the file is selected, do that here.
+    # You mentioned the aria-label contains "Drag and drop or click" for the upload element,
+    # so if needed, find that element and click it to initiate the upload.
     upload_button = driver.find_element(By.XPATH, "//button[contains(@aria-label, 'Drag and drop or click')]")
     upload_button.click()
 
-    logger.info(f"Uploaded Image")
+    # Note: The final click on the 'upload_button' might not be necessary if the application starts uploading immediately after the file selection.
+
+    ###
 
     tags_input_field = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input.pill-editor-input")))
     tags_input_field.clear()
