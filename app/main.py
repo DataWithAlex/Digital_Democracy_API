@@ -3,18 +3,26 @@ import logging
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
-from .models import BillRequest, Bill, BillMeta
-from .webflow import WebflowAPI
-from .logger_config import logger
-import boto3
-from .bill_processing import fetch_bill_details, create_summary_pdf, generate_pros_and_cons
+from .bill_processing import fetch_bill_details
+from .bill_processing import create_summary_pdf, create_summary_pdf_spanish
+from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
+from .models import BillRequest, Bill, BillMeta
+import openai
+from .webflow import WebflowAPI
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from .logger_config import logger
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
+from sqlalchemy.orm import Session
+import boto3
+
+
+# Set OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # FastAPI app initialization
 app = FastAPI()
-
 # Check and log AWS credentials
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")  # Be careful with logging this
@@ -23,6 +31,7 @@ aws_region = os.getenv("AWS_DEFAULT_REGION")
 logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
 logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
 logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
+
 
 if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
     logger.error("AWS credentials are not set correctly.")
@@ -51,6 +60,15 @@ def get_db():
     finally:
         logger.info("Closing database connection")
         db.close()
+
+# Depnoti
+
+# Database connection details
+#db_host = 'ddp-api.czqcac8oivov.us-east-1.rds.amazonaws.com'
+#db_name = 'digital_democracy'
+#db_user = 'DataWithAlex'
+#db_password = '%Mineguy29'
+#db_port = 3306
 
 # Database connection details
 db_host = os.getenv('DB_HOST')
@@ -99,9 +117,7 @@ async def delete_file():
         logger.error(f"Failed to delete file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Process bill request
-@app.post("/process-bill/", response_class=Response)
-async def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
+def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
         # Fetch bill details
@@ -114,20 +130,17 @@ async def process_bill_request(bill_request: BillRequest, db: Session = Depends(
             logger.info(f"{key}: {value}")
 
         # Ensure required keys are in bill_details
-        if not all(k in bill_details for k in ["govId", "pdf_path"]):
+        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
         # Check language and generate PDF accordingly
         if bill_request.lan == "es":
-            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
+            pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
         else:
             pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
 
-        # Generate pros and cons
-        pros, cons = generate_pros_and_cons(summary)
-
         # Insert bill details into the database
-        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["pdf_path"])
+        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
         db.add(new_bill)
         db.commit()
 
@@ -171,6 +184,85 @@ async def process_bill_request(bill_request: BillRequest, db: Session = Depends(
     except Exception as e:
         db.rollback()
         logging.error(f"An error occurred: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+from fastapi.responses import JSONResponse  # Import JSONResponse
+
+# Exception handlers
+@app.exception_handler(Exception)
+async def universal_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception occurred: {exc}", exc_info=True)
+    return {"message": "An internal server error occurred."}
+
+def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
+    logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
+    try:
+        # Fetch bill details
+        logger.info(f"About to run fetch_bill_details() with url: {bill_request.url}")
+        bill_details = fetch_bill_details(bill_request.url)
+
+        # Log all the values in bill_details
+        logger.info("Bill details:")
+        for key, value in bill_details.items():
+            logger.info(f"{key}: {value}")
+
+        # Ensure required keys are in bill_details
+        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
+            raise HTTPException(status_code=500, detail="Required bill details are missing.")
+
+        # Check language and generate PDF accordingly
+        if bill_request.lan == "es":
+            pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
+        else:
+            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+
+        # Insert bill details into the database
+        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
+        db.add(new_bill)
+        db.commit()
+
+        # Insert summary, pros, and cons into bill_meta
+        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=bill_request.lan.upper())
+            db.add(new_meta)
+        db.commit()
+
+        logger.info("About to run Selenium script")
+        # Run the Selenium script after generating the summary
+        kialo_url = run_selenium_script(
+            title=bill_details['govId'],
+            summary=summary,
+            pros_text=pros,
+            cons_text=cons
+        )
+        logger.info("Finished running Selenium script")
+        logger.info(f"Kialo URL: {kialo_url}")
+
+        # Update bill_details with summary for Webflow item creation
+        bill_details['description'] = summary  # Update description with summary
+        logger.info(f"Summary for Webflow: {summary}")
+
+        logger.info("Creating Webflow item")
+        # Now, create a Webflow CMS item with the returned details
+        webflow_item_id = webflow_api.create_collection_item(bill_request.url, bill_details, kialo_url)
+        #webflow_item_id = webflow_api.create_collection_item(bill_details, kialo_url, bill_url=bill_request.url)
+
+        # Check if PDF was successfully created
+        if pdf_path and os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as pdf_file:
+                return Response(content=pdf_file.read(), media_type="application/pdf")
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate PDF")
+
+    except HTTPException as http_exc:
+        db.rollback()
+        logger.error(f"HTTP exception occurred: {http_exc}", exc_info=True)
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"An error occurred: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
