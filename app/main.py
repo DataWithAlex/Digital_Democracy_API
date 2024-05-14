@@ -226,6 +226,7 @@ async def process_federal_bill(session: str, bill: str, lan: str = "en", db: Ses
     finally:
         db.close()
 
+
 # Update bill
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)):

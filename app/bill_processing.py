@@ -77,21 +77,30 @@ def fetch_bill_details(bill_page_url):
 
 # Function to fetch federal bill details
 def fetch_federal_bill_details(session, bill):
-    url = f'https://www.congress.gov/{session}/bills/{bill}/BILLS-{session}{bill}ih.xml'
-    response = requests.get(url)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.content, 'html.parser')
-    bill_text = soup.get_text()
+    try:
+        url = f'https://www.congress.gov/{session}/bills/{bill}/BILLS-{session}{bill}ih.xml'
+        response = requests.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, 'html.parser')
+        bill_text = soup.get_text()
 
-    # Assume some logic to extract title and other details from the soup
-    bill_details = {
-        "title": "Extracted Title",
-        "description": "Extracted Description",
-        "full_text": bill_text,
-        "govId": f"{session}_{bill}",
-        "billTextPath": upload_to_s3('ddp-bills-2', 'temp_path_for_federal_bill.txt')  # Placeholder for actual file path
-    }
-    return bill_details
+        # Extracting title for the sake of the example
+        title = soup.find('title').get_text() if soup.find('title') else "No title available"
+        description = "No description available"
+
+        # Assume some logic to extract title and other details from the soup
+        bill_details = {
+            "title": title,
+            "description": description,
+            "full_text": bill_text,
+            "govId": f"{session}_{bill}",
+            "billTextPath": upload_to_s3('ddp-bills-2', 'temp_path_for_federal_bill.txt')  # Placeholder for actual file path
+        }
+        return bill_details
+    except Exception as e:
+        logging.error(f"Failed to fetch federal bill details: {e}")
+        raise
+
 
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
