@@ -88,18 +88,27 @@ def fetch_federal_bill_details(session, bill):
         title = soup.find('title').get_text() if soup.find('title') else "No title available"
         description = "No description available"
 
-        # Assume some logic to extract title and other details from the soup
+        # Create a local file with the extracted bill text
+        local_file_path = 'temp_path_for_federal_bill.txt'
+        with open(local_file_path, 'w', encoding='utf-8') as file:
+            file.write(bill_text)
+
+        # Upload the local file to S3
+        bill_text_path = upload_to_s3('ddp-bills-2', local_file_path)
+
+        # Construct bill details dictionary
         bill_details = {
             "title": title,
             "description": description,
             "full_text": bill_text,
             "govId": f"{session}_{bill}",
-            "billTextPath": upload_to_s3('ddp-bills-2', 'temp_path_for_federal_bill.txt')  # Placeholder for actual file path
+            "billTextPath": bill_text_path
         }
         return bill_details
     except Exception as e:
         logging.error(f"Failed to fetch federal bill details: {e}")
         raise
+
 
 
 # Function to summarize text with OpenAI
