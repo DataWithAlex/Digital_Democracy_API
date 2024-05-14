@@ -262,4 +262,68 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
 
     return os.path.abspath(output_pdf_path), summary_es, pros_es, cons_es
 
-# Additional functions for federal bill processing can be added here following similar patterns
+# Function to create federal summary PDF
+def create_federal_summary_pdf(full_text, output_pdf_path, title):
+    width, height = letter
+    styles = getSampleStyleSheet()
+    doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
+    story = []
+
+    story.append(Paragraph(title, styles['Title']))
+    story.append(Spacer(1, 12))
+
+    summary = full_summarize_with_openai_chat(full_text)
+    pros, cons = generate_pros_and_cons(full_text)
+
+    story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
+    story.append(Spacer(1, 12))
+
+    data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
+    col_widths = [width * 0.45, width * 0.45]
+    t = Table(data, colWidths=col_widths)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+    ]))
+    story.append(t)
+
+    doc.build(story)
+
+    return os.path.abspath(output_pdf_path), summary, pros, cons
+
+# Function to create federal summary PDF in Spanish
+def create_federal_summary_pdf_spanish(full_text, output_pdf_path, title):
+    width, height = letter
+    styles = getSampleStyleSheet()
+    doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
+    story = []
+
+    story.append(Paragraph(title, styles['Title']))
+    story.append(Spacer(1, 12))
+
+    summary = full_summarize_with_openai_chat_spanish(full_text)
+    pros, cons = generate_pros_and_cons_spanish(full_text)
+
+    story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
+    story.append(Spacer(1, 12))
+
+    data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
+    col_widths = [width * 0.45, width * 0.45]
+    t = Table(data, colWidths=col_widths)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+    ]))
+    story.append(t)
+
+    doc.build(story)
+
+    return os.path.abspath(output_pdf_path), summary, pros, cons
