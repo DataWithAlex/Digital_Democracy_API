@@ -47,6 +47,13 @@ def download_pdf(pdf_url, local_path="bill_text.pdf"):
         logging.error(f"Error downloading PDF: {e}")
         raise
 
+def scrape_bill_text(session, bill):
+    url = f'https://www.congress.gov/{session}/bills/{bill}/BILLS-{session}{bill}ih.xml'
+    response = requests.get(url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, 'html.parser')
+    return soup.get_text()
+
 def fetch_bill_details(bill_page_url):
     """
     Fetches details of a bill from the Florida Senate Bill page and downloads its PDF.
@@ -57,14 +64,6 @@ def fetch_bill_details(bill_page_url):
         base_url = 'https://www.flsenate.gov'
         response = requests.get(urljoin(base_url, bill_page_url))
         bill_details = {"title": "", "description": "", "pdf_path": "", "govId": "", "billTextPath": ""}
-
-        bill_details = {
-            "title": "",
-            "description": "",
-            "pdf_path": "",
-            "govId": "",  # govId extracted from title
-            "billTextPath": ""  # URL of the uploaded file on S3
-        }
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -88,13 +87,41 @@ def fetch_bill_details(bill_page_url):
         logging.error(f"Error fetching bill details: {e}")
         raise
 
+def fetch_federal_bill_details(session, bill):
+    """
+    Fetches details of a federal bill from the Congress.gov page and processes its XML content.
+    :param session: Congress session number.
+    :param bill: Bill identifier (e.g., hr8014).
+    :return: A dictionary containing the bill title, description, full text, govId, and billTextPath.
+    """
+    try:
+        bill_details = {"title": "", "description": "", "full_text": "", "govId": "", "billTextPath": ""}
+
+        full_text = scrape_bill_text(session, bill)
+        bill_details["full_text"] = full_text
+
+        # Extract title and govId from the full text
+        title_match = re.search(r"<title>(.*?)</title>", full_text, re.IGNORECASE)
+        if title_match:
+            bill_details["title"] = title_match.group(1).strip()
+            gov_id_match = re.search(r"([A-Z]{2} \d+):", bill_details["title"])
+            if gov_id_match:
+                bill_details["govId"] = gov_id_match.group(1)
+
+        # Save the full text to a local file
+        local_text_path = f"bill_text_{session}_{bill}.txt"
+        with open(local_text_path, 'w') as file:
+            file.write(full_text)
+
+        # Upload the text file to S3
+        bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_text_path)
+
+        return bill_details
+    except Exception as e:
+        logging.error(f"Error fetching federal bill details: {e}")
+        raise
+
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
-    """
-    Summarizes a given text using OpenAI's Chat Completion API.
-    :param text: The text to summarize.
-    :param model: The OpenAI model to use for summarization.
-    :return: A summary of the provided text.
-    """
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -106,12 +133,6 @@ def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
     return content
 
 def full_summarize_with_openai_chat(full_text, model="gpt-4-turbo-preview"):
-    """
-    Summarizes a given text using OpenAI's Chat Completion API.
-    :param text: The text to summarize.
-    :param model: The OpenAI model to use for summarization.
-    :return: A summary of the provided text.
-    """
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -123,12 +144,6 @@ def full_summarize_with_openai_chat(full_text, model="gpt-4-turbo-preview"):
     return summary
 
 def full_summarize_with_openai_chat_spanish(full_text, model="gpt-4-turbo-preview"):
-    """
-    Summarizes a given text using OpenAI's Chat Completion API.
-    :param text: The text to summarize.
-    :param model: The OpenAI model to use for summarization.
-    :return: A summary of the provided text.
-    """
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -154,7 +169,7 @@ def generate_pros_and_cons(full_text):
     cons_response = openai.ChatCompletion.create(
         model="gpt-4-turbo-preview",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant designed to generate cons against supporting a bill based on its summary. You must have specifically 3 Cons, separated by numbers--no excpetions. Numbers separated as 1) 2) 3)"},
+            {"role": "system", "content": "You are a helpful assistant designed to generate cons against supporting a bill based on its summary. You must have specifically 3 Cons, separated by numbers--no exceptions. Numbers separated as 1) 2) 3)"},
             {"role": "user", "content": f"What are the cons of supporting this bill? Make it no more than 2 sentences \n\n{full_text}"}
         ]
     )
@@ -230,7 +245,8 @@ def create_summary_pdf(input_pdf_path, output_pdf_path, title):
 
     return os.path.abspath(output_pdf_path), summary, pros, cons
 
-def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
+
+def create_federal_summary_pdf(full_text, output_pdf_path, title):
     width, height = letter
     styles = getSampleStyleSheet()
     doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
@@ -240,36 +256,19 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
     story.append(Paragraph(title, styles['Title']))
     story.append(Spacer(1, 12))
 
-    # Extract full text from the PDF
-    full_text = ""
-    with fitz.open(input_pdf_path) as pdf:
-        for page_num in range(len(pdf)):
-            page = pdf[page_num]
-            text = page.get_text()
-            full_text += text + " "
-
-    if not full_text.strip():
-        logging.error("No text extracted from PDF for translation.")
-        return None
-
-    # Generate the summary, pros, and cons in Spanish
+    # Generate the summary, pros, and cons
     summary = full_summarize_with_openai_chat(full_text)
-    summary_es = translate_to_spanish(summary)
     pros, cons = generate_pros_and_cons(full_text)
-    pros_es = translate_to_spanish(pros)
-    cons_es = translate_to_spanish(cons)
 
-    # Add the Spanish summary, pros, and cons to the document
-    story.append(Paragraph(f"<b>Summary:</b><br/>{summary_es}", styles['Normal']))
+    # Add summary, pros, and cons to the document
+    story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
     story.append(Spacer(1, 12))
 
-    # Define the column widths for the table
+    # Creating a table for pros and cons
+    data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
     col_widths = [width * 0.45, width * 0.45]
-
-    # Creating a table for Spanish pros and cons
-    data_es = [['Cons', 'Pros'], [Paragraph(cons_es, styles['Normal']), Paragraph(pros_es, styles['Normal'])]]
-    t_es = Table(data_es, colWidths=col_widths)
-    t_es.setStyle(TableStyle([
+    t = Table(data, colWidths=col_widths)
+    t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), colors.grey),
         ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -277,11 +276,9 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
         ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
         ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
     ]))
-
-    # Append the table to the story
-    story.append(t_es)
+    story.append(t)
 
     # Build the PDF document
     doc.build(story)
 
-    return os.path.abspath(output_pdf_path), summary_es, pros_es, cons_es
+    return os.path.abspath(output_pdf_path), summary, pros, cons
