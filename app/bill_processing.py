@@ -26,7 +26,7 @@ def upload_to_s3(bucket_name, file_path):
     try:
         s3_client = boto3.client('s3')
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
+        file_key = f"bill_details/{timestamp}_{os.path.basename(file_path)}"
         s3_client.upload_file(file_path, bucket_name, file_key, ExtraArgs={'ACL': 'public-read'})
         object_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
         logging.info(f"Uploaded {file_path} to {object_url}")
@@ -39,7 +39,7 @@ def upload_to_s3(bucket_name, file_path):
 def download_pdf(pdf_url, local_path="bill_text.pdf"):
     try:
         response = requests.get(pdf_url)
-        if response.status_code == 200:
+        if (response.status_code == 200):
             with open(local_path, 'wb') as file:
                 file.write(response.content)
             logging.info(f"Downloaded PDF from {pdf_url} to {local_path}")
@@ -81,8 +81,18 @@ def fetch_federal_bill_details(session, bill):
         url = f'https://www.congress.gov/{session}/bills/{bill}/BILLS-{session}{bill}ih.xml'
         response = requests.get(url)
         response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
+        soup = BeautifulSoup(response.content, 'html.parser', features="xml")
         bill_text = soup.get_text()
+
+        # Save the bill text to a local file
+        temp_file_path = f'temp_federal_bill_{session}_{bill}.txt'
+        logging.info(f"Writing federal bill text to {temp_file_path}")
+        with open(temp_file_path, 'w') as file:
+            file.write(bill_text)
+        
+        # Ensure the file was written successfully
+        if not os.path.exists(temp_file_path):
+            raise Exception(f"File {temp_file_path} was not created successfully.")
 
         # Extracting title for the sake of the example
         title = soup.find('title').get_text() if soup.find('title') else "No title available"
@@ -94,13 +104,17 @@ def fetch_federal_bill_details(session, bill):
             "description": description,
             "full_text": bill_text,
             "govId": f"{session}_{bill}",
-            "billTextPath": upload_to_s3('ddp-bills-2', 'temp_path_for_federal_bill.txt')  # Placeholder for actual file path
+            "billTextPath": upload_to_s3('ddp-bills-2', temp_file_path)  # Upload the actual file path
         }
+        
+        # Remove the temporary file after uploading to S3
+        logging.info(f"Removing temporary file {temp_file_path}")
+        os.remove(temp_file_path)
+        
         return bill_details
     except Exception as e:
         logging.error(f"Failed to fetch federal bill details: {e}")
         raise
-
 
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
@@ -270,69 +284,3 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
     doc.build(story)
 
     return os.path.abspath(output_pdf_path), summary_es, pros_es, cons_es
-
-# Function to create federal summary PDF
-def create_federal_summary_pdf(full_text, output_pdf_path, title):
-    width, height = letter
-    styles = getSampleStyleSheet()
-    doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
-    story = []
-
-    story.append(Paragraph(title, styles['Title']))
-    story.append(Spacer(1, 12))
-
-    summary = full_summarize_with_openai_chat(full_text)
-    pros, cons = generate_pros_and_cons(full_text)
-
-    story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
-    story.append(Spacer(1, 12))
-
-    data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
-    col_widths = [width * 0.45, width * 0.45]
-    t = Table(data, colWidths=col_widths)
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
-    ]))
-    story.append(t)
-
-    doc.build(story)
-
-    return os.path.abspath(output_pdf_path), summary, pros, cons
-
-# Function to create federal summary PDF in Spanish
-def create_federal_summary_pdf_spanish(full_text, output_pdf_path, title):
-    width, height = letter
-    styles = getSampleStyleSheet()
-    doc = SimpleDocTemplate(output_pdf_path, pagesize=letter)
-    story = []
-
-    story.append(Paragraph(title, styles['Title']))
-    story.append(Spacer(1, 12))
-
-    summary = full_summarize_with_openai_chat_spanish(full_text)
-    pros, cons = generate_pros_and_cons_spanish(full_text)
-
-    story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
-    story.append(Spacer(1, 12))
-
-    data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
-    col_widths = [width * 0.45, width * 0.45]
-    t = Table(data, colWidths=col_widths)
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
-    ]))
-    story.append(t)
-
-    doc.build(story)
-
-    return os.path.abspath(output_pdf_path), summary, pros, cons
