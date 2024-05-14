@@ -178,7 +178,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         driver.get(new_url)
 
         time.sleep(1)
-        bill_summary_ = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H")]')))
+        bill_summary_ = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H") or contains(text(), "Test")]')))
         bill_summary_.clear()
         bill_summary_.send_keys(bill_summary_text)
 
