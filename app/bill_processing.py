@@ -1,5 +1,3 @@
-# bill_processing.py
-
 import os
 import re
 from urllib.parse import urljoin
@@ -13,6 +11,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from .translation import translate_to_spanish
 import openai
 
 # Ensure that the OpenAI API key is set
@@ -75,6 +74,24 @@ def fetch_bill_details(bill_page_url):
         return bill_details
     else:
         raise Exception("Failed to fetch bill details due to HTTP error.")
+
+# Function to fetch federal bill details
+def fetch_federal_bill_details(session, bill):
+    url = f'https://www.congress.gov/{session}/bills/{bill}/BILLS-{session}{bill}ih.xml'
+    response = requests.get(url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, 'html.parser')
+    bill_text = soup.get_text()
+
+    # Assume some logic to extract title and other details from the soup
+    bill_details = {
+        "title": "Extracted Title",
+        "description": "Extracted Description",
+        "full_text": bill_text,
+        "govId": f"{session}_{bill}",
+        "billTextPath": upload_to_s3('ddp-bills-2', 'temp_path_for_federal_bill.txt')  # Placeholder for actual file path
+    }
+    return bill_details
 
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
@@ -217,16 +234,11 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
         logging.error("No text extracted from PDF for translation.")
         return None
 
-    #summary = full_summarize_with_openai_chat(full_text)
     summary = full_summarize_with_openai_chat(full_text)
-    #summary_es = translate_to_spanish(summary)
-    summary_es = summary
-    #pros, cons = generate_pros_and_cons(full_text)
-    pros, cons = "s"
-    #pros_es = translate_to_spanish(pros)
-    pros_es = "s"
-    #cons_es = translate_to_spanish(cons)
-    cons_es = "s"
+    summary_es = translate_to_spanish(summary)
+    pros, cons = generate_pros_and_cons(full_text)
+    pros_es = translate_to_spanish(pros)
+    cons_es = translate_to_spanish(cons)
 
     story.append(Paragraph(f"<b>Summary:</b><br/>{summary_es}", styles['Normal']))
     story.append(Spacer(1, 12))
@@ -251,4 +263,3 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
     return os.path.abspath(output_pdf_path), summary_es, pros_es, cons_es
 
 # Additional functions for federal bill processing can be added here following similar patterns
-
