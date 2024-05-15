@@ -88,8 +88,8 @@ def fetch_federal_bill_details(session, bill):
         if not response.content:
             raise ValueError("Empty response from Congress.gov")
 
-        # Use xml parser
-        soup = BeautifulSoup(response.content, 'xml')
+        # Use lxml-xml parser
+        soup = BeautifulSoup(response.content, 'lxml-xml')
         bill_text = soup.get_text()
 
         # Extracting title for the sake of the example
@@ -122,6 +122,7 @@ def fetch_federal_bill_details(session, bill):
     except Exception as e:
         logging.error(f"Failed to fetch federal bill details: {e}")
         raise
+
 
 
 
