@@ -76,11 +76,17 @@ def fetch_bill_details(bill_page_url):
         raise Exception("Failed to fetch bill details due to HTTP error.")
 
 # Function to fetch federal bill details
+# Function to fetch federal bill details
 def fetch_federal_bill_details(session, bill):
     try:
         url = f'https://www.congress.gov/{session}/bills/{bill}/BILLS-{session}{bill}ih.xml'
         response = requests.get(url)
         response.raise_for_status()
+        
+        # Check if response content is empty
+        if not response.content:
+            raise ValueError("Empty response from Congress.gov")
+
         soup = BeautifulSoup(response.content, 'html.parser')
         bill_text = soup.get_text()
 
@@ -105,9 +111,16 @@ def fetch_federal_bill_details(session, bill):
             "billTextPath": bill_text_path
         }
         return bill_details
+    except requests.exceptions.HTTPError as http_err:
+        logging.error(f"HTTP error occurred: {http_err}")
+        raise
+    except ValueError as val_err:
+        logging.error(f"Value error occurred: {val_err}")
+        raise
     except Exception as e:
         logging.error(f"Failed to fetch federal bill details: {e}")
         raise
+
 
 
 
