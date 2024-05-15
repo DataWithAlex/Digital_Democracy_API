@@ -77,6 +77,7 @@ def fetch_bill_details(bill_page_url):
 
 # Function to fetch federal bill details
 # Function to fetch federal bill details
+# Function to fetch federal bill details
 def fetch_federal_bill_details(session, bill):
     try:
         url = f'https://www.congress.gov/{session}/bills/{bill}/BILLS-{session}{bill}ih.xml'
@@ -87,7 +88,8 @@ def fetch_federal_bill_details(session, bill):
         if not response.content:
             raise ValueError("Empty response from Congress.gov")
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+        # Use lxml parser for XML parsing
+        soup = BeautifulSoup(response.content, 'lxml-xml')
         bill_text = soup.get_text()
 
         # Extracting title for the sake of the example
@@ -120,6 +122,7 @@ def fetch_federal_bill_details(session, bill):
     except Exception as e:
         logging.error(f"Failed to fetch federal bill details: {e}")
         raise
+
 
 
 
