@@ -8,7 +8,7 @@ import openai
 from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
-from .models import BillRequest, Bill, BillMeta, FormData, Base
+from .models import BillRequest, Bill, BillMeta, FormData, FormRequest  # Ensure FormRequest is imported
 from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
@@ -47,6 +47,16 @@ BUCKET_NAME = "ddp-bills-2"  # Confirm this is the correct bucket name
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
+# Dependency: Database connection
+def get_db():
+    logger.info("Establishing database connection")
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        logger.info("Closing database connection")
+        db.close()
+
 # Database connection details
 db_host = os.getenv('DB_HOST')
 db_name = os.getenv('DB_NAME')
@@ -63,19 +73,6 @@ logger.info(f"DB_PORT: {db_port}")
 # SQLAlchemy engine and session maker
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Ensure the tables are created
-Base.metadata.create_all(engine)
-
-# Dependency: Database connection
-def get_db():
-    logger.info("Establishing database connection")
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        logger.info("Closing database connection")
-        db.close()
 
 # Initialize WebflowAPI
 webflow_api = WebflowAPI(
