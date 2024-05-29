@@ -251,61 +251,70 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
     finally:
         db.close()
 
-# Update bill
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
 
     logger.info(f"Starting update-bill() for bill: {history_value}")
 
-    # Check if the history value exists
-    existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
-    if existing_bill:
-        logger.info(f"Bill with history {history_value} already exists. Process not run.")
-    else:
-        bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
-        bill_details = fetch_bill_details(bill_url)
-        logger.info(f"Obtained bill details for: {bill_url}")
+    try:
+        # Check if the history value exists
+        existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
+        if existing_bill:
+            logger.info(f"Bill with history {history_value} already exists. Process not run.")
+        else:
+            bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
+            bill_details = fetch_bill_details(bill_url)
+            logger.info(f"Obtained bill details for: {bill_url}")
 
-        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
-            raise HTTPException(status_code=500, detail="Required bill details are missing.")
+            if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
+                raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
-        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"], history=history_value)
-        db.add(new_bill)
-        db.commit()
+            new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"], history=history_value)
+            db.add(new_bill)
+            db.commit()
 
-        pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
-        logger.info("Generated Summary")
+            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+            logger.info("Generated Summary")
 
-        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
-            db.add(new_meta)
-        db.commit()
+            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
+                db.add(new_meta)
+            db.commit()
 
-        logger.info("Running Selenium script")
-        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+            logger.info("Running Selenium script")
+            kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
-        logger.info("Creating Webflow item")
-        webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
-        webflow_url = f"https://digitaldemocracyproject.org/bills-copy/{slug}"
+            logger.info("Creating Webflow item")
+            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
+            webflow_url = f"https://digitaldemocracyproject.org/bills-copy/{slug}"
 
-        new_bill.webflow_link = webflow_url
-        db.commit()
+            new_bill.webflow_link = webflow_url
+            db.commit()
 
-    # Save form data to the database
-    save_form_data(
-        name=request.name,
-        email=request.email,
-        member_organization=request.member_organization,
-        year=request.year,
-        legislation_type="Florida Bills",
-        session="N/A",
-        bill_number=request.bill_number,
-        bill_type=bill_details['govId'].split(" ")[0],  # Assuming bill type is part of govId
-        support=request.support,
-        govId=bill_details["govId"],
-        db=db
-    )
+        # Save form data to the database
+        save_form_data(
+            name=request.name,
+            email=request.email,
+            member_organization=request.member_organization,
+            year=request.year,
+            legislation_type="Florida Bills",
+            session="N/A",
+            bill_number=request.bill_number,
+            bill_type=bill_details['govId'].split(" ")[0],  # Assuming bill type is part of govId
+            support=request.support,
+            govId=bill_details["govId"],
+            db=db
+        )
+
+    except HTTPException as http_exc:
+        logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
+        raise http_exc
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
 
