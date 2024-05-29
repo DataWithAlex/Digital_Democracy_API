@@ -1,20 +1,18 @@
 import os
 import logging
-from fastapi import FastAPI, HTTPException, Request, Response, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
 import openai
 from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish
-
-
-from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
-from .models import BillRequest, Bill, BillMeta
+from .models import BillRequest, Bill, BillMeta, FormData, Base
 from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
+import datetime
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -49,16 +47,6 @@ BUCKET_NAME = "ddp-bills-2"  # Confirm this is the correct bucket name
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
-# Dependency: Database connection
-def get_db():
-    logger.info("Establishing database connection")
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        logger.info("Closing database connection")
-        db.close()
-
 # Database connection details
 db_host = os.getenv('DB_HOST')
 db_name = os.getenv('DB_NAME')
@@ -75,6 +63,19 @@ logger.info(f"DB_PORT: {db_port}")
 # SQLAlchemy engine and session maker
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Ensure the tables are created
+Base.metadata.create_all(engine)
+
+# Dependency: Database connection
+def get_db():
+    logger.info("Establishing database connection")
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        logger.info("Closing database connection")
+        db.close()
 
 # Initialize WebflowAPI
 webflow_api = WebflowAPI(
@@ -123,30 +124,35 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         else:
             pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
 
-        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
-        db.add(new_bill)
-        db.commit()
+        # Check if the bill already exists
+        existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
+        if not existing_bill:
+            new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
+            db.add(new_bill)
+            db.commit()
 
-        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=bill_request.lan.upper())
-            db.add(new_meta)
-        db.commit()
+            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=bill_request.lan.upper())
+                db.add(new_meta)
+            db.commit()
 
-        logger.info("About to run Selenium script")
-        kialo_url = run_selenium_script(
-            title=bill_details['govId'],
-            summary=summary,
-            pros_text=pros,
-            cons_text=cons
-        )
-        logger.info("Finished running Selenium script")
-        logger.info(f"Kialo URL: {kialo_url}")
+            logger.info("About to run Selenium script")
+            kialo_url = run_selenium_script(
+                title=bill_details['govId'],
+                summary=summary,
+                pros_text=pros,
+                cons_text=cons
+            )
+            logger.info("Finished running Selenium script")
+            logger.info(f"Kialo URL: {kialo_url}")
 
-        bill_details['description'] = summary
-        logger.info(f"Summary for Webflow: {summary}")
+            bill_details['description'] = summary
+            logger.info(f"Summary for Webflow: {summary}")
 
-        logger.info("Creating Webflow item")
-        webflow_item_id = webflow_api.create_collection_item(bill_request.url, bill_details, kialo_url)
+            logger.info("Creating Webflow item")
+            webflow_item_id = webflow_api.create_collection_item(bill_request.url, bill_details, kialo_url)
+        else:
+            logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
 
         if pdf_path and os.path.exists(pdf_path):
             with open(pdf_path, "rb") as pdf_file:
@@ -167,12 +173,12 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 
 # Federal bill processing endpoint
 @app.post("/process-federal-bill/")
-async def process_federal_bill(session: str, bill: str, lan: str = "en", db: Session = Depends(get_db)):
-    logger.info(f"Received request to generate federal bill summary for session: {session}, bill: {bill}")
+async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
+    logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}")
     try:
         # Fetch federal bill details
-        logger.info(f"About to run fetch_federal_bill_details() with session: {session}, bill: {bill}")
-        bill_details = fetch_federal_bill_details(session, bill)
+        logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}")
+        bill_details = fetch_federal_bill_details(request.session, request.bill_number)
 
         logger.info("Bill details:")
         for key, value in bill_details.items():
@@ -181,35 +187,55 @@ async def process_federal_bill(session: str, bill: str, lan: str = "en", db: Ses
         if not all(k in bill_details for k in ["govId", "billTextPath", "full_text"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
-        if lan == "es":
+        if request.lan == "es":
             pdf_path, summary, pros, cons = create_federal_summary_pdf_spanish(bill_details['full_text'], "output/federal_bill_summary_spanish.pdf", bill_details['title'])
         else:
             pdf_path, summary, pros, cons = create_federal_summary_pdf(bill_details['full_text'], "output/federal_bill_summary.pdf", bill_details['title'])
 
-        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
-        db.add(new_bill)
-        db.commit()
+        # Check if the bill already exists
+        existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
+        if not existing_bill:
+            new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
+            db.add(new_bill)
+            db.commit()
 
-        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=lan.upper())
-            db.add(new_meta)
-        db.commit()
+            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=request.lan.upper())
+                db.add(new_meta)
+            db.commit()
 
-        logger.info("About to run Selenium script")
-        kialo_url = run_selenium_script(
-            title=bill_details['govId'],
-            summary=summary,
-            pros_text=pros,
-            cons_text=cons
+            logger.info("About to run Selenium script")
+            kialo_url = run_selenium_script(
+                title=bill_details['govId'],
+                summary=summary,
+                pros_text=pros,
+                cons_text=cons
+            )
+            logger.info("Finished running Selenium script")
+            logger.info(f"Kialo URL: {kialo_url}")
+
+            bill_details['description'] = summary
+            logger.info(f"Summary for Webflow: {summary}")
+
+            logger.info("Creating Webflow item")
+            webflow_item_id = webflow_api.create_collection_item(bill_details['govId'], bill_details, kialo_url)
+        else:
+            logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
+
+        # Save form data to the database
+        save_form_data(
+            name=request.name,
+            email=request.email,
+            member_organization=request.member_organization,
+            year=request.year,
+            legislation_type="Federal Bills",
+            session=request.session,
+            bill_number=request.bill_number,
+            bill_type=bill_details['govId'].split("_")[0],  # Assuming bill type is part of govId
+            support=request.support,
+            govId=bill_details["govId"],
+            db=db
         )
-        logger.info("Finished running Selenium script")
-        logger.info(f"Kialo URL: {kialo_url}")
-
-        bill_details['description'] = summary
-        logger.info(f"Summary for Webflow: {summary}")
-
-        logger.info("Creating Webflow item")
-        webflow_item_id = webflow_api.create_collection_item(bill_details['govId'], bill_details, kialo_url)
 
         if pdf_path and os.path.exists(pdf_path):
             with open(pdf_path, "rb") as pdf_file:
@@ -228,11 +254,10 @@ async def process_federal_bill(session: str, bill: str, lan: str = "en", db: Ses
     finally:
         db.close()
 
-
 # Update bill
 @app.post("/update-bill/", response_class=Response)
-async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)):
-    history_value = f"{year}{bill_number}"
+async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
+    history_value = f"{request.year}{request.bill_number}"
 
     logger.info(f"Starting update-bill() for bill: {history_value}")
 
@@ -240,38 +265,69 @@ async def update_bill(year: str, bill_number: str, db: Session = Depends(get_db)
     existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
     if existing_bill:
         logger.info(f"Bill with history {history_value} already exists. Process not run.")
-        return JSONResponse(content={"message": f"Bill with history {history_value} already exists. Process not run."}, status_code=200)
+    else:
+        bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
+        bill_details = fetch_bill_details(bill_url)
+        logger.info(f"Obtained bill details for: {bill_url}")
 
-    bill_url = f"https://www.flsenate.gov/Session/Bill/{year}/{bill_number}"
-    bill_details = fetch_bill_details(bill_url)
-    logger.info(f"Obtained bill details for: {bill_url}")
+        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
+            raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
-    if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
-        raise HTTPException(status_code=500, detail="Required bill details are missing.")
+        new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"], history=history_value)
+        db.add(new_bill)
+        db.commit()
 
-    new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"], history=history_value)
-    db.add(new_bill)
+        pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+        logger.info("Generated Summary")
+
+        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
+            db.add(new_meta)
+        db.commit()
+
+        logger.info("Running Selenium script")
+        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+
+        logger.info("Creating Webflow item")
+        webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
+        webflow_url = f"https://digitaldemocracyproject.org/bills-copy/{slug}"
+
+        new_bill.webflow_link = webflow_url
+        db.commit()
+
+    # Save form data to the database
+    save_form_data(
+        name=request.name,
+        email=request.email,
+        member_organization=request.member_organization,
+        year=request.year,
+        legislation_type="Florida Bills",
+        session="N/A",
+        bill_number=request.bill_number,
+        bill_type=bill_details['govId'].split(" ")[0],  # Assuming bill type is part of govId
+        support=request.support,
+        govId=bill_details["govId"],
+        db=db
+    )
+
+    return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
+
+def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
+    form_data = FormData(
+        name=name,
+        email=email,
+        member_organization=member_organization,
+        year=year,
+        legislation_type=legislation_type,
+        session=session,
+        bill_number=bill_number,
+        bill_type=bill_type,
+        support=support,
+        govId=govId,
+        created_at=datetime.datetime.now()
+    )
+    db.add(form_data)
     db.commit()
-
-    pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
-    logger.info("Generated Summary")
-
-    for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-        new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
-        db.add(new_meta)
-    db.commit()
-
-    logger.info("Running Selenium script")
-    kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
-
-    logger.info("Creating Webflow item")
-    webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
-    webflow_url = f"https://digitaldemocracyproject.org/bills-copy/{slug}"
-
-    new_bill.webflow_link = webflow_url
-    db.commit()
-
-    return JSONResponse(content={"message": "Bill processed successfully", "kialo_url": kialo_url, "webflow_item_id": webflow_item_id, "webflow_url": webflow_url}, status_code=200)
 
 # Exception handlers
 @app.exception_handler(Exception)

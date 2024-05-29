@@ -1,14 +1,28 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, BIGINT
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, BIGINT, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from pydantic import BaseModel
+from pydantic import BaseModel as PydanticBaseModel
+import datetime
 
 Base = declarative_base()
 
-class BillRequest(BaseModel):
+# Pydantic models for request validation
+class BillRequest(PydanticBaseModel):
     url: str
     lan: str  # Language field
 
+class FormRequest(PydanticBaseModel):
+    name: str
+    email: str
+    member_organization: str
+    year: str
+    legislation_type: str
+    session: str
+    bill_number: str
+    bill_type: str
+    support: str
+
+# SQLAlchemy models
 class Bill(Base):
     __tablename__ = 'bill'
 
@@ -17,7 +31,6 @@ class Bill(Base):
     billTextPath = Column(String(255))
     history = Column(String(255))  # New history column
     webflow_link = Column(String(255))
-
 
 class BillMeta(Base):
     __tablename__ = 'bill_meta'
@@ -31,3 +44,18 @@ class BillMeta(Base):
     # Relationship to link back to the bill
     bill = relationship("Bill")
 
+class FormData(Base):
+    __tablename__ = 'form_data'
+
+    id = Column(BIGINT, primary_key=True, autoincrement=True)
+    name = Column(String(255))
+    email = Column(String(255))
+    member_organization = Column(String(255))
+    year = Column(String(4))
+    legislation_type = Column(String(50))
+    session = Column(String(10))
+    bill_number = Column(String(50))
+    bill_type = Column(String(50))
+    support = Column(String(10))
+    govId = Column(String(50))
+    created_at = Column(DateTime, default=datetime.datetime.now)
