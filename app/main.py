@@ -292,7 +292,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             new_bill.webflow_link = webflow_url
             db.commit()
 
-            # Save form data to the database
+            # Save form data to the database with new bill details
             save_form_data(
                 name=request.name,
                 email=request.email,
@@ -307,6 +307,22 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 db=db
             )
 
+        # Save form data to the database with existing bill details
+        if existing_bill:
+            save_form_data(
+                name=request.name,
+                email=request.email,
+                member_organization=request.member_organization,
+                year=request.year,
+                legislation_type="Florida Bills",
+                session="N/A",
+                bill_number=request.bill_number,
+                bill_type=existing_bill.govId.split(" ")[0],  # Assuming bill type is part of govId
+                support=request.support,
+                govId=existing_bill.govId,
+                db=db
+            )
+
     except HTTPException as http_exc:
         logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
         raise http_exc
@@ -317,6 +333,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
+
 
 
 def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
