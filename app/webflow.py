@@ -27,9 +27,9 @@ def reformat_title(title):
         return title
 
     # Trim whitespace and extract the bill number (e.g., "SB 2")
-    bill_number = parts[0].trim()
+    bill_number = parts[0].strip()
     # Trim whitespace for the description part
-    description = parts[1].trim()
+    description = parts[1].strip()
 
     # Format the new title as "Description (Bill Number)"
     new_title = f"{description} ({bill_number})"
@@ -137,3 +137,4 @@ class WebflowAPI:
         return response.status_code in [200, 201]
 
 # You can add more methods here to interact with Webflow API as needed.
+
