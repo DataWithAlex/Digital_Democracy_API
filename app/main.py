@@ -263,8 +263,11 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         if existing_bill:
             logger.info(f"Bill with history {history_value} already exists. Process not run.")
             
+            # Get the Webflow item ID
+            webflow_item_id = existing_bill.webflow_item_id
+            
             # Get the existing Webflow item
-            webflow_item = webflow_api.get_collection_item(existing_bill.webflow_link.split('/')[-1])
+            webflow_item = webflow_api.get_collection_item(webflow_item_id)
             if not webflow_item:
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
             
@@ -284,7 +287,9 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 }
             }
 
-            webflow_api.update_collection_item(webflow_item['_id'], data)
+            if not webflow_api.update_collection_item(webflow_item_id, data):
+                raise HTTPException(status_code=500, detail="Failed to update Webflow item.")
+
         else:
             bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
             bill_details = fetch_bill_details(bill_url)
@@ -293,7 +298,11 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
                 raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
-            new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"], history=history_value)
+            new_bill = Bill(
+                govId=bill_details["govId"], 
+                billTextPath=bill_details["billTextPath"], 
+                history=history_value
+            )
             db.add(new_bill)
             db.commit()
 
@@ -309,25 +318,43 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             logger.info("Creating Webflow item")
-            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url, request.member_organization if request.support == 'Support' else '', request.member_organization if request.support == 'Oppose' else '')
+            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
+            new_bill.webflow_item_id = webflow_item_id  # Store the Webflow item ID
             db.commit()
 
-        save_form_data(
-            name=request.name,
-            email=request.email,
-            member_organization=request.member_organization,
-            year=request.year,
-            legislation_type="Florida Bills",
-            session="N/A",
-            bill_number=request.bill_number,
-            bill_type=existing_bill.govId.split(" ")[0] if existing_bill else bill_details['govId'].split(" ")[0],
-            support=request.support,
-            govId=existing_bill.govId if existing_bill else bill_details["govId"],
-            db=db
-        )
+            # Save form data to the database with new bill details
+            save_form_data(
+                name=request.name,
+                email=request.email,
+                member_organization=request.member_organization,
+                year=request.year,
+                legislation_type="Florida Bills",
+                session="N/A",
+                bill_number=request.bill_number,
+                bill_type=bill_details['govId'].split(" ")[0],  # Assuming bill type is part of govId
+                support=request.support,
+                govId=bill_details["govId"],
+                db=db
+            )
+
+        # Save form data to the database with existing bill details
+        if existing_bill:
+            save_form_data(
+                name=request.name,
+                email=request.email,
+                member_organization=request.member_organization,
+                year=request.year,
+                legislation_type="Florida Bills",
+                session="N/A",
+                bill_number=request.bill_number,
+                bill_type=existing_bill.govId.split(" ")[0],  # Assuming bill type is part of govId
+                support=request.support,
+                govId=existing_bill.govId,
+                db=db
+            )
 
     except HTTPException as http_exc:
         logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
@@ -339,7 +366,6 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
-
 
 def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
     form_data = FormData(
@@ -357,6 +383,7 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
     )
     db.add(form_data)
     db.commit()
+
 
 # Exception handlers
 @app.exception_handler(Exception)
