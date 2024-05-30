@@ -252,7 +252,6 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         db.close()
 
 @app.post("/update-bill/", response_class=Response)
-@app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
 
@@ -321,7 +320,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             logger.info("Creating Webflow item")
-            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
+            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url, support_text='', oppose_text='')
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
@@ -386,6 +385,7 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
     )
     db.add(form_data)
     db.commit()
+
 
 # Exception handlers
 @app.exception_handler(Exception)

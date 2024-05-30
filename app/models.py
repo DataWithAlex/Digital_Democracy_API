@@ -31,7 +31,7 @@ class Bill(Base):
     billTextPath = Column(String(255))
     history = Column(String(255))  # New history column
     webflow_link = Column(String(255))
-    webflow_item_id = Column(String(255))  # New webflow item ID column
+    webflow_item_id = Column(String(255))  # New webflow_item_id column
 
 class BillMeta(Base):
     __tablename__ = 'bill_meta'
