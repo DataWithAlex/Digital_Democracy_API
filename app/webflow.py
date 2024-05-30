@@ -90,7 +90,8 @@ class WebflowAPI:
                 "support": support_text,
                 "oppose": oppose_text,
                 "_draft": False,
-                "_archived": False
+                "_archived": False,
+                "featured": True  # Set the 'Featured' field to True
             }
         }
         # Debugging: Print the JSON payload to verify the structure before sending
