@@ -74,15 +74,18 @@ logger.info(f"DB_PORT: {db_port}")
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Initialize WebflowAPI
+# Get the collection ID for 'bills'
+bills_collection_id = 'your_bills_collection_id'  # Replace this with the actual collection ID
+
+# Initialize WebflowAPI with the new collection ID for 'bills'
 webflow_api = WebflowAPI(
     api_key=os.getenv("WEBFLOW_KEY"),
-    collection_id=os.getenv("WEBFLOW_COLLECTION_KEY"),
+    collection_id=bills_collection_id,  # Updated to use the 'bills' collection ID
     site_id=os.getenv("WEBFLOW_SITE_ID")
 )
 
 logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
-logger.info(f"WEBFLOW_COLLECTION_KEY: {os.getenv('WEBFLOW_COLLECTION_KEY')}")
+logger.info(f"WEBFLOW_COLLECTION_KEY: {bills_collection_id}")
 logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
 @app.post("/upload-file/")
@@ -287,7 +290,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             logger.info("Creating Webflow item")
             webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
-            webflow_url = f"https://digitaldemocracyproject.org/bills-copy/{slug}"
+            webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"  # Updated to 'bills' instead of 'bills-copy'
 
             new_bill.webflow_link = webflow_url
             db.commit()
@@ -333,8 +336,6 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
-
-
 
 def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
     form_data = FormData(

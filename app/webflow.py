@@ -4,6 +4,7 @@ import json
 import re
 from typing import Dict, Optional
 from .logger_config import logger
+
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
@@ -45,7 +46,6 @@ original_title = "SB 2: Relief of blah"
 new_title = reformat_title(original_title)
 print(new_title)  # Output should be "Relief of blah (SB 2)"
 
-
 class WebflowAPI:
     def __init__(self, api_key: str, collection_id: str, site_id: str):
         self.api_key = api_key
@@ -59,8 +59,6 @@ class WebflowAPI:
         }
         self.base_url = "https://api.webflow.com"
 
-#bill_details['slug'] = generate_slug(bill_details['title'])
-    
     def publish_collection_item(self, item_id: str) -> None:
         publish_endpoint = f"https://api.webflow.com/sites/{self.site_id}/publish"
 
@@ -76,10 +74,7 @@ class WebflowAPI:
         else:
             print(f"Failed to publish collection item: {response.status_code} - {response.text}")
 
-    
     def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str) -> Optional[str]:
-            # Method implementation
-
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -90,19 +85,18 @@ class WebflowAPI:
             "fields": {
                 "name": title,  # Replace with actual bill title
                 "slug": slug,  # Replace with actual bill slug
-                "post-body":"",  # Replace with actual content
-                "jurisdiction":"",  # Replace with actual Florida jurisdiction item ID
+                "post-body": "",  # Replace with actual content
+                "jurisdiction": "",  # Replace with actual Florida jurisdiction item ID
                 "voatzid": "",  # Can be left empty or filled with bogus data
                 "session-year-2": "",  # Replace with a session item ID from Webflow
                 "kialo-url": kialo_url,  # Kialo URL from the selenium script
-                "gov-url": bill_url+'/BillText/Filed/PDF',  # Replace with actual government URL
+                "gov-url": bill_url + '/BillText/Filed/PDF',  # Replace with actual government URL
                 "bill-score": 1.0,  # Replace with actual bill score if available
                 "description": bill_details['description'],
-                "_draft": False,  
+                "_draft": False,
                 "_archived": False
             }
         }
-        
         # Debugging: Print the JSON payload to verify the structure before sending
         print(json.dumps(data, indent=4))
         logger.info(f"JSON{json.dumps(data, indent=4)}")
@@ -115,18 +109,19 @@ class WebflowAPI:
         # Making the POST request to create the collection item
         response = requests.post(create_item_endpoint, headers=self.headers, data=json.dumps(data))
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
-        
+
         if response.status_code in [200, 201]:
             item_id = response.json()['_id']
             print("Collection item created successfully, ID:", item_id)
             logger.info(f"Collection item created successfully, ID: {item_id}")
             self.publish_collection_item(item_id)
-            print(f"https://digitaldemocracyproject.org/bills-copy/{slug}")
-            logger.info(f"https://digitaldemocracyproject.org/bills-copy/{slug}")
+            print(f"https://digitaldemocracyproject.org/bills/{slug}")
+            logger.info(f"https://digitaldemocracyproject.org/bills/{slug}")
             return item_id, slug
         else:
             print(f"Failed to create collection item: {response.status_code} - {response.text}")
             return None
-        
-    
-    # You can add more methods here to interact with Webflow API as needed.
+
+# You can add more methods here to interact with Webflow API as needed.
+
+       
