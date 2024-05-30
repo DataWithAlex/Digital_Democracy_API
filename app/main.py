@@ -270,11 +270,13 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             
             # Get the existing Webflow item
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
+            logger.info(f"Webflow API Response: {webflow_item}")
             if not webflow_item:
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
             
             # Ensure all required fields are present
-            webflow_item_fields = webflow_item['items'][0]['fields']
+            webflow_item_data = webflow_item.get('items', [])[0]
+            webflow_item_fields = webflow_item_data.get('fields', {})
             support_text = webflow_item_fields.get('support', '')
             oppose_text = webflow_item_fields.get('oppose', '')
             name = webflow_item_fields.get('name')
@@ -377,8 +379,6 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
-
-
 
 
 def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
