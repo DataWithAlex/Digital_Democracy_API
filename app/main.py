@@ -276,11 +276,11 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             
             # Ensure all required fields are present
             webflow_item_data = webflow_item.get('items', [])[0]
-            webflow_item_fields = webflow_item_data.get('fields', {})
-            support_text = webflow_item_fields.get('support', '')
-            oppose_text = webflow_item_fields.get('oppose', '')
-            name = webflow_item_fields.get('name')
-            slug = webflow_item_fields.get('slug')
+            name = webflow_item_data.get('name')
+            slug = webflow_item_data.get('slug')
+            support_text = webflow_item_data.get('support', '')
+            oppose_text = webflow_item_data.get('oppose', '')
+            
             if not name or not slug:
                 raise HTTPException(status_code=500, detail="Required fields 'name' or 'slug' are missing in the Webflow item.")
 
@@ -295,8 +295,8 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                     "oppose": oppose_text,
                     "name": name,
                     "slug": slug,
-                    "_draft": webflow_item_fields.get("_draft", False),
-                    "_archived": webflow_item_fields.get("_archived", False)
+                    "_draft": webflow_item_data.get("_draft", False),
+                    "_archived": webflow_item_data.get("_archived", False)
                 }
             }
 
