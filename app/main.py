@@ -273,10 +273,14 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             if not webflow_item:
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
             
-            # Check if 'fields' exists in the Webflow item
-            fields = webflow_item.get('items', [{}])[0].get('fields', {})
-            support_text = fields.get('support', '')
-            oppose_text = fields.get('oppose', '')
+            # Ensure all required fields are present
+            webflow_item_fields = webflow_item['items'][0]['fields']
+            support_text = webflow_item_fields.get('support', '')
+            oppose_text = webflow_item_fields.get('oppose', '')
+            name = webflow_item_fields.get('name')
+            slug = webflow_item_fields.get('slug')
+            if not name or not slug:
+                raise HTTPException(status_code=500, detail="Required fields 'name' or 'slug' are missing in the Webflow item.")
 
             if request.support == 'Support':
                 support_text += f"\n{request.member_organization}"
@@ -287,10 +291,10 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 "fields": {
                     "support": support_text,
                     "oppose": oppose_text,
-                    "name": fields.get("name"),
-                    "slug": fields.get("slug"),
-                    "_draft": fields.get("_draft", False),
-                    "_archived": fields.get("_archived", False)
+                    "name": name,
+                    "slug": slug,
+                    "_draft": webflow_item_fields.get("_draft", False),
+                    "_archived": webflow_item_fields.get("_archived", False)
                 }
             }
 
@@ -373,6 +377,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
+
 
 
 
