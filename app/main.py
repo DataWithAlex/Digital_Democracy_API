@@ -284,6 +284,10 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             if not name or not slug:
                 raise HTTPException(status_code=500, detail="Required fields 'name' or 'slug' are missing in the Webflow item.")
 
+            # Initialize support_text and oppose_text if None
+            support_text = support_text if support_text is not None else ''
+            oppose_text = oppose_text if oppose_text is not None else ''
+
             if request.support == 'Support':
                 support_text += f"\n{request.member_organization}"
             else:
