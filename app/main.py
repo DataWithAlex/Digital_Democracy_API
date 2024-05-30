@@ -252,6 +252,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         db.close()
 
 @app.post("/update-bill/", response_class=Response)
+@app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
 
@@ -265,6 +266,8 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             
             # Get the Webflow item ID
             webflow_item_id = existing_bill.webflow_item_id
+            if not webflow_item_id:
+                raise HTTPException(status_code=500, detail="Webflow item ID is missing for the existing bill.")
             
             # Get the existing Webflow item
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
@@ -383,7 +386,6 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
     )
     db.add(form_data)
     db.commit()
-
 
 # Exception handlers
 @app.exception_handler(Exception)
