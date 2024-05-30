@@ -13,13 +13,6 @@ from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
-from fastapi import FastAPI, HTTPException, Request, Response, Depends
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import sessionmaker, Session
-import logging
-from .models import FormRequest  # Ensure FormRequest is imported
-from .logger_config import logger
-
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -81,18 +74,15 @@ logger.info(f"DB_PORT: {db_port}")
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Get the collection ID for 'bills'
-bills_collection_id = '655288ef928edb1283067256'  # Replace this with the actual collection ID
-
-# Initialize WebflowAPI with the new collection ID for 'bills'
+# Initialize WebflowAPI
 webflow_api = WebflowAPI(
     api_key=os.getenv("WEBFLOW_KEY"),
-    collection_id=bills_collection_id,  # Updated to use the 'bills' collection ID
+    collection_id="655288ef928edb1283067256",  # Updated with the actual collection ID
     site_id=os.getenv("WEBFLOW_SITE_ID")
 )
 
 logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
-logger.info(f"WEBFLOW_COLLECTION_KEY: {bills_collection_id}")
+logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")  # Updated with the actual collection ID
 logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
 @app.post("/upload-file/")
@@ -261,7 +251,6 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
     finally:
         db.close()
 
-# Endpoint to update bill
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
@@ -269,9 +258,6 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Starting update-bill() for bill: {history_value}")
 
     try:
-        # Log the request data
-        logger.info(f"Received request data: {jsonable_encoder(request)}")
-
         # Check if the history value exists
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
