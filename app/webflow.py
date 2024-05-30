@@ -41,11 +41,6 @@ def clean_kialo_url(url: str) -> str:
     # Return the first part which contains the URL without the action parameter
     return parts[0]
 
-# Example usage:
-original_title = "SB 2: Relief of blah"
-new_title = reformat_title(original_title)
-print(new_title)  # Output should be "Relief of blah (SB 2)"
-
 class WebflowAPI:
     def __init__(self, api_key: str, collection_id: str, site_id: str):
         self.api_key = api_key
@@ -83,17 +78,17 @@ class WebflowAPI:
 
         data = {
             "fields": {
-                "name": title,  # Replace with actual bill title
-                "slug": slug,  # Replace with actual bill slug
-                "post-body": "",  # Replace with actual content
-                "jurisdiction": "",  # Replace with actual Florida jurisdiction item ID
-                "voatzid": "",  # Can be left empty or filled with bogus data
-                "kialo-url": kialo_url,  # Kialo URL from the selenium script
-                "gov-url": bill_url + '/BillText/Filed/PDF',  # Replace with actual government URL
-                "bill-score": 1.0,  # Replace with actual bill score if available
+                "name": title,
+                "slug": slug,
+                "post-body": "",
+                "jurisdiction": "",
+                "voatzid": "",
+                "kialo-url": kialo_url,
+                "gov-url": bill_url + '/BillText/Filed/PDF',
+                "bill-score": 1.0,
                 "description": bill_details['description'],
-                "support": support_text,  # Add support text
-                "oppose": oppose_text,  # Add oppose text
+                "support": support_text,
+                "oppose": oppose_text,
                 "_draft": False,
                 "_archived": False
             }
@@ -136,5 +131,14 @@ class WebflowAPI:
 
         return response.status_code in [200, 201]
 
-# You can add more methods here to interact with Webflow API as needed.
+    def get_collection_item(self, item_id: str) -> Optional[Dict]:
+        get_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
 
+        response = requests.get(get_item_endpoint, headers=self.headers)
+        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+
+        if response.status_code in [200, 201]:
+            return response.json()
+        else:
+            logger.error(f"Failed to get collection item: {response.status_code} - {response.text}")
+            return None

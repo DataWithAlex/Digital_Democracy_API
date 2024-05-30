@@ -262,22 +262,29 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
             logger.info(f"Bill with history {history_value} already exists. Process not run.")
-            # Update the existing Webflow item with Support and Oppose fields
-            support_text = existing_bill.support if existing_bill.support else ''
-            oppose_text = existing_bill.oppose if existing_bill.oppose else ''
+            
+            # Get the existing Webflow item
+            webflow_item = webflow_api.get_collection_item(existing_bill.webflow_link.split('/')[-1])
+            if not webflow_item:
+                raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
+            
+            # Update the Support or Oppose fields
+            support_text = webflow_item['fields'].get('support', '')
+            oppose_text = webflow_item['fields'].get('oppose', '')
 
-            if request.support == "Support":
+            if request.support == 'Support':
                 support_text += f"\n{request.member_organization}"
             else:
                 oppose_text += f"\n{request.member_organization}"
 
             data = {
                 "fields": {
-                    "support": support_text.strip(),
-                    "oppose": oppose_text.strip()
+                    "support": support_text,
+                    "oppose": oppose_text
                 }
             }
-            webflow_api.update_collection_item(existing_bill.webflow_item_id, data)
+
+            webflow_api.update_collection_item(webflow_item['_id'], data)
         else:
             bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
             bill_details = fetch_bill_details(bill_url)
@@ -302,43 +309,25 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             logger.info("Creating Webflow item")
-            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url, request.support, request.oppose)
+            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url, request.member_organization if request.support == 'Support' else '', request.member_organization if request.support == 'Oppose' else '')
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
-            new_bill.webflow_item_id = webflow_item_id  # Save the item ID for future updates
             db.commit()
 
-            # Save form data to the database with new bill details
-            save_form_data(
-                name=request.name,
-                email=request.email,
-                member_organization=request.member_organization,
-                year=request.year,
-                legislation_type="Florida Bills",
-                session="N/A",
-                bill_number=request.bill_number,
-                bill_type=bill_details['govId'].split(" ")[0],  # Assuming bill type is part of govId
-                support=request.support,
-                govId=bill_details["govId"],
-                db=db
-            )
-
-        # Save form data to the database with existing bill details
-        if existing_bill:
-            save_form_data(
-                name=request.name,
-                email=request.email,
-                member_organization=request.member_organization,
-                year=request.year,
-                legislation_type="Florida Bills",
-                session="N/A",
-                bill_number=request.bill_number,
-                bill_type=existing_bill.govId.split(" ")[0],  # Assuming bill type is part of govId
-                support=request.support,
-                govId=existing_bill.govId,
-                db=db
-            )
+        save_form_data(
+            name=request.name,
+            email=request.email,
+            member_organization=request.member_organization,
+            year=request.year,
+            legislation_type="Florida Bills",
+            session="N/A",
+            bill_number=request.bill_number,
+            bill_type=existing_bill.govId.split(" ")[0] if existing_bill else bill_details['govId'].split(" ")[0],
+            support=request.support,
+            govId=existing_bill.govId if existing_bill else bill_details["govId"],
+            db=db
+        )
 
     except HTTPException as http_exc:
         logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
