@@ -88,7 +88,7 @@ class WebflowAPI:
                 "post-body": "",  # Replace with actual content
                 "jurisdiction": "",  # Replace with actual Florida jurisdiction item ID
                 "voatzid": "",  # Can be left empty or filled with bogus data
-                "session-year-2": "",  # Replace with a session item ID from Webflow
+                # "session-year-2": "",  # This field is removed
                 "kialo-url": kialo_url,  # Kialo URL from the selenium script
                 "gov-url": bill_url + '/BillText/Filed/PDF',  # Replace with actual government URL
                 "bill-score": 1.0,  # Replace with actual bill score if available
