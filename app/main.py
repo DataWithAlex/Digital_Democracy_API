@@ -82,7 +82,7 @@ engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Get the collection ID for 'bills'
-bills_collection_id = 'your_bills_collection_id'  # Replace this with the actual collection ID
+bills_collection_id = '655288ef928edb1283067256'  # Replace this with the actual collection ID
 
 # Initialize WebflowAPI with the new collection ID for 'bills'
 webflow_api = WebflowAPI(
