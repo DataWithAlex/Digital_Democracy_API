@@ -27,9 +27,9 @@ def reformat_title(title):
         return title
 
     # Trim whitespace and extract the bill number (e.g., "SB 2")
-    bill_number = parts[0].strip()
+    bill_number = parts[0].trim()
     # Trim whitespace for the description part
-    description = parts[1].strip()
+    description = parts[1].trim()
 
     # Format the new title as "Description (Bill Number)"
     new_title = f"{description} ({bill_number})"
@@ -74,7 +74,7 @@ class WebflowAPI:
         else:
             print(f"Failed to publish collection item: {response.status_code} - {response.text}")
 
-    def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str) -> Optional[str]:
+    def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -88,11 +88,12 @@ class WebflowAPI:
                 "post-body": "",  # Replace with actual content
                 "jurisdiction": "",  # Replace with actual Florida jurisdiction item ID
                 "voatzid": "",  # Can be left empty or filled with bogus data
-                # "session-year-2": "",  # This field is removed
                 "kialo-url": kialo_url,  # Kialo URL from the selenium script
                 "gov-url": bill_url + '/BillText/Filed/PDF',  # Replace with actual government URL
                 "bill-score": 1.0,  # Replace with actual bill score if available
                 "description": bill_details['description'],
+                "support": support_text,  # Add support text
+                "oppose": oppose_text,  # Add oppose text
                 "_draft": False,
                 "_archived": False
             }
@@ -122,6 +123,17 @@ class WebflowAPI:
             print(f"Failed to create collection item: {response.status_code} - {response.text}")
             return None
 
-# You can add more methods here to interact with Webflow API as needed.
+    def update_collection_item(self, item_id: str, data: Dict) -> bool:
+        update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
 
-       
+        # Debugging: Print the JSON payload to verify the structure before sending
+        print(json.dumps(data, indent=4))
+        logger.info(f"JSON{json.dumps(data, indent=4)}")
+
+        # Making the PUT request to update the collection item
+        response = requests.put(update_item_endpoint, headers=self.headers, data=json.dumps(data))
+        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+
+        return response.status_code in [200, 201]
+
+# You can add more methods here to interact with Webflow API as needed.

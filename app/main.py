@@ -262,6 +262,22 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
             logger.info(f"Bill with history {history_value} already exists. Process not run.")
+            # Update the existing Webflow item with Support and Oppose fields
+            support_text = existing_bill.support if existing_bill.support else ''
+            oppose_text = existing_bill.oppose if existing_bill.oppose else ''
+
+            if request.support == "Support":
+                support_text += f"\n{request.member_organization}"
+            else:
+                oppose_text += f"\n{request.member_organization}"
+
+            data = {
+                "fields": {
+                    "support": support_text.strip(),
+                    "oppose": oppose_text.strip()
+                }
+            }
+            webflow_api.update_collection_item(existing_bill.webflow_item_id, data)
         else:
             bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
             bill_details = fetch_bill_details(bill_url)
@@ -286,10 +302,11 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             logger.info("Creating Webflow item")
-            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
+            webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url, request.support, request.oppose)
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
+            new_bill.webflow_item_id = webflow_item_id  # Save the item ID for future updates
             db.commit()
 
             # Save form data to the database with new bill details
@@ -333,6 +350,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
+
 
 def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
     form_data = FormData(
