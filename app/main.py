@@ -13,6 +13,13 @@ from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
+from fastapi import FastAPI, HTTPException, Request, Response, Depends
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import sessionmaker, Session
+import logging
+from .models import FormRequest  # Ensure FormRequest is imported
+from .logger_config import logger
+
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -254,6 +261,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
     finally:
         db.close()
 
+# Endpoint to update bill
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
@@ -261,6 +269,9 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Starting update-bill() for bill: {history_value}")
 
     try:
+        # Log the request data
+        logger.info(f"Received request data: {jsonable_encoder(request)}")
+
         # Check if the history value exists
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
@@ -290,7 +301,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             logger.info("Creating Webflow item")
             webflow_item_id, slug = webflow_api.create_collection_item(bill_url, bill_details, kialo_url)
-            webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"  # Updated to 'bills' instead of 'bills-copy'
+            webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
             db.commit()
