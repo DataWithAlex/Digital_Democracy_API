@@ -85,7 +85,7 @@ class WebflowAPI:
                 "voatzid": "",
                 "kialo-url": kialo_url,
                 "gov-url": bill_url + '/BillText/Filed/PDF',
-                "bill-score": 1.0,
+                "bill-score": 0.0,
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
