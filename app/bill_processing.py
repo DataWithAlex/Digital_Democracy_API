@@ -78,22 +78,32 @@ def fetch_bill_details(bill_page_url):
 def fetch_federal_bill_details(session, bill, bill_type):
     base_url = 'https://www.congress.gov'
     url_mappings = {
-        "HR": f'{base_url}/{session}/bills/hr{bill}/BILLS-{session}hr{bill}rh.xml',
-        "S": f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}fps.xml',
-        "H.Res": f'{base_url}/{session}/bills/hres{bill}/BILLS-{session}hres{bill}rh.xml',
-        "S.Res": f'{base_url}/{session}/bills/sres{bill}/BILLS-{session}sres{bill}lts.xml',
-        "H.J.Res": f'{base_url}/{session}/bills/hjres{bill}/BILLS-{session}hjres{bill}ih.xml',
-        "S.J.Res": f'{base_url}/{session}/bills/sjres{bill}/BILLS-{session}sjres{bill}rs.xml',
-        "H.Con.Res": f'{base_url}/{session}/bills/hconres{bill}/BILLS-{session}hconres{bill}ih.xml',
-        "S.Con.Res": f'{base_url}/{session}/bills/sconres{bill}/BILLS-{session}sconres{bill}ats.xml'
+        "HR": [f'{base_url}/{session}/bills/hr{bill}/BILLS-{session}hr{bill}ih.xml', f'{base_url}/{session}/bills/hr{bill}/BILLS-{session}hr{bill}rh.xml'],
+        "S": [f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}fps.xml'],
+        "H.Res": [f'{base_url}/{session}/bills/hres{bill}/BILLS-{session}hres{bill}rh.xml'],
+        "S.Res": [f'{base_url}/{session}/bills/sres{bill}/BILLS-{session}sres{bill}lts.xml'],
+        "H.J.Res": [f'{base_url}/{session}/bills/hjres{bill}/BILLS-{session}hjres{bill}ih.xml'],
+        "S.J.Res": [f'{base_url}/{session}/bills/sjres{bill}/BILLS-{session}sjres{bill}rs.xml'],
+        "H.Con.Res": [f'{base_url}/{session}/bills/hconres{bill}/BILLS-{session}hconres{bill}ih.xml'],
+        "S.Con.Res": [f'{base_url}/{session}/bills/sconres{bill}/BILLS-{session}sconres{bill}ats.xml']
     }
 
-    url = url_mappings.get(bill_type)
-    if not url:
+    urls = url_mappings.get(bill_type)
+    if not urls:
         raise ValueError(f"Unsupported bill type: {bill_type}")
 
-    response = requests.get(url)
-    response.raise_for_status()
+    for url in urls:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            break
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 404:
+                continue
+            else:
+                raise e
+    else:
+        raise ValueError(f"Bill {bill_type}{bill} not found for session {session}")
 
     # Check if response content is empty
     if not response.content:
@@ -124,6 +134,7 @@ def fetch_federal_bill_details(session, bill, bill_type):
         "billTextPath": bill_text_path
     }
     return bill_details
+
 
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
