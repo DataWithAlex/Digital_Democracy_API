@@ -171,7 +171,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 # Federal bill processing endpoint
 @app.post("/process-federal-bill/")
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
-    logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}")
+    logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
         # Fetch federal bill details
         logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")

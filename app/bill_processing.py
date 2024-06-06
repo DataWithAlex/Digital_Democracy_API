@@ -76,9 +76,10 @@ def fetch_bill_details(bill_page_url):
         raise Exception("Failed to fetch bill details due to HTTP error.")
 
 def fetch_federal_bill_details(session, bill, bill_type):
+def fetch_federal_bill_details(session, bill, bill_type):
     base_url = 'https://www.congress.gov'
     url_mappings = {
-        "HR": f'{base_url}/{session}/bills/hr{bill}/BILLS-{session}hr{bill}ih.xml',
+        "HR": f'{base_url}/{session}/bills/hr{bill}/BILLS-{session}hr{bill}rh.xml',
         "S": f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}fps.xml',
         "H.Res": f'{base_url}/{session}/bills/hres{bill}/BILLS-{session}hres{bill}rh.xml',
         "S.Res": f'{base_url}/{session}/bills/sres{bill}/BILLS-{session}sres{bill}lts.xml',
