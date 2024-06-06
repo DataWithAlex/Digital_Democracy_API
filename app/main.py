@@ -174,7 +174,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}")
     try:
         # Fetch federal bill details
-        logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}")
+        logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
         bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
 
         logger.info("Bill details:")

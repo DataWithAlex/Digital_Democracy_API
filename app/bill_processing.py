@@ -75,18 +75,17 @@ def fetch_bill_details(bill_page_url):
     else:
         raise Exception("Failed to fetch bill details due to HTTP error.")
 
-# Function to fetch federal bill details
 def fetch_federal_bill_details(session, bill, bill_type):
     base_url = 'https://www.congress.gov'
     url_mappings = {
         "HR": f'{base_url}/{session}/bills/hr{bill}/BILLS-{session}hr{bill}ih.xml',
-        "S": f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}ih.xml',
-        "H.Res": f'{base_url}/{session}/bills/hres{bill}/BILLS-{session}hres{bill}ih.xml',
-        "S.Res": f'{base_url}/{session}/bills/sres{bill}/BILLS-{session}sres{bill}ih.xml',
+        "S": f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}fps.xml',
+        "H.Res": f'{base_url}/{session}/bills/hres{bill}/BILLS-{session}hres{bill}rh.xml',
+        "S.Res": f'{base_url}/{session}/bills/sres{bill}/BILLS-{session}sres{bill}lts.xml',
         "H.J.Res": f'{base_url}/{session}/bills/hjres{bill}/BILLS-{session}hjres{bill}ih.xml',
-        "S.J.Res": f'{base_url}/{session}/bills/sjres{bill}/BILLS-{session}sjres{bill}ih.xml',
+        "S.J.Res": f'{base_url}/{session}/bills/sjres{bill}/BILLS-{session}sjres{bill}rs.xml',
         "H.Con.Res": f'{base_url}/{session}/bills/hconres{bill}/BILLS-{session}hconres{bill}ih.xml',
-        "S.Con.Res": f'{base_url}/{session}/bills/sconres{bill}/BILLS-{session}sconres{bill}ih.xml'
+        "S.Con.Res": f'{base_url}/{session}/bills/sconres{bill}/BILLS-{session}sconres{bill}ats.xml'
     }
 
     url = url_mappings.get(bill_type)
@@ -95,7 +94,7 @@ def fetch_federal_bill_details(session, bill, bill_type):
 
     response = requests.get(url)
     response.raise_for_status()
-    
+
     # Check if response content is empty
     if not response.content:
         raise ValueError("Empty response from Congress.gov")
