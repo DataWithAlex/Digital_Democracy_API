@@ -89,11 +89,13 @@ class WebflowAPI:
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
+                "hidden": True,
                 "_draft": False,
                 "_archived": False,
                 "featured": True  # Set the 'Featured' field to True
             }
         }
+        
         # Debugging: Print the JSON payload to verify the structure before sending
         print(json.dumps(data, indent=4))
         logger.info(f"JSON{json.dumps(data, indent=4)}")
