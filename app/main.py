@@ -175,7 +175,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
     try:
         # Fetch federal bill details
         logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}")
-        bill_details = fetch_federal_bill_details(request.session, request.bill_number)
+        bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
 
         logger.info("Bill details:")
         for key, value in bill_details.items():
@@ -215,7 +215,12 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             logger.info(f"Summary for Webflow: {summary}")
 
             logger.info("Creating Webflow item")
-            webflow_item_id = webflow_api.create_collection_item(bill_details['govId'], bill_details, kialo_url)
+            webflow_item_id, slug = webflow_api.create_collection_item(bill_details['govId'], bill_details, kialo_url, support_text='', oppose_text='')
+            webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
+
+            new_bill.webflow_link = webflow_url
+            new_bill.webflow_item_id = webflow_item_id  # Store the Webflow item ID
+            db.commit()
         else:
             logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
 
@@ -250,6 +255,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
