@@ -73,6 +73,17 @@ class WebflowAPI:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
+
+        # Truncate fields if necessary
+        if len(title) > 256:
+            title = title[:256]
+        if len(slug) > 256:
+            slug = slug[:256]
+        if len(kialo_url) > 256:
+            kialo_url = kialo_url[:256]
+        if len(bill_details['description']) > 5000:  # Assuming 5000 as the max length for description
+            bill_details['description'] = bill_details['description'][:5000]
+
         print(bill_details['description'])
         logger.info(f"slug{slug}, title{title}, kialo_url{kialo_url}, description{bill_details['description']}")
 
