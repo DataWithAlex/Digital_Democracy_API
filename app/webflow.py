@@ -89,7 +89,7 @@ class WebflowAPI:
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
-                "hidden": True,
+                "public": True,
                 "_draft": False,
                 "_archived": False,
                 "featured": True  # Set the 'Featured' field to True
