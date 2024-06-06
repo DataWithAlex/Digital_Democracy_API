@@ -21,6 +21,7 @@ class FormRequest(PydanticBaseModel):
     bill_number: str
     bill_type: str
     support: str
+    lan: str  # Add this line to include the language field
 
 # SQLAlchemy models
 class Bill(Base):
