@@ -309,7 +309,6 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
 
     return os.path.abspath(output_pdf_path), summary_es, pros_es, cons_es
 
-# Function to create federal summary PDF
 def create_federal_summary_pdf(full_text, output_pdf_path, title):
     width, height = letter
     styles = getSampleStyleSheet()
@@ -324,6 +323,10 @@ def create_federal_summary_pdf(full_text, output_pdf_path, title):
 
     story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
     story.append(Spacer(1, 12))
+
+    # Limit the length of pros and cons to avoid oversized table cells
+    pros = pros[:500]  # Adjust the limit as needed
+    cons = cons[:500]  # Adjust the limit as needed
 
     data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
     col_widths = [width * 0.45, width * 0.45]
@@ -341,6 +344,7 @@ def create_federal_summary_pdf(full_text, output_pdf_path, title):
     doc.build(story)
 
     return os.path.abspath(output_pdf_path), summary, pros, cons
+
 
 # Function to create federal summary PDF in Spanish
 def create_federal_summary_pdf_spanish(full_text, output_pdf_path, title):
