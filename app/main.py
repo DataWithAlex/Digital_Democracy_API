@@ -199,7 +199,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             new_bill = Bill(
                 govId=bill_details["govId"],
                 billTextPath=bill_details["billTextPath"],
-                history=bill_details["history"]  # Set the history field
+                history=bill_details["history"]
             )
             db.add(new_bill)
             db.commit()

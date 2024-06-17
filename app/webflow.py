@@ -65,9 +65,9 @@ class WebflowAPI:
 
         response = requests.post(publish_endpoint, headers=self.headers, data=json.dumps(data))
         if response.status_code in [200, 201]:
-            print("Collection item published successfully")
+            logger.info("Collection item published successfully")
         else:
-            print(f"Failed to publish collection item: {response.status_code} - {response.text}")
+            logger.error(f"Failed to publish collection item: {response.status_code} - {response.text}")
 
     def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
@@ -124,8 +124,7 @@ class WebflowAPI:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
 
         # Debugging: Print the JSON payload to verify the structure before sending
-        print(json.dumps(data, indent=4))
-        logger.info(f"JSON{json.dumps(data, indent=4)}")
+        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
         # Making the PUT request to update the collection item
         response = requests.put(update_item_endpoint, headers=self.headers, data=json.dumps(data))
