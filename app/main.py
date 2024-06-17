@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
 import openai
-from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish
+from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish, validate_and_generate_pros_cons
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest  # Ensure FormRequest is imported
@@ -173,7 +173,6 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
-        # Fetch federal bill details
         logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
         try:
             bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
@@ -193,7 +192,9 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         else:
             pdf_path, summary, pros, cons = create_federal_summary_pdf(bill_details['full_text'], "output/federal_bill_summary.pdf", bill_details['title'])
 
-        # Check if the bill already exists
+        # Validate pros and cons format
+        pros, cons = validate_and_generate_pros_cons(bill_details['full_text'])
+
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
             new_bill = Bill(
@@ -224,11 +225,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
             logger.info("Creating Webflow item")
             result = webflow_api.create_collection_item(
-                bill_details['govId'],
+                bill_details['gov-url'],  # Use the correct gov-url
                 bill_details,
                 kialo_url,
-                support_text='',
-                oppose_text=''
+                support_text=pros,
+                oppose_text=cons
             )
 
             if result is None:
@@ -239,12 +240,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
-            new_bill.webflow_item_id = webflow_item_id  # Store the Webflow item ID
+            new_bill.webflow_item_id = webflow_item_id
             db.commit()
         else:
             logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
 
-        # Save form data to the database
         save_form_data(
             name=request.name,
             email=request.email,
@@ -275,7 +275,6 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
@@ -434,3 +433,4 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
 async def universal_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception occurred: {exc}", exc_info=True)
     return JSONResponse(content={"message": "An internal server error occurred."})
+

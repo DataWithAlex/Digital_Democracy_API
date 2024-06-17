@@ -74,7 +74,6 @@ class WebflowAPI:
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
 
-        # Ensure bill_url is valid
         if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
             logger.error(f"Invalid gov-url: {bill_url}")
             return None
@@ -89,7 +88,7 @@ class WebflowAPI:
                 "jurisdiction": "",
                 "voatzid": "",
                 "kialo-url": kialo_url,
-                "gov-url": bill_url,  # Ensure the gov-url is correctly set here
+                "gov-url": bill_url,
                 "bill-score": 0.0,
                 "description": bill_details['description'],
                 "support": support_text,
@@ -97,16 +96,13 @@ class WebflowAPI:
                 "public": True,
                 "_draft": False,
                 "_archived": False,
-                "featured": True  # Set the 'Featured' field to True
+                "featured": True
             }
         }
 
         logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-        # Endpoint to create a new collection item
         create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
-
-        # Making the POST request to create the collection item
         response = requests.post(create_item_endpoint, headers=self.headers, data=json.dumps(data))
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 

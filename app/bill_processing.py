@@ -378,3 +378,14 @@ def create_federal_summary_pdf_spanish(full_text, output_pdf_path, title):
     doc.build(story)
 
     return os.path.abspath(output_pdf_path), summary, pros, cons
+
+def validate_and_generate_pros_cons(full_text):
+    pros, cons = generate_pros_and_cons(full_text)
+    
+    def is_valid_format(text):
+        return bool(re.match(r'^\d\).*', text))
+    
+    if not all(is_valid_format(p) for p in pros.split('\n')) or not all(is_valid_format(c) for c in cons.split('\n')):
+        pros, cons = generate_pros_and_cons(full_text)  # Regenerate if invalid format
+
+    return pros, cons
