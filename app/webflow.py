@@ -84,7 +84,7 @@ class WebflowAPI:
                 "jurisdiction": "",
                 "voatzid": "",
                 "kialo-url": kialo_url,
-                "gov-url": bill_url + '/BillText/Filed/PDF',
+                "gov-url": bill_url,  # Correctly set the gov-url
                 "bill-score": 0.0,
                 "description": bill_details['description'],
                 "support": support_text,
