@@ -167,7 +167,6 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
 @app.post("/process-federal-bill/")
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
@@ -180,7 +179,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         for key, value in bill_details.items():
             logger.info(f"{key}: {value}")
 
-        if not all(k in bill_details for k in ["govId", "billTextPath", "full_text", "history"]):
+        if not all(k in bill_details for k in ["govId", "billTextPath", "full_text", "history", "gov-url"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
         if request.lan == "es":
@@ -218,7 +217,13 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             logger.info(f"Summary for Webflow: {summary}")
 
             logger.info("Creating Webflow item")
-            webflow_item_id, slug = webflow_api.create_collection_item(bill_details['govId'], bill_details, kialo_url, support_text='', oppose_text='')
+            webflow_item_id, slug = webflow_api.create_collection_item(
+                bill_details['govId'],
+                bill_details,
+                kialo_url,
+                support_text='',
+                oppose_text=''
+            )
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
@@ -258,6 +263,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 
 @app.post("/update-bill/", response_class=Response)

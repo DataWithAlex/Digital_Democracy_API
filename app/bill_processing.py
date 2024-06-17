@@ -132,11 +132,10 @@ def fetch_federal_bill_details(session, bill, bill_type):
         "full_text": bill_text,
         "govId": f"{bill_type} {bill}",  # Correct format: bill type + bill number
         "billTextPath": bill_text_path,
-        "history": f"{session}{bill_type}{bill}"  # Correct format: session + bill type + bill number
+        "history": f"{session}{bill_type}{bill}",  # Correct format: session + bill type + bill number
+        "gov-url": url  # Correct URL for the bill
     }
     return bill_details
-
-
 
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
