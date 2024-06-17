@@ -74,10 +74,24 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     os.environ['KIALO_PASSWORD'] = '%Mineguy29'
 
     cons = split_pros_cons(cons_text)
-    cons_1, cons_2, cons_3 = cons[0], cons[1], cons[2]
-
     pros = split_pros_cons(pros_text)
+
+    logger.info(f"Cons: {cons}")
+    logger.info(f"Pros: {pros}")
+
+    if len(cons) < 3:
+        logger.warning(f"Not enough cons provided: {cons}")
+        cons += [''] * (3 - len(cons))
+
+    if len(pros) < 3:
+        logger.warning(f"Not enough pros provided: {pros}")
+        pros += [''] * (3 - len(pros))
+
+    cons_1, cons_2, cons_3 = cons[0], cons[1], cons[2]
     pros_1, pros_2, pros_3 = pros[0], pros[1], pros[2]
+
+    logger.info(f"Cons after padding: {cons}")
+    logger.info(f"Pros after padding: {pros}")
 
     bill_summary_text = summary
     if len(bill_summary_text) > 500:
