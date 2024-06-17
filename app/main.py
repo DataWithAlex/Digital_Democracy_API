@@ -188,11 +188,6 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         if not all(k in bill_details for k in ["govId", "billTextPath", "full_text", "history", "gov-url"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
-        # Ensure gov-url is valid before proceeding
-        if not bill_details['gov-url'].startswith("http://") and not bill_details['gov-url'].startswith("https://"):
-            logger.error(f"Invalid gov-url: {bill_details['gov-url']}")
-            raise HTTPException(status_code=400, detail="Invalid gov-url format.")
-
         if request.lan == "es":
             pdf_path, summary, pros, cons = create_federal_summary_pdf_spanish(bill_details['full_text'], "output/federal_bill_summary_spanish.pdf", bill_details['title'])
         else:
@@ -228,16 +223,19 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             logger.info(f"Summary for Webflow: {summary}")
 
             logger.info("Creating Webflow item")
-            # Log the details before calling create_collection_item
-            logger.info(f"govId: {bill_details['govId']}, gov-url: {bill_details['gov-url']}, kialo_url: {kialo_url}")
-
-            webflow_item_id, slug = webflow_api.create_collection_item(
+            result = webflow_api.create_collection_item(
                 bill_details['govId'],
                 bill_details,
                 kialo_url,
                 support_text='',
                 oppose_text=''
             )
+
+            if result is None:
+                logger.error("Failed to create Webflow item")
+                raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+
+            webflow_item_id, slug = result
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
@@ -277,6 +275,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
