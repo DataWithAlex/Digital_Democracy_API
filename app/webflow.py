@@ -73,8 +73,13 @@ class WebflowAPI:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
-        print(bill_details['description'])
-        logger.info(f"slug{slug}, title{title}, kialo_url{kialo_url}, description{bill_details['description']}")
+
+        # Ensure bill_url is valid
+        if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
+            logger.error(f"Invalid gov-url: {bill_url}")
+            return None
+
+        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
             "fields": {
@@ -84,7 +89,7 @@ class WebflowAPI:
                 "jurisdiction": "",
                 "voatzid": "",
                 "kialo-url": kialo_url,
-                "gov-url": bill_url,  # Correctly set the gov-url
+                "gov-url": bill_url,  # Ensure the gov-url is correctly set here
                 "bill-score": 0.0,
                 "description": bill_details['description'],
                 "support": support_text,
@@ -95,30 +100,24 @@ class WebflowAPI:
                 "featured": True  # Set the 'Featured' field to True
             }
         }
-        
-        # Debugging: Print the JSON payload to verify the structure before sending
-        print(json.dumps(data, indent=4))
-        logger.info(f"JSON{json.dumps(data, indent=4)}")
+
+        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
         # Endpoint to create a new collection item
-        logger.info("Creating item")
         create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
 
-        logger.info("POST Webflow Item")
         # Making the POST request to create the collection item
         response = requests.post(create_item_endpoint, headers=self.headers, data=json.dumps(data))
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         if response.status_code in [200, 201]:
             item_id = response.json()['_id']
-            print("Collection item created successfully, ID:", item_id)
             logger.info(f"Collection item created successfully, ID: {item_id}")
             self.publish_collection_item(item_id)
-            print(f"https://digitaldemocracyproject.org/bills/{slug}")
             logger.info(f"https://digitaldemocracyproject.org/bills/{slug}")
             return item_id, slug
         else:
-            print(f"Failed to create collection item: {response.status_code} - {response.text}")
+            logger.error(f"Failed to create collection item: {response.status_code} - {response.text}")
             return None
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
