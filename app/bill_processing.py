@@ -125,15 +125,16 @@ def fetch_federal_bill_details(session, bill, bill_type):
     # Upload the local file to S3
     bill_text_path = upload_to_s3('ddp-bills-2', local_file_path)
 
-    # Construct bill details dictionary
+    # Construct bill details dictionary with the correct govId format
     bill_details = {
         "title": title,
         "description": description,
         "full_text": bill_text,
-        "govId": f"{session}_{bill}",
+        "govId": f"{session}{bill_type}{bill}",  # Correct format: session + bill type + bill number
         "billTextPath": bill_text_path
     }
     return bill_details
+
 
 
 # Function to summarize text with OpenAI

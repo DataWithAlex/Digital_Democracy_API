@@ -191,7 +191,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         # Check if the bill already exists
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
-            new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
+            new_bill = Bill(
+                govId=bill_details["govId"],
+                billTextPath=bill_details["billTextPath"],
+                history=f"{request.session}{request.bill_type}{request.bill_number}"  # Set the history field
+            )
             db.add(new_bill)
             db.commit()
 
@@ -232,7 +236,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             legislation_type="Federal Bills",
             session=request.session,
             bill_number=request.bill_number,
-            bill_type=bill_details['govId'].split("_")[0],  # Assuming bill type is part of govId
+            bill_type=request.bill_type,
             support=request.support,
             govId=bill_details["govId"],
             db=db
