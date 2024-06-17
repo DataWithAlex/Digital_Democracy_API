@@ -92,10 +92,12 @@ def fetch_federal_bill_details(session, bill, bill_type):
     if not urls:
         raise ValueError(f"Unsupported bill type: {bill_type}")
 
+    valid_url = None
     for url in urls:
         try:
             response = requests.get(url)
             response.raise_for_status()
+            valid_url = url
             break
         except requests.exceptions.HTTPError as e:
             if response.status_code == 404:
@@ -125,7 +127,7 @@ def fetch_federal_bill_details(session, bill, bill_type):
     # Upload the local file to S3
     bill_text_path = upload_to_s3('ddp-bills-2', local_file_path)
 
-    # Construct bill details dictionary with the correct govId and history format
+    # Construct bill details dictionary with the correct govId, history, and gov-url format
     bill_details = {
         "title": title,
         "description": description,
@@ -133,9 +135,10 @@ def fetch_federal_bill_details(session, bill, bill_type):
         "govId": f"{bill_type} {bill}",  # Correct format: bill type + bill number
         "billTextPath": bill_text_path,
         "history": f"{session}{bill_type}{bill}",  # Correct format: session + bill type + bill number
-        "gov-url": url  # Correct URL for the bill
+        "gov-url": valid_url  # Correct URL for the bill
     }
     return bill_details
+
 
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):

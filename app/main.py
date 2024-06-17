@@ -167,13 +167,19 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
+
 @app.post("/process-federal-bill/")
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
         # Fetch federal bill details
         logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
-        bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
+        try:
+            bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
+        except ValueError as e:
+            logger.error(f"An error occurred: {e}")
+            raise HTTPException(status_code=404, detail=str(e))
 
         logger.info("Bill details:")
         for key, value in bill_details.items():
@@ -263,6 +269,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 
 
