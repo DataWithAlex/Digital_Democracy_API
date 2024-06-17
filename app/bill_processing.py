@@ -125,13 +125,14 @@ def fetch_federal_bill_details(session, bill, bill_type):
     # Upload the local file to S3
     bill_text_path = upload_to_s3('ddp-bills-2', local_file_path)
 
-    # Construct bill details dictionary with the correct govId format
+    # Construct bill details dictionary with the correct govId and history format
     bill_details = {
         "title": title,
         "description": description,
         "full_text": bill_text,
-        "govId": f"{session}{bill_type}{bill}",  # Correct format: session + bill type + bill number
-        "billTextPath": bill_text_path
+        "govId": f"{bill_type} {bill}",  # Correct format: bill type + bill number
+        "billTextPath": bill_text_path,
+        "history": f"{session}{bill_type}{bill}"  # Correct format: session + bill type + bill number
     }
     return bill_details
 

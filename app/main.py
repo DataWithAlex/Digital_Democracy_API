@@ -180,7 +180,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         for key, value in bill_details.items():
             logger.info(f"{key}: {value}")
 
-        if not all(k in bill_details for k in ["govId", "billTextPath", "full_text"]):
+        if not all(k in bill_details for k in ["govId", "billTextPath", "full_text", "history"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
         if request.lan == "es":
@@ -194,7 +194,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             new_bill = Bill(
                 govId=bill_details["govId"],
                 billTextPath=bill_details["billTextPath"],
-                history=f"{request.session}{request.bill_type}{request.bill_number}"  # Set the history field
+                history=bill_details["history"]  # Set the history field
             )
             db.add(new_bill)
             db.commit()
