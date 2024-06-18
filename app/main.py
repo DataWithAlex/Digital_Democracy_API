@@ -254,8 +254,8 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
             fields = webflow_item['items'][0]
 
-            support_text = fields.get('support', '')
-            oppose_text = fields.get('oppose', '')
+            support_text = fields.get('support', '') or ''
+            oppose_text = fields.get('oppose', '') or ''
 
             if request.support == "Support":
                 support_text += f"\n{request.member_organization}"
@@ -306,6 +306,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 
 
