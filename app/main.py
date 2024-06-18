@@ -227,8 +227,8 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
                 bill_details['gov-url'],
                 bill_details,
                 kialo_url,
-                support_text=request.support if request.support == "Support" else '',
-                oppose_text=request.support if request.support == "Oppose" else ''
+                support_text=request.member_organization if request.support == "Support" else '',
+                oppose_text=request.member_organization if request.support == "Oppose" else ''
             )
 
             if result is None:
@@ -303,6 +303,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 
 @app.post("/update-bill/", response_class=Response)
