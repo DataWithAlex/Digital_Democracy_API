@@ -84,7 +84,8 @@ def fetch_federal_bill_details(session, bill, bill_type):
         ],
         "S": [
             f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}fps.xml',
-            f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}rs.xml'
+            f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}rs.xml',
+            f'{base_url}/{session}/bills/s{bill}/BILLS-{session}s{bill}is.xml'
         ],
         "H.Res": [
             f'{base_url}/{session}/bills/hres{bill}/BILLS-{session}hres{bill}rh.xml'
@@ -156,6 +157,7 @@ def fetch_federal_bill_details(session, bill, bill_type):
         "gov-url": valid_url  # Correct URL for the bill
     }
     return bill_details
+
 
 
 # Function to summarize text with OpenAI
