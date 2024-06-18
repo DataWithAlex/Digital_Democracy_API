@@ -246,11 +246,14 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             webflow_item_id = existing_bill.webflow_item_id
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
 
-            if not webflow_item:
-                logger.error("Failed to retrieve Webflow item")
-                raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item")
+            logger.info(f"Webflow item response: {webflow_item}")
 
-            fields = webflow_item['items'][0]['fields']
+            if not webflow_item or 'items' not in webflow_item or not webflow_item['items']:
+                logger.error("Failed to retrieve valid Webflow item")
+                raise HTTPException(status_code=500, detail="Failed to retrieve valid Webflow item")
+
+            fields = webflow_item['items'][0]
+
             support_text = fields.get('support', '')
             oppose_text = fields.get('oppose', '')
 
@@ -303,6 +306,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 
 
