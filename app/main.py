@@ -173,6 +173,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
+        # Fetch federal bill details
         logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
         try:
             bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
@@ -192,9 +193,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         else:
             pdf_path, summary, pros, cons = create_federal_summary_pdf(bill_details['full_text'], "output/federal_bill_summary.pdf", bill_details['title'])
 
-        # Validate pros and cons format
-        pros, cons = validate_and_generate_pros_cons(bill_details['full_text'])
-
+        # Check if the bill already exists
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
             new_bill = Bill(
@@ -225,11 +224,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
             logger.info("Creating Webflow item")
             result = webflow_api.create_collection_item(
-                bill_details['gov-url'],  # Use the correct gov-url
+                bill_details['gov-url'],
                 bill_details,
                 kialo_url,
-                support_text=pros,
-                oppose_text=cons
+                support_text=request.support if request.support == "Support" else '',
+                oppose_text=request.support if request.support == "Oppose" else ''
             )
 
             if result is None:
@@ -243,7 +242,36 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             new_bill.webflow_item_id = webflow_item_id
             db.commit()
         else:
-            logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
+            # Update existing bill
+            webflow_item_id = existing_bill.webflow_item_id
+            webflow_item = webflow_api.get_collection_item(webflow_item_id)
+
+            if not webflow_item:
+                logger.error("Failed to retrieve Webflow item")
+                raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item")
+
+            fields = webflow_item['items'][0]['fields']
+            support_text = fields.get('support', '')
+            oppose_text = fields.get('oppose', '')
+
+            if request.support == "Support":
+                support_text += f"\n{request.member_organization}"
+            else:
+                oppose_text += f"\n{request.member_organization}"
+
+            data = {
+                "fields": {
+                    "support": support_text.strip(),
+                    "oppose": oppose_text.strip(),
+                    "name": fields['name'],
+                    "slug": fields['slug'],
+                    "_draft": fields['_draft'],
+                    "_archived": fields['_archived']
+                }
+            }
+
+            if not webflow_api.update_collection_item(webflow_item_id, data):
+                raise HTTPException(status_code=500, detail="Failed to update Webflow item")
 
         save_form_data(
             name=request.name,
@@ -275,6 +303,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
