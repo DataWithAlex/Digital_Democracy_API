@@ -139,7 +139,6 @@ def fetch_federal_bill_details(session, bill, bill_type):
     }
     return bill_details
 
-
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
     response = openai.ChatCompletion.create(
@@ -292,7 +291,7 @@ def create_summary_pdf_spanish(input_pdf_path, output_pdf_path, title):
 
     col_widths = [width * 0.45, width * 0.45]
 
-    data_es = [['Cons', 'Pros'], [Paragraph(cons_es, styles['Normal']), Paragraph(pros_es, styles['Normal'])]]
+    data_es = [['Contras', 'Pros'], [Paragraph(cons_es, styles['Normal']), Paragraph(pros_es, styles['Normal'])]]
     t_es = Table(data_es, colWidths=col_widths)
     t_es.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), colors.grey),
@@ -323,10 +322,6 @@ def create_federal_summary_pdf(full_text, output_pdf_path, title):
 
     story.append(Paragraph(f"<b>Summary:</b><br/>{summary}", styles['Normal']))
     story.append(Spacer(1, 12))
-
-    # Limit the length of pros and cons to avoid oversized table cells
-    pros = pros[:500]  # Adjust the limit as needed
-    cons = cons[:500]  # Adjust the limit as needed
 
     data = [['Cons', 'Pros'], [Paragraph(cons, styles['Normal']), Paragraph(pros, styles['Normal'])]]
     col_widths = [width * 0.45, width * 0.45]
@@ -389,3 +384,4 @@ def validate_and_generate_pros_cons(full_text):
         pros, cons = generate_pros_and_cons(full_text)  # Regenerate if invalid format
 
     return pros, cons
+
