@@ -73,6 +73,17 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     os.environ['KIALO_USERNAME'] = 'explore@datawithalex.com'
     os.environ['KIALO_PASSWORD'] = '%Mineguy29'
 
+    # Split pros and cons text into individual lines, replacing numbers with bullets
+    def format_to_bullets(text):
+        lines = text.split('\n')
+        formatted_lines = [re.sub(r'^\d\)', '-', line.strip()) for line in lines]
+        return '\n'.join(formatted_lines)
+
+    # Format pros and cons with bullet points
+    pros_text = format_to_bullets(pros_text)
+    cons_text = format_to_bullets(cons_text)
+
+
     cons = split_pros_cons(cons_text)
     pros = split_pros_cons(pros_text)
 
