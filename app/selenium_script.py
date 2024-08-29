@@ -18,6 +18,17 @@ logging.basicConfig(level=logging.INFO)
 # Define logger
 logger = logging.getLogger(__name__)
 
+def remove_numbering_and_format(text):
+    """
+    Removes any numbering format like '1) ' or '2) ' from the text and replaces it with '- '.
+    """
+    # Split the text into individual lines
+    lines = text.split('\n')
+    # Remove any numbering (e.g., '1) ', '2) ') and replace with '- '
+    formatted_lines = [re.sub(r'^\d+\)\s*', '- ', line.strip()) for line in lines]
+    return '\n'.join(formatted_lines)
+
+
 def split_pros_cons(text):
     pattern = r'\d+\)\s'
     matches = list(re.finditer(pattern, text))
@@ -72,17 +83,10 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
     os.environ['KIALO_USERNAME'] = 'explore@datawithalex.com'
     os.environ['KIALO_PASSWORD'] = '%Mineguy29'
-
-    # Split pros and cons text into individual lines, replacing numbers with bullets
-    def format_to_bullets(text):
-        lines = text.split('\n')
-        formatted_lines = [re.sub(r'^\d\)', '-', line.strip()) for line in lines]
-        return '\n'.join(formatted_lines)
-
+    
     # Format pros and cons with bullet points
-    pros_text = format_to_bullets(pros_text)
-    cons_text = format_to_bullets(cons_text)
-
+    pros_text = remove_numbering_and_format(pros_text)
+    cons_text = remove_numbering_and_format(cons_text)
 
     cons = split_pros_cons(cons_text)
     pros = split_pros_cons(pros_text)
