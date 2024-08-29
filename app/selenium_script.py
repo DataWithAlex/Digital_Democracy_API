@@ -22,16 +22,16 @@ def remove_numbering_and_format(text):
     """
     Removes any numbering format like '1) ' or '2) ' from the text and replaces it with '- '.
     """
-    # Split the text into individual lines
     lines = text.split('\n')
-    # Remove any numbering (e.g., '1) ', '2) ') and replace with '- '
     formatted_lines = [re.sub(r'^\d+\)\s*', '- ', line.strip()) for line in lines]
     return '\n'.join(formatted_lines)
 
 
+
 def split_pros_cons(text):
-    pattern = r'\d+\)\s'
-    matches = list(re.finditer(pattern, text))
+    # Splitting lines using common delimiters including numbers or bullet points
+    pattern = r'(^-|\d+\))\s*'
+    matches = list(re.finditer(pattern, text, re.MULTILINE))
     sections = []
     
     for i, match in enumerate(matches):
@@ -43,6 +43,7 @@ def split_pros_cons(text):
             sections.append(text[start:].strip())
     
     return sections
+
 
 def clean_url(url):
     cleaned_url = url.split("/permissions")[0] + "/"
@@ -83,17 +84,19 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
     os.environ['KIALO_USERNAME'] = 'explore@datawithalex.com'
     os.environ['KIALO_PASSWORD'] = '%Mineguy29'
-    
-    # Format pros and cons with bullet points
+
+    # Formatting pros and cons to remove numbers and replace with bullet points
     pros_text = remove_numbering_and_format(pros_text)
     cons_text = remove_numbering_and_format(cons_text)
-
+    
+    # Split the formatted text into individual pros and cons
     cons = split_pros_cons(cons_text)
     pros = split_pros_cons(pros_text)
-
+    
     logger.info(f"Cons: {cons}")
     logger.info(f"Pros: {pros}")
 
+    # Check and ensure the cons and pros have content
     if len(cons) < 3:
         logger.warning(f"Not enough cons provided: {cons}")
         cons += [''] * (3 - len(cons))
