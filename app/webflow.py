@@ -20,20 +20,30 @@ def generate_slug(title):
     return slug
 
 def reformat_title(title):
-    # Split the title at the colon
+    """
+    Reformat the title to exclude the congressional session and other suffixes.
+    For example, convert "118 HR 9056 IH: VA Insurance Improvement Act" to 
+    "VA Insurance Improvement Act (HR 9056)".
+    """
+    # Split the title at the colon to separate the bill identifier and description
     parts = title.split(":")
+    
     if len(parts) < 2:
-        # If there is no colon in the title, return it as is or handle it accordingly
+        # If there is no colon in the title, return it as is
         return title
 
-    # Trim whitespace and extract the bill number (e.g., "SB 2")
-    bill_number = parts[0].strip()
-    # Trim whitespace for the description part
+    # Trim whitespace and extract the bill identifier (e.g., "118 HR 9056 IH")
+    bill_identifier = parts[0].strip()
+    # Extract only the description part
     description = parts[1].strip()
+    
+    # Extract the bill type and number (e.g., "HR 9056") without session or suffixes
+    bill_type_number = " ".join(bill_identifier.split()[1:3])  # Takes only the second and third parts, which are the type and number
 
-    # Format the new title as "Description (Bill Number)"
-    new_title = f"{description} ({bill_number})"
+    # Format the new title as "Description (Bill Type Number)"
+    new_title = f"{description} ({bill_type_number})"
     return new_title
+
 
 def clean_kialo_url(url: str) -> str:
     # Split the URL at "&action="
