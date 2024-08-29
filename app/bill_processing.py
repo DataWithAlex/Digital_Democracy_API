@@ -158,50 +158,86 @@ def fetch_federal_bill_details(session, bill, bill_type):
     }
     return bill_details
 
-# List of predefined categories
-CATEGORIES = [
-    "Animals", "Arts", "Business", "Civil Rights", "Criminal Justice", "Culture", 
-    "Disney", "Drugs", "Education", "Elections", "Employment", "Energy", 
-    "Environment", "Government", "Guns", "Housing", "Immigration", 
-    "International Relations", "LGBT", "Marriage", "Media", "Medical", 
-    "Military and Veterans", "National Security", "Natural Disasters", 
-    "Public Records", "Public Safety", "Social Welfare", "Sports", "State Parks", 
-    "Taxes", "Technology", "Transportation"
-]
+# Define valid Webflow categories and their exact names as expected in Webflow
+WEBFLOW_CATEGORIES = {
+    "Animals": "Animals",
+    "Arts": "Arts",
+    "Business": "Business",
+    "Civil Rights": "Civil Rights",
+    "Criminal Justice": "Criminal Justice",
+    "Culture": "Culture",
+    "Disney": "Disney",
+    "Drugs": "Drugs",
+    "Education": "Education",
+    "Elections": "Elections",
+    "Employment": "Employment",
+    "Energy": "Energy",
+    "Environment": "Environment",
+    "Government": "Government",
+    "Guns": "Guns",
+    "Housing": "Housing",
+    "Immigration": "Immigration",
+    "International Relations": "International Relations",
+    "LGBT": "LGBT",
+    "Marriage": "Marriage",
+    "Media": "Media",
+    "Medical": "Medical",
+    "Military and Veterans": "Military and Veterans",
+    "National Security": "National Security",
+    "Natural Disasters": "Natural Disasters",
+    "Public Records": "Public Records",
+    "Public Safety": "Public Safety",
+    "Social Welfare": "Social Welfare",
+    "Sports": "Sports",
+    "State Parks": "State Parks",
+    "Taxes": "Taxes",
+    "Technology": "Technology",
+    "Transportation": "Transportation"
+}
 
-# Function to categorize the bill based on its description
+# Function to categorize the bill based on its description and map to valid Webflow categories
 def categorize_bill(description):
     try:
-        # OpenAI API call to categorize the bill based on its description
+        # Call OpenAI to categorize the bill
         category_response = openai.ChatCompletion.create(
             model="gpt-4-turbo-preview",
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        "You are an intelligent assistant that classifies bills into relevant categories. "
-                        "You must select the most fitting categories from the following list based on the bill's description: "
-                        "Animals, Arts, Business, Civil Rights, Criminal Justice, Culture, Disney, Drugs, Education, Elections, "
-                        "Employment, Energy, Environment, Government, Guns, Housing, Immigration, International Relations, LGBT, "
-                        "Marriage, Media, Medical, Military and Veterans, National Security, Natural Disasters, Public Records, "
-                        "Public Safety, Social Welfare, Sports, State Parks, Taxes, Technology, Transportation. "
-                        "List only the categories that are applicable to the description provided, separated by commas."
+                        "You are an assistant that categorizes bills based on their descriptions. "
+                        "Choose the most relevant categories from this list: "
+                        "Animals, Arts, Business, Civil Rights, Criminal Justice, Culture, Disney, Drugs, Education, "
+                        "Elections, Employment, Energy, Environment, Government, Guns, Housing, Immigration, "
+                        "International Relations, LGBT, Marriage, Media, Medical, Military and Veterans, "
+                        "National Security, Natural Disasters, Public Records, Public Safety, Social Welfare, Sports, "
+                        "State Parks, Taxes, Technology, Transportation. Only return the applicable categories."
                     ),
                 },
                 {
                     "role": "user",
-                    "content": f"Based on the following bill description, identify the most relevant categories: \n\n{description}",
+                    "content": f"Categorize the following bill description: \n\n{description}",
                 },
             ],
         )
-        
-        # Extract categories from the response
-        categories = category_response['choices'][0]['message']['content'].strip()
-        return categories
+
+        # Extract the categories suggested by OpenAI
+        suggested_categories = category_response['choices'][0]['message']['content'].strip().split(',')
+
+        # Clean up the suggested categories and map them to valid Webflow categories
+        mapped_categories = []
+        for category in suggested_categories:
+            clean_category = category.strip()
+            if clean_category in WEBFLOW_CATEGORIES:
+                mapped_categories.append(WEBFLOW_CATEGORIES[clean_category])
+
+        # Return valid Webflow categories
+        return mapped_categories
 
     except Exception as e:
         logging.error(f"Error categorizing the bill: {str(e)}")
-        return ""
+        return []
+
 
 
 

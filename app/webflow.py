@@ -80,7 +80,21 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to publish collection item: {response.status_code} - {response.text}")
 
-    def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str) -> Optional[str]:
+    def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, category: str) -> Optional[str]:
+        """
+        Creates a new item in the Webflow collection.
+        
+        Args:
+            bill_url (str): The URL of the bill.
+            bill_details (Dict): Details of the bill including title and description.
+            kialo_url (str): The URL for the Kialo discussion.
+            support_text (str): Text supporting the bill.
+            oppose_text (str): Text opposing the bill.
+            category (str): The category of the bill as determined by the categorize_bill function.
+
+        Returns:
+            Optional[str]: The item ID and slug of the created Webflow item, if successful; otherwise, None.
+        """
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -89,11 +103,9 @@ class WebflowAPI:
             logger.error(f"Invalid gov-url: {bill_url}")
             return None
 
-        # Categorize the bill based on its description
-        category = categorize_bill(bill_details['description'])
-
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
+        # Constructing the data payload for creating the item
         data = {
             "fields": {
                 "name": title,
@@ -107,7 +119,7 @@ class WebflowAPI:
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
-                "category": category,  # Add the category field
+                "category": {"_id": category},  # Reference field requires an ID
                 "public": True,
                 "_draft": False,
                 "_archived": False,
@@ -117,10 +129,14 @@ class WebflowAPI:
 
         logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
+        # API endpoint for creating a new item in the collection
         create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
+
+        # Making the POST request to create the collection item
         response = requests.post(create_item_endpoint, headers=self.headers, data=json.dumps(data))
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
+        # Handling the response to check if the item was created successfully
         if response.status_code in [200, 201]:
             item_id = response.json()['_id']
             logger.info(f"Collection item created successfully, ID: {item_id}")
@@ -130,6 +146,7 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to create collection item: {response.status_code} - {response.text}")
             return None
+
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
