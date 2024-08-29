@@ -158,58 +158,6 @@ def fetch_federal_bill_details(session, bill, bill_type):
     }
     return bill_details
 
-# Define valid Webflow categories and their exact names as expected in Webflow
-WEBFLOW_CATEGORIES = {
-    "Animals": "Animals",
-    "Arts": "Arts",
-    "Business": "Business",
-    "Civil Rights": "Civil Rights",
-    "Criminal Justice": "Criminal Justice",
-    "Culture": "Culture",
-    "Disney": "Disney",
-    "Drugs": "Drugs",
-    "Education": "Education",
-    "Elections": "Elections",
-    "Employment": "Employment",
-    "Energy": "Energy",
-    "Environment": "Environment",
-    "Government": "Government",
-    "Guns": "Guns",
-    "Housing": "Housing",
-    "Immigration": "Immigration",
-    "International Relations": "International Relations",
-    "LGBT": "LGBT",
-    "Marriage": "Marriage",
-    "Media": "Media",
-    "Medical": "Medical",
-    "Military and Veterans": "Military and Veterans",
-    "National Security": "National Security",
-    "Natural Disasters": "Natural Disasters",
-    "Public Records": "Public Records",
-    "Public Safety": "Public Safety",
-    "Social Welfare": "Social Welfare",
-    "Sports": "Sports",
-    "State Parks": "State Parks",
-    "Taxes": "Taxes",
-    "Technology": "Technology",
-    "Transportation": "Transportation"
-}
-
-# Function to categorize the bill based on its description and map to valid Webflow categories
-# Function to categorize a bill based on its description using GPT-4
-# Function to categorize a bill based on its description using GPT-4
-# Function to categorize a bill based on its description using GPT-4
-def categorize_bill(description):
-    response = openai.ChatCompletion.create(
-        model="gpt-4-turbo-preview",
-        messages=[
-            {"role": "system", "content": "You are an assistant that helps categorize legislative bills based on their content. Choose the best categories from the following list: Animals, Arts, Business, Civil Rights, Criminal Justice, Culture, Disney, Drugs, Education, Elections, Employment, Energy, Environment, Government, Guns, Housing, Immigration, International Relations, LGBT, Marriage, Media, Medical, Military and Veterans, National Security, Natural Disasters, Public Records, Public Safety, Social Welfare, Sports, State Parks, Taxes, Technology, Transportation."},
-            {"role": "user", "content": f"Please suggest categories for the following bill description:\n\n{description}"}
-        ]
-    )
-    categories = response['choices'][0]['message']['content']
-    # Assuming the response is formatted as a comma-separated list of categories
-    return [cat.strip() for cat in categories.split(',')]
 
 
 # Function to summarize text with OpenAI
@@ -457,4 +405,3 @@ def validate_and_generate_pros_cons(full_text):
         pros, cons = generate_pros_and_cons(full_text)  # Regenerate if invalid format
 
     return pros, cons
-
