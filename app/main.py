@@ -319,26 +319,25 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
             logger.info(f"Bill with history {history_value} already exists. Process not run.")
-
+            
             # Get the Webflow item ID
             webflow_item_id = existing_bill.webflow_item_id
             if not webflow_item_id:
                 raise HTTPException(status_code=500, detail="Webflow item ID is missing for the existing bill.")
-
+            
             # Get the existing Webflow item
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
             logger.info(f"Webflow API Response: {webflow_item}")
             if not webflow_item:
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
-
+            
             # Ensure all required fields are present
             webflow_item_data = webflow_item.get('items', [])[0]
             name = webflow_item_data.get('name')
             slug = webflow_item_data.get('slug')
             support_text = webflow_item_data.get('support', '')
             oppose_text = webflow_item_data.get('oppose', '')
-            description = webflow_item_data.get('description', '')  # Ensure description is retrieved
-
+            
             if not name or not slug:
                 raise HTTPException(status_code=500, detail="Required fields 'name' or 'slug' are missing in the Webflow item.")
 
@@ -351,16 +350,18 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             else:
                 oppose_text += f"\n{request.member_organization}"
 
-            # Prepare the data with the description field included
+            # Generate the category
+            category_id = categorize_bill(bill_details['description'])  # Use the categorize_bill function to get the category
+
             data = {
                 "fields": {
                     "support": support_text,
                     "oppose": oppose_text,
                     "name": name,
                     "slug": slug,
-                    "description": description,  # Ensure description is updated
                     "_draft": webflow_item_data.get("_draft", False),
-                    "_archived": webflow_item_data.get("_archived", False)
+                    "_archived": webflow_item_data.get("_archived", False),
+                    "category": category_id  # Include the category in the update
                 }
             }
 
@@ -372,7 +373,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             bill_details = fetch_bill_details(bill_url)
             logger.info(f"Obtained bill details for: {bill_url}")
 
-            if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
+            if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
                 raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
             new_bill = Bill(
@@ -395,16 +396,14 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             logger.info("Creating Webflow item")
-            # Pass the description field to Webflow API
+            category_id = categorize_bill(bill_details['description'])  # Get the category ID for the bill
             webflow_item_id, slug = webflow_api.create_collection_item(
-                bill_url,
-                {
-                    **bill_details,  # Ensure bill details include description
-                    "description": summary  # Set description to the generated summary
-                },
-                kialo_url,
+                bill_url=bill_url,
+                bill_details=bill_details,
+                kialo_url=kialo_url,
                 support_text='',
-                oppose_text=''
+                oppose_text='',
+                category=category_id  # Pass the category ID to the Webflow item creation
             )
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
