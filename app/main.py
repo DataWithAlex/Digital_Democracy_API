@@ -12,7 +12,7 @@ from .models import BillRequest, Bill, BillMeta, FormData, FormRequest  # Ensure
 from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
-import datetime
+from .bill_processing import categorize_bill
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
