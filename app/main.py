@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import datetime  # Add this import
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
@@ -13,7 +14,8 @@ from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 from .bill_processing import categorize_bill
-from datetime import datetime
+
+
 
 
 # Set OpenAI API key
@@ -469,10 +471,11 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
         bill_type=bill_type,
         support=support,
         govId=govId,
-        created_at=datetime.datetime.now()
+        created_at=datetime.now()  # Use datetime.now() instead of datetime.datetime.now()
     )
     db.add(form_data)
     db.commit()
+
 
 
 # Exception handlers
