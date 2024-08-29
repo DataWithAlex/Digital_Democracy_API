@@ -158,6 +158,52 @@ def fetch_federal_bill_details(session, bill, bill_type):
     }
     return bill_details
 
+# List of predefined categories
+CATEGORIES = [
+    "Animals", "Arts", "Business", "Civil Rights", "Criminal Justice", "Culture", 
+    "Disney", "Drugs", "Education", "Elections", "Employment", "Energy", 
+    "Environment", "Government", "Guns", "Housing", "Immigration", 
+    "International Relations", "LGBT", "Marriage", "Media", "Medical", 
+    "Military and Veterans", "National Security", "Natural Disasters", 
+    "Public Records", "Public Safety", "Social Welfare", "Sports", "State Parks", 
+    "Taxes", "Technology", "Transportation"
+]
+
+# Function to categorize the bill based on its description
+def categorize_bill(description):
+    try:
+        # OpenAI API call to categorize the bill based on its description
+        category_response = openai.ChatCompletion.create(
+            model="gpt-4-turbo-preview",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an intelligent assistant that classifies bills into relevant categories. "
+                        "You must select the most fitting categories from the following list based on the bill's description: "
+                        "Animals, Arts, Business, Civil Rights, Criminal Justice, Culture, Disney, Drugs, Education, Elections, "
+                        "Employment, Energy, Environment, Government, Guns, Housing, Immigration, International Relations, LGBT, "
+                        "Marriage, Media, Medical, Military and Veterans, National Security, Natural Disasters, Public Records, "
+                        "Public Safety, Social Welfare, Sports, State Parks, Taxes, Technology, Transportation. "
+                        "List only the categories that are applicable to the description provided, separated by commas."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"Based on the following bill description, identify the most relevant categories: \n\n{description}",
+                },
+            ],
+        )
+        
+        # Extract categories from the response
+        categories = category_response['choices'][0]['message']['content'].strip()
+        return categories
+
+    except Exception as e:
+        logging.error(f"Error categorizing the bill: {str(e)}")
+        return ""
+
+
 
 
 # Function to summarize text with OpenAI

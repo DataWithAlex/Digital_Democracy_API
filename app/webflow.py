@@ -4,6 +4,7 @@ import json
 import re
 from typing import Dict, Optional
 from .logger_config import logger
+from .bill_processing import categorize_bill
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -88,6 +89,9 @@ class WebflowAPI:
             logger.error(f"Invalid gov-url: {bill_url}")
             return None
 
+        # Categorize the bill based on its description
+        category = categorize_bill(bill_details['description'])
+
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
@@ -103,6 +107,7 @@ class WebflowAPI:
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
+                "category": category,  # Add the category field
                 "public": True,
                 "_draft": False,
                 "_archived": False,
