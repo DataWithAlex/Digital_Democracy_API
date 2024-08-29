@@ -20,6 +20,47 @@ def generate_slug(title):
     slug = re.sub(r'-+', '-', slug)
     return slug
 
+# Function to map category names to Webflow category IDs
+def map_category_to_id(category_name):
+    category_mapping = {
+        "Animals": "668329ae71bf22a23a6ac94b",
+        "International Relations": "663299c73b94826974bd24da",
+        "National Security": "6632997a194f0d20b0d24108",
+        "Civil Rights": "663298e4562bd3696c89b3ea",
+        "Arts": "660ede71e88a45fcd08e2e39",
+        "Energy": "660ed44984debef46e8d5c5d",
+        "Military and Veterans": "65ce5778dae6450ac15a2d2f",
+        "Priority Bill": "65ba9dbe9768a6290a95c945",
+        "Media": "65b550562534316ee17131c0",
+        "LGBT": "655288ef928edb128306753e",
+        "Public Records": "655288ef928edb128306753d",
+        "Social Welfare": "655288ef928edb12830673e2",
+        "Technology": "655288ef928edb128306743e",
+        "Government": "655288ef928edb12830673e1",
+        "Business": "655288ef928edb128306746b",
+        "Employment": "655288ef928edb1283067425",
+        "Public Safety": "655288ef928edb1283067442",
+        "Drugs": "655288ef928edb128306745e",
+        "Immigration": "655288ef928edb12830673e5",
+        "Transportation": "655288ef928edb1283067415",
+        "Criminal Justice": "655288ef928edb12830673dc",
+        "Elections": "655288ef928edb12830673e0",
+        "Culture": "655288ef928edb1283067436",
+        "Sports": "655288ef928edb12830673df",
+        "Marriage": "655288ef928edb128306742d",
+        "Housing": "655288ef928edb128306743d",
+        "Education": "655288ef928edb12830673e4",
+        "Medical": "655288ef928edb12830673e9",
+        "State Parks": "655288ef928edb128306745d",
+        "Guns": "655288ef928edb128306741f",
+        "Disney": "655288ef928edb128306742c",
+        "Natural Disasters": "655288ef928edb1283067435",
+        "Environment": "655288ef928edb128306741b",
+        "Taxes": "655288ef928edb128306745c"
+    }
+    return category_mapping.get(category_name)
+
+
 def reformat_title(title):
     """
     Reformat the title to exclude the congressional session and other suffixes.
@@ -80,16 +121,21 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to publish collection item: {response.status_code} - {response.text}")
 
-    def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, category: str) -> Optional[str]:
+    # Function to create a Webflow collection item
+    def create_collection_item(self, bill_url, bill_details, kialo_url, support_text, oppose_text, category):
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
+
+        # Use the categorize_bill function to get the category names
+        categories = categorize_bill(bill_details['description']) 
+        webflow_category_ids = [map_category_to_id(cat) for cat in categories if map_category_to_id(cat) is not None]
 
         if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
             logger.error(f"Invalid gov-url: {bill_url}")
             return None
 
-        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}, category: {category}")
+        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}, category: {webflow_category_ids}")
 
         data = {
             "fields": {
@@ -104,7 +150,7 @@ class WebflowAPI:
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
-                "category": category,  # Ensure the category is included in the data payload
+                "category": webflow_category_ids,  # Add the category IDs
                 "public": True,
                 "_draft": False,
                 "_archived": False,
@@ -127,7 +173,6 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to create collection item: {response.status_code} - {response.text}")
             return None
-
 
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:

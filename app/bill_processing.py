@@ -198,15 +198,8 @@ WEBFLOW_CATEGORIES = {
 # Function to categorize the bill based on its description and map to valid Webflow categories
 # Function to categorize a bill based on its description using GPT-4
 # Function to categorize a bill based on its description using GPT-4
+# Function to categorize a bill based on its description using GPT-4
 def categorize_bill(description):
-    valid_categories = [
-        "Animals", "Arts", "Business", "Civil Rights", "Criminal Justice", "Culture", "Disney", "Drugs", "Education",
-        "Elections", "Employment", "Energy", "Environment", "Government", "Guns", "Housing", "Immigration",
-        "International Relations", "LGBT", "Marriage", "Media", "Medical", "Military and Veterans", "National Security",
-        "Natural Disasters", "Public Records", "Public Safety", "Social Welfare", "Sports", "State Parks", "Taxes",
-        "Technology", "Transportation"
-    ]
-    
     response = openai.ChatCompletion.create(
         model="gpt-4-turbo-preview",
         messages=[
@@ -216,17 +209,8 @@ def categorize_bill(description):
     )
     categories = response['choices'][0]['message']['content']
     # Assuming the response is formatted as a comma-separated list of categories
-    suggested_categories = categories.split(', ')
-    
-    # Validate the categories against the list of valid categories
-    valid_suggestions = [cat for cat in suggested_categories if cat in valid_categories]
-    
-    if not valid_suggestions:
-        # If no valid categories are suggested, you can set a default or handle it as needed
-        logging.error("No valid categories were suggested.")
-        return ["Government"]  # Default category or handle appropriately
+    return [cat.strip() for cat in categories.split(',')]
 
-    return valid_suggestions
 
 # Function to summarize text with OpenAI
 def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
