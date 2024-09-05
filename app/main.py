@@ -335,17 +335,14 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             webflow_item_data = webflow_item.get('items', [])[0]
             name = webflow_item_data.get('name')
             slug = webflow_item_data.get('slug')
-            support_text = webflow_item_data.get('support', '')
-            oppose_text = webflow_item_data.get('oppose', '')
+            support_text = webflow_item_data.get('support', '') or ''
+            oppose_text = webflow_item_data.get('oppose', '') or ''
             description = webflow_item_data.get('description', '')  # Ensure description is retrieved
 
             if not name or not slug:
                 raise HTTPException(status_code=500, detail="Required fields 'name' or 'slug' are missing in the Webflow item.")
 
             # Initialize support_text and oppose_text if None
-            support_text = support_text if support_text is not None else ''
-            oppose_text = oppose_text if oppose_text is not None else ''
-
             if request.support == 'Support':
                 support_text += f"\n{request.member_organization}"
             else:
@@ -354,8 +351,8 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             # Prepare the data with the description field included
             data = {
                 "fields": {
-                    "support": support_text,
-                    "oppose": oppose_text,
+                    "support": support_text.strip(),
+                    "oppose": oppose_text.strip(),
                     "name": name,
                     "slug": slug,
                     "description": description,  # Ensure description is updated
@@ -368,6 +365,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 raise HTTPException(status_code=500, detail="Failed to update Webflow item.")
 
         else:
+            # New bill creation
             bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
             bill_details = fetch_bill_details(bill_url)
             logger.info(f"Obtained bill details for: {bill_url}")
@@ -395,17 +393,23 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             logger.info("Creating Webflow item")
-            # Pass the description field to Webflow API
-            webflow_item_id, slug = webflow_api.create_collection_item(
+            # Pass the description field and support/oppose text to Webflow API
+            result = webflow_api.create_collection_item(
                 bill_url,
                 {
                     **bill_details,  # Ensure bill details include description
                     "description": summary  # Set description to the generated summary
                 },
                 kialo_url,
-                support_text='',
-                oppose_text=''
+                support_text=request.member_organization if request.support == "Support" else '',
+                oppose_text=request.member_organization if request.support == "Oppose" else ''
             )
+
+            if result is None:
+                logger.error("Failed to create Webflow item")
+                raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+
+            webflow_item_id, slug = result
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
@@ -453,6 +457,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
+
 
 
 
