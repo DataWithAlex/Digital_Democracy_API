@@ -67,7 +67,7 @@ class WebflowAPI:
         }
         self.base_url = "https://api.webflow.com"
 
-    def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str) -> Optional[str]:
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -79,7 +79,9 @@ class WebflowAPI:
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
-            "fields": {
+            "isArchived": False,
+            "isDraft": False,
+            "fieldData": {
                 "name": title,
                 "slug": slug,
                 "post-body": "",
@@ -92,25 +94,22 @@ class WebflowAPI:
                 "support": support_text,
                 "oppose": oppose_text,
                 "public": True,
-                "_draft": False,
-                "_archived": False,
                 "featured": True
             }
         }
 
         logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
-        response = requests.post(create_item_endpoint, headers=self.headers, data=json.dumps(data))
+        create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
+        response = requests.post(create_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         if response.status_code in [200, 201]:
-            item_id = response.json()['_id']
-            logger.info(f"Collection item created successfully, ID: {item_id}")
-            logger.info(f"https://digitaldemocracyproject.org/bills/{slug}")
+            item_id = response.json().get('id')
+            logger.info(f"Live collection item created successfully, ID: {item_id}")
             return item_id, slug
         else:
-            logger.error(f"Failed to create collection item: {response.status_code} - {response.text}")
+            logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
