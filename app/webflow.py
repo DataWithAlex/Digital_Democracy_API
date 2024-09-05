@@ -48,8 +48,6 @@ def reformat_title(title):
     new_title = f"{description} ({formatted_bill_number})"
     return new_title
 
-
-
 def clean_kialo_url(url: str) -> str:
     # Split the URL at "&action="
     parts = url.split("&action=")
@@ -68,21 +66,6 @@ class WebflowAPI:
             'accept': 'application/json'
         }
         self.base_url = "https://api.webflow.com"
-
-    def publish_collection_item(self, item_id: str) -> None:
-        publish_endpoint = f"https://api.webflow.com/sites/{self.site_id}/publish"
-
-        # The IDs of the items to be published need to be wrapped in an array
-        data = {
-            "domains": ["digitaldemocracyproject.org"],  # Your actual domain
-            "itemIds": [item_id]
-        }
-
-        response = requests.post(publish_endpoint, headers=self.headers, data=json.dumps(data))
-        if response.status_code in [200, 201]:
-            logger.info("Collection item published successfully")
-        else:
-            logger.error(f"Failed to publish collection item: {response.status_code} - {response.text}")
 
     def create_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
@@ -124,7 +107,6 @@ class WebflowAPI:
         if response.status_code in [200, 201]:
             item_id = response.json()['_id']
             logger.info(f"Collection item created successfully, ID: {item_id}")
-            self.publish_collection_item(item_id)
             logger.info(f"https://digitaldemocracyproject.org/bills/{slug}")
             return item_id, slug
         else:
