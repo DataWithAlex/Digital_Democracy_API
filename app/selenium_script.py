@@ -203,10 +203,10 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         next_button.click()
         logger.info("Create")
 
-        time.sleep(1)
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "button") and contains(@aria-label, "Enter")]')))
-        next_button.click()
-        logger.info("Enter")
+        #time.sleep(1)
+        #next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "button") and contains(@aria-label, "Enter")]')))
+        #next_button.click()
+        #logger.info("Enter")
 
         time.sleep(1)
         current_url = driver.current_url
