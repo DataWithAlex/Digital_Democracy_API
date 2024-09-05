@@ -161,7 +161,7 @@ def fetch_federal_bill_details(session, bill, bill_type):
 
 
 # Function to summarize text with OpenAI
-def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
+def summarize_with_openai_chat(text, model="gpt-4o"):
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -173,7 +173,7 @@ def summarize_with_openai_chat(text, model="gpt-4-turbo-preview"):
     return content
 
 # Function to summarize full text with OpenAI
-def full_summarize_with_openai_chat(full_text, model="gpt-4-turbo-preview"):
+def full_summarize_with_openai_chat(full_text, model="gpt-4o"):
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -185,7 +185,7 @@ def full_summarize_with_openai_chat(full_text, model="gpt-4-turbo-preview"):
     return summary
 
 # Function to summarize full text with OpenAI in Spanish
-def full_summarize_with_openai_chat_spanish(full_text, model="gpt-4-turbo-preview"):
+def full_summarize_with_openai_chat_spanish(full_text, model="gpt-4o"):
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -199,7 +199,7 @@ def full_summarize_with_openai_chat_spanish(full_text, model="gpt-4-turbo-previe
 # Function to generate pros and cons
 def generate_pros_and_cons(full_text):
     pros_response = openai.ChatCompletion.create(
-        model="gpt-4-turbo-preview",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant designed to generate pros for supporting a bill based on its summary. You must specifically have 3 Pros, separated by numbers--no exceptions. Numbers separated as 1) 2) 3)"},
             {"role": "user", "content": f"What are the pros of supporting this bill? make it no more than 2 sentences \n\n{full_text}"}
@@ -208,7 +208,7 @@ def generate_pros_and_cons(full_text):
     pros = pros_response['choices'][0]['message']['content']
 
     cons_response = openai.ChatCompletion.create(
-        model="gpt-4-turbo-preview",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant designed to generate cons against supporting a bill based on its summary. You must have specifically 3 Cons, separated by numbers--no exceptions. Numbers separated as 1) 2) 3)"},
             {"role": "user", "content": f"What are the cons of supporting this bill? Make it no more than 2 sentences \n\n{full_text}"}
@@ -221,7 +221,7 @@ def generate_pros_and_cons(full_text):
 # Function to generate pros and cons in Spanish
 def generate_pros_and_cons_spanish(full_text):
     pros_response = openai.ChatCompletion.create(
-        model="gpt-4-turbo-preview",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "Eres un asistente útil diseñado para generar ventajas para respaldar una factura en función de su resumen. Debes tener específicamente 3 profesionales, separados por números, sin excepciones. Números separados como 1) 2) 3)"},
             {"role": "user", "content": f"¿Cuáles son las ventajas de apoyar este proyecto de ley? que no sean más de 2 oraciones \n\n{full_text}"}
@@ -230,7 +230,7 @@ def generate_pros_and_cons_spanish(full_text):
     pros = pros_response['choices'][0]['message']['content']
 
     cons_response = openai.ChatCompletion.create(
-        model="gpt-4-turbo-preview",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "Usted es un asistente útil diseñado para generar desventajas contra el respaldo de un proyecto de ley en función de su resumen. Debes tener específicamente 3 desventajas, separadas por números, sin excepciones. Números separados como 1) 2) 3)"},
             {"role": "user", "content": f"¿Cuáles son las desventajas de apoyar este proyecto de ley? Que no tenga más de 2 oraciones. \n\n{full_text}"}
