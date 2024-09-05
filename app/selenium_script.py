@@ -208,13 +208,13 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         #next_button.click()
         #logger.info("Enter")
 
-        time.sleep(1)
+        time.sleep(10)
         current_url = driver.current_url
         x = current_url[-5:]
         new_url = f"{current_url}?path={x}.0~{x}.3&active=~{x}.3&action=edit"
         driver.get(new_url)
         logger.info("Edit")
-        logger.info("new_url")
+        logger.info(new_url)
 
         time.sleep(1)
         bill_summary_ = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H") or contains(text(), "Thesis")]')))
