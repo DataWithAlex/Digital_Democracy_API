@@ -147,7 +147,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
             logger.info(f"Summary for Webflow: {summary}")
 
             logger.info("Creating Webflow item")
-            webflow_item_id = webflow_api.create_collection_item(bill_request.url, bill_details, kialo_url)
+            webflow_item_id = webflow_api.create_live_collection_item(bill_request.url, bill_details, kialo_url)
         else:
             logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
 
@@ -223,7 +223,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             logger.info(f"Summary for Webflow: {summary}")
 
             logger.info("Creating Webflow item")
-            result = webflow_api.create_collection_item(
+            result = webflow_api.create_live_collection_item(
                 bill_details['gov-url'],
                 bill_details,
                 kialo_url,
@@ -394,7 +394,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             logger.info("Creating Webflow item")
             # Pass the description field and support/oppose text to Webflow API
-            result = webflow_api.create_collection_item(
+            result = webflow_api.create_live_collection_item(
                 bill_url,
                 {
                     **bill_details,  # Ensure bill details include description
