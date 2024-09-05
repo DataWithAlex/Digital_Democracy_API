@@ -27,7 +27,7 @@ def reformat_title(title):
     """
     # Split the title at the colon to separate the bill identifier and description
     parts = title.split(":")
-    
+
     if len(parts) < 2:
         # If there is no colon in the title, return it as is
         return title
@@ -36,13 +36,19 @@ def reformat_title(title):
     bill_identifier = parts[0].strip()
     # Extract only the description part
     description = parts[1].strip()
-    
+
     # Extract the bill type and number (e.g., "HR 9056") without session or suffixes
     bill_type_number = " ".join(bill_identifier.split()[1:3])  # Takes only the second and third parts, which are the type and number
 
+    # Ensure that the bill type is included in the formatted title
+    bill_number = bill_identifier.split()[2] if len(bill_identifier.split()) > 2 else ""
+    bill_type = bill_identifier.split()[1] if len(bill_identifier.split()) > 1 else ""
+    bill_type_with_number = f"{bill_type} {bill_number}" if bill_number else bill_type
+
     # Format the new title as "Description (Bill Type Number)"
-    new_title = f"{description} ({bill_type_number})"
+    new_title = f"{description} ({bill_type_with_number})"
     return new_title
+
 
 
 def clean_kialo_url(url: str) -> str:
