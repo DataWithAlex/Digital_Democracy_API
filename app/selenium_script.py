@@ -124,7 +124,8 @@ def run_selenium_script(title, summary, pros_text, cons_text):
     username = os.environ.get('KIALO_USERNAME')
     password = os.environ.get('KIALO_PASSWORD')
 
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 40)  # Increased wait time
+
 
     try:
         username_field = wait.until(EC.presence_of_element_located((By.NAME, "emailOrUsername")))
