@@ -184,35 +184,42 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         file_input.send_keys(image_path)
         logger.info("Uploaded Image")
 
-        upload_button = driver.find_element(By.XPATH, "//button[contains(@aria-label, 'Drag and drop file or click')]")
+        upload_button = driver.find_element(By.XPATH, "//button[contains(@aria-label, 'Drag and drop or click')]")
         upload_button.click()
+        logger.info("Drag and drop or click")
 
         tags_input_field = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input.pill-editor-input")))
         tags_input_field.clear()
         tags_input_field.send_keys("DDP")
         tags_input_field.send_keys(Keys.ENTER)
+        logger.info("DDP")
 
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
         next_button.click()
+        logger.info("Next")
 
         time.sleep(1)
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Create")]')))
         next_button.click()
+        logger.info("Create")
 
         time.sleep(1)
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "button") and contains(@aria-label, "Enter")]')))
         next_button.click()
+        logger.info("Enter")
 
         time.sleep(1)
         current_url = driver.current_url
         x = current_url[-5:]
         new_url = f"{current_url}?path={x}.0~{x}.3&active=~{x}.3&action=edit"
         driver.get(new_url)
+        logger.info("Edit")
 
         time.sleep(1)
         bill_summary_ = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H") or contains(text(), "Test")]')))
         bill_summary_.clear()
         bill_summary_.send_keys(bill_summary_text)
+        logger.info("Add Bill Text")
 
         time.sleep(1)
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))
