@@ -184,7 +184,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         file_input.send_keys(image_path)
         logger.info("Uploaded Image")
 
-        upload_button = driver.find_element(By.XPATH, "//button[contains(@aria-label, 'Drag and drop or click')]")
+        upload_button = driver.find_element(By.XPATH, "//button[contains(@aria-label, 'Drag and drop file or click')]")
         upload_button.click()
 
         tags_input_field = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input.pill-editor-input")))
