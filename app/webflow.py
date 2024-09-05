@@ -21,7 +21,7 @@ def generate_slug(title):
 
 def reformat_title(title):
     """
-    Reformat the title to exclude the congressional session and other suffixes.
+    Reformat the title to include the bill type and number in parentheses.
     For example, convert "118 HR 9056 IH: VA Insurance Improvement Act" to 
     "VA Insurance Improvement Act (HR 9056)".
     """
@@ -37,12 +37,17 @@ def reformat_title(title):
     # Extract only the description part
     description = parts[1].strip()
     
-    # Extract the bill type and number (e.g., "HR 9056") without session or suffixes
+    # Extract the bill type and number (e.g., "HR 9056") including prefix
     bill_type_number = " ".join(bill_identifier.split()[1:3])  # Takes only the second and third parts, which are the type and number
+    
+    # Append prefix to bill number
+    prefix = bill_identifier.split()[0]  # Extracts "SB", "HR", etc.
+    formatted_bill_number = f"{prefix} {bill_type_number}"
 
     # Format the new title as "Description (Bill Type Number)"
-    new_title = f"{description} ({bill_type_number})"
+    new_title = f"{description} ({formatted_bill_number})"
     return new_title
+
 
 
 def clean_kialo_url(url: str) -> str:
