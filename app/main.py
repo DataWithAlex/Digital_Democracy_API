@@ -169,7 +169,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         db.close()
 
 
-@app.post("/process-federal-bill/")
+@app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
@@ -228,7 +228,8 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
                 bill_details,
                 kialo_url,
                 support_text=request.member_organization if request.support == "Support" else '',
-                oppose_text=request.member_organization if request.support == "Oppose" else ''
+                oppose_text=request.member_organization if request.support == "Oppose" else '',
+                jurisdiction="US"  # Set jurisdiction to "US" for federal bills
             )
 
             if result is None:
@@ -306,7 +307,6 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
@@ -402,7 +402,8 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 },
                 kialo_url,
                 support_text=request.member_organization if request.support == "Support" else '',
-                oppose_text=request.member_organization if request.support == "Oppose" else ''
+                oppose_text=request.member_organization if request.support == "Oppose" else '',
+                jurisdiction="FL"  # Set jurisdiction to "FL" for Florida bills
             )
 
             if result is None:
@@ -457,6 +458,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.close()
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
+
 
 
 

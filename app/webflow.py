@@ -67,7 +67,7 @@ class WebflowAPI:
         }
         self.base_url = "https://api.webflow.com"
 
-    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str) -> Optional[str]:
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -85,7 +85,7 @@ class WebflowAPI:
                 "name": title,
                 "slug": slug,
                 "post-body": "",
-                "jurisdiction": "",
+                "jurisdiction": jurisdiction,  # Set jurisdiction here
                 "voatzid": "",
                 "kialo-url": kialo_url,
                 "gov-url": bill_url,
