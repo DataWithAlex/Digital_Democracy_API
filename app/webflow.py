@@ -104,13 +104,15 @@ class WebflowAPI:
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-        if response.status_code in [200, 201]:
+        # Check if the response status code indicates success (200, 201, or 202)
+        if response.status_code in [200, 201, 202]:
             item_id = response.json().get('id')
             logger.info(f"Live collection item created successfully, ID: {item_id}")
             return item_id, slug
         else:
             logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
+
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
