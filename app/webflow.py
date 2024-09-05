@@ -66,6 +66,12 @@ class WebflowAPI:
             'accept': 'application/json'
         }
         self.base_url = "https://api.webflow.com"
+        
+        # Add a mapping for the jurisdictions
+        self.jurisdiction_map = {
+            'FL': '655288ef928edb128306745f',  # Replace with the actual ItemRef for FL
+            'US': '65810f6b889af86635a71b49'  # Replace with the actual ItemRef for US
+        }
 
     def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
@@ -74,6 +80,12 @@ class WebflowAPI:
 
         if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
             logger.error(f"Invalid gov-url: {bill_url}")
+            return None
+
+        # Map jurisdiction to its corresponding ItemRef
+        jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
+        if not jurisdiction_item_ref:
+            logger.error(f"Invalid jurisdiction: {jurisdiction}")
             return None
 
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
@@ -85,7 +97,7 @@ class WebflowAPI:
                 "name": title,
                 "slug": slug,
                 "post-body": "",
-                "jurisdiction": jurisdiction,  # Set jurisdiction here
+                "jurisdiction": jurisdiction_item_ref,  # Use the ItemRef for the jurisdiction
                 "voatzid": "",
                 "kialo-url": kialo_url,
                 "gov-url": bill_url,
@@ -112,6 +124,7 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
+
 
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
