@@ -259,8 +259,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         else:
             # If the bill already exists, update it
             webflow_item_id = existing_bill.webflow_item_id
-            webflow_item = webflow_api.get_collection_item(webflow_item_id)
+            if not webflow_item_id:
+                logger.error("Webflow item ID is missing for the existing bill")
+                raise HTTPException(status_code=500, detail="Webflow item ID is missing for the existing bill")
 
+            webflow_item = webflow_api.get_collection_item(webflow_item_id)
             if not webflow_item or 'items' not in webflow_item or not webflow_item['items']:
                 logger.error("Failed to retrieve valid Webflow item")
                 raise HTTPException(status_code=500, detail="Failed to retrieve valid Webflow item")
@@ -286,6 +289,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
                 }
             }
 
+            # Validate and update the Webflow item
             if not webflow_api.update_collection_item(webflow_item_id, data):
                 logger.error("Failed to update Webflow item")
                 raise HTTPException(status_code=500, detail="Failed to update Webflow item")
@@ -322,6 +326,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 
 @app.post("/update-bill/", response_class=Response)
