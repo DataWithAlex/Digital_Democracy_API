@@ -185,17 +185,28 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         for key, value in bill_details.items():
             logger.info(f"{key}: {value}")
 
+        # Ensure required bill details are present
         if not all(k in bill_details for k in ["govId", "billTextPath", "full_text", "history", "gov-url"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
+        # Generate PDF and summaries
         if request.lan == "es":
-            pdf_path, summary, pros, cons = create_federal_summary_pdf_spanish(bill_details['full_text'], "output/federal_bill_summary_spanish.pdf", bill_details['title'])
+            pdf_path, summary, pros, cons = create_federal_summary_pdf_spanish(
+                bill_details['full_text'], 
+                "output/federal_bill_summary_spanish.pdf", 
+                bill_details['title']
+            )
         else:
-            pdf_path, summary, pros, cons = create_federal_summary_pdf(bill_details['full_text'], "output/federal_bill_summary.pdf", bill_details['title'])
+            pdf_path, summary, pros, cons = create_federal_summary_pdf(
+                bill_details['full_text'], 
+                "output/federal_bill_summary.pdf", 
+                bill_details['title']
+            )
 
-        # Check if the bill already exists
+        # Check if the bill already exists in the database
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
+            # Insert new bill into the database
             new_bill = Bill(
                 govId=bill_details["govId"],
                 billTextPath=bill_details["billTextPath"],
@@ -204,11 +215,13 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             db.add(new_bill)
             db.commit()
 
+            # Insert metadata for the new bill
             for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
                 new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=request.lan.upper())
                 db.add(new_meta)
             db.commit()
 
+            # Generate a Kialo URL using the Selenium script
             logger.info("About to run Selenium script")
             kialo_url = run_selenium_script(
                 title=bill_details['govId'],
@@ -222,6 +235,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             bill_details['description'] = summary
             logger.info(f"Summary for Webflow: {summary}")
 
+            # Create a new Webflow item
             logger.info("Creating Webflow item")
             result = webflow_api.create_live_collection_item(
                 bill_details['gov-url'],
@@ -243,11 +257,9 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             new_bill.webflow_item_id = webflow_item_id
             db.commit()
         else:
-            # Update existing bill
+            # If the bill already exists, update it
             webflow_item_id = existing_bill.webflow_item_id
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
-
-            logger.info(f"Webflow item response: {webflow_item}")
 
             if not webflow_item or 'items' not in webflow_item or not webflow_item['items']:
                 logger.error("Failed to retrieve valid Webflow item")
@@ -275,8 +287,10 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             }
 
             if not webflow_api.update_collection_item(webflow_item_id, data):
+                logger.error("Failed to update Webflow item")
                 raise HTTPException(status_code=500, detail="Failed to update Webflow item")
 
+        # Save the form data to the database
         save_form_data(
             name=request.name,
             email=request.email,
@@ -291,6 +305,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             db=db
         )
 
+        # Return the generated PDF if available
         if pdf_path and os.path.exists(pdf_path):
             with open(pdf_path, "rb") as pdf_file:
                 return Response(content=pdf_file.read(), media_type="application/pdf")
@@ -307,6 +322,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
