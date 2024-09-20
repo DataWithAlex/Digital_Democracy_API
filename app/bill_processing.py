@@ -72,7 +72,6 @@ categories = [
     {"name": "Taxes", "id": "655288ef928edb128306745c"}
 ]
 
-# Function to categorize the bill text and select top categories
 def get_top_categories(bill_text, categories, model="gpt-4o"):
     # Prepare the system message with instructions
     system_message = (
@@ -97,22 +96,24 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
     top_categories_response = response['choices'][0]['message']['content']
     print(f"Model Response: {top_categories_response}")
 
-    # Split the response into individual categories
-    top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
-
-    # Validate and extract category IDs
+    # Validate and parse the response properly
     valid_categories = []
-    for category in top_categories:
-        try:
-            # Parse the category string, assuming format: "[Category Name, Category ID]"
-            name, category_id = category.strip("[]").split(", ")
-            # Check if the category_id exists in the predefined list
-            if any(cat['id'] == category_id for cat in categories):
-                valid_categories.append(category_id)
-            else:
-                print(f"Invalid category ID: {category_id}")
-        except Exception as e:
-            print(f"Error parsing category: {category}, error: {e}")
+    for line in top_categories_response.split("\n"):
+        line = line.strip()
+        # Check if line matches the format [Category Name, Category ID]
+        if line.startswith("[") and line.endswith("]"):
+            try:
+                # Remove brackets and split by comma
+                name, category_id = line[1:-1].split(", ")
+                # Check if the category_id exists in the predefined list
+                if any(cat['id'] == category_id for cat in categories):
+                    valid_categories.append(category_id)
+                else:
+                    print(f"Invalid category ID: {category_id}")
+            except Exception as e:
+                print(f"Error parsing category: {line}, error: {e}")
+        else:
+            print(f"Unexpected format: {line}")
 
     return valid_categories
 
@@ -178,9 +179,10 @@ def fetch_bill_details(bill_page_url):
                 full_text += page.get_text()
 
         # Get top categories for the bill text
+    # Fetch top categories
         top_categories = get_top_categories(full_text, categories)
         formatted_categories = format_categories_for_webflow(top_categories)
-        bill_details["categories"] = formatted_categories  # Add categories to bill details
+        bill_details["categories"] = formatted_categories  # Ensure it's a list of {"_id": "category_id"}
 
         return bill_details
     else:
