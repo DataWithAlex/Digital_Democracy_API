@@ -31,8 +31,9 @@ def format_categories_for_webflow(category_ids):
     Returns:
         list: A formatted list of dictionaries, each containing an '_id' key.
     """
-    return [{"_id": category_id} for category_id in category_ids]
-
+    formatted_categories = [{"_id": category_id} for category_id in category_ids]
+    logging.debug(f"Formatted Categories for Webflow:\n{formatted_categories}")
+    return formatted_categories
 # Define the list of categories with their names and IDs
 # Define the list of categories with their names and IDs
 categories = [
@@ -72,6 +73,7 @@ categories = [
     {"name": "Taxes", "id": "655288ef928edb128306745c"}
 ]
 
+
 def get_top_categories(bill_text, categories, model="gpt-4o"):
     # Prepare the system message with instructions
     system_message = (
@@ -92,28 +94,34 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
         ],
     )
 
-    # Extract the response content and print it for debugging
+    # Extract the response content and log it for debugging
     top_categories_response = response['choices'][0]['message']['content']
-    print(f"Model Response: {top_categories_response}")
+    logging.debug(f"Model Response:\n{top_categories_response}")
 
-    # Validate and parse the response properly
+    # Split the response into individual lines
+    top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
+    
+    # Log the extracted top categories
+    logging.debug(f"Extracted Categories from Model:\n{top_categories}")
+
+    # Validate and extract category IDs
     valid_categories = []
-    for line in top_categories_response.split("\n"):
-        line = line.strip()
-        # Check if line matches the format [Category Name, Category ID]
-        if line.startswith("[") and line.endswith("]"):
-            try:
-                # Remove brackets and split by comma
-                name, category_id = line[1:-1].split(", ")
-                # Check if the category_id exists in the predefined list
-                if any(cat['id'] == category_id for cat in categories):
-                    valid_categories.append(category_id)
-                else:
-                    print(f"Invalid category ID: {category_id}")
-            except Exception as e:
-                print(f"Error parsing category: {line}, error: {e}")
-        else:
-            print(f"Unexpected format: {line}")
+    for category in top_categories:
+        try:
+            # Parse the category string, assuming format: "[Category Name, Category ID]"
+            name, category_id = category.strip("[]").split(", ")
+            logging.debug(f"Parsed Category - Name: {name}, ID: {category_id}")
+
+            # Check if the category_id exists in the predefined list
+            if any(cat['id'] == category_id for cat in categories):
+                valid_categories.append(category_id)
+                logging.debug(f"Valid Category ID: {category_id}")
+            else:
+                logging.warning(f"Invalid Category ID: {category_id} not found in predefined list.")
+        except Exception as e:
+            logging.error(f"Error parsing category: {category}, error: {e}")
+
+    logging.debug(f"Final Valid Categories: {valid_categories}")
 
     return valid_categories
 
