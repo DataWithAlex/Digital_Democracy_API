@@ -107,7 +107,7 @@ class WebflowAPI:
                 "oppose": oppose_text,
                 "public": True,
                 "featured": True,
-                "category": bill_details["categories"]  # Include categories in field data
+                "category": bill_details["categories"]  # Ensure the categories field is in the correct format
             }
         }
 

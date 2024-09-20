@@ -29,9 +29,9 @@ def format_categories_for_webflow(category_ids):
         category_ids (list): A list of category IDs.
 
     Returns:
-        list: A formatted list of dictionaries, each containing an 'id' key.
+        list: A formatted list of dictionaries, each containing an '_id' key.
     """
-    return [{"id": category_id} for category_id in category_ids]
+    return [{"_id": category_id} for category_id in category_ids]
 
 # Define the list of categories with their names and IDs
 # Define the list of categories with their names and IDs
