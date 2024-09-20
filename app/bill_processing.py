@@ -62,15 +62,17 @@ categories = [
 
 # Function to categorize the bill text and select top categories
 def get_top_categories(bill_text, categories, model="gpt-4o"):
+    # Prepare the system message with instructions
     system_message = (
         "You are an AI that categorizes legislative texts into predefined categories. "
-        "You will receive a list of categories with IDs and the text of a legislative bill. "
-        "Your task is to select the three most relevant categories for the given text."
+        "You will receive a list of categories and the text of a legislative bill. "
+        "Your task is to select the three most relevant categories for the given text and return them in this format: [Category Name, Category ID]."
     )
-    
+
     categories_list = "\n".join([f"- {category['name']}: {category['id']}" for category in categories])
-    user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}. Return them in the following format: [CATEGORY: CATEGORY ID]."
-    
+    user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}"
+
+    # Create the ChatCompletion request using the GPT-4o model
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -78,18 +80,19 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
             {"role": "user", "content": user_message}
         ],
     )
-    
-    # Print the model's response for debugging
-    print(f"Model Response: {response['choices'][0]['message']['content']}")
 
-    # Extract and validate the categories
+    # Extract the response content and print it for debugging
     top_categories_response = response['choices'][0]['message']['content']
+    print(f"Model Response: {top_categories_response}")
+
+    # Split the response into individual categories
     top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
 
-    # Validate that categories are correctly formatted and exist in the list
+    # Validate and extract category IDs
     valid_categories = []
     for category in top_categories:
         try:
+            # Parse the category string, assuming format: "[Category Name, Category ID]"
             name, category_id = category.strip("[]").split(", ")
             # Check if the category_id exists in the predefined list
             if any(cat['id'] == category_id for cat in categories):
@@ -100,22 +103,6 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
             print(f"Error parsing category: {category}, error: {e}")
 
     return valid_categories
-
-# Function to format the OpenAI output for Webflow
-def format_categories_for_webflow(openai_output):
-    # Extract category IDs from the OpenAI output
-    category_ids = []
-    for category in openai_output:
-        # Assuming the format is: "[Category Name, Category ID]"
-        # We split by commas and strip the brackets
-        parts = category.strip("[]").split(",")
-        if len(parts) == 2:
-            # Get the ID, which is the second part, and strip whitespace
-            category_id = parts[1].strip()
-            category_ids.append(category_id)
-    
-    # Return the list of IDs formatted for Webflow's ItemRefSet field
-    return category_ids
 
 
 # Function to upload files to S3
