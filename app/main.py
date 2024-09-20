@@ -104,6 +104,8 @@ async def delete_file():
         logger.error(f"Failed to delete file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Function to process bill requests
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
@@ -113,15 +115,16 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         for key, value in bill_details.items():
             logger.info(f"{key}: {value}")
 
-        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path"]):
+        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "categories"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
+        # Generate PDF and summaries based on language preference
         if bill_request.lan == "es":
             pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
         else:
             pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
 
-        # Check if the bill already exists
+        # Check if the bill already exists in the database
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
             new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
@@ -147,7 +150,14 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
             logger.info(f"Summary for Webflow: {summary}")
 
             logger.info("Creating Webflow item")
-            webflow_item_id = webflow_api.create_live_collection_item(bill_request.url, bill_details, kialo_url)
+            webflow_item_id = webflow_api.create_live_collection_item(
+                bill_request.url, 
+                bill_details, 
+                kialo_url, 
+                support_text=bill_request.member_organization if bill_request.support == "Support" else '', 
+                oppose_text=bill_request.member_organization if bill_request.support == "Oppose" else '', 
+                jurisdiction="FL"  # Example jurisdiction for Florida bills
+            )
         else:
             logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
 
@@ -480,10 +490,6 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
 
-
-
-
-
 def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
     form_data = FormData(
         name=name,
@@ -500,7 +506,6 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
     )
     db.add(form_data)
     db.commit()
-
 
 # Exception handlers
 @app.exception_handler(Exception)

@@ -21,3 +21,7 @@ myenv/
 __pycache__/
 .__pycache__
 
+myenv-local-only/
+.WebFlow.ipynb
+
+WebFlow.ipynb
