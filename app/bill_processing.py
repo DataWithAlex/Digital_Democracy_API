@@ -21,6 +21,18 @@ openai.api_key = openai_api_key
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def format_categories_for_webflow(category_ids):
+    """
+    Converts a list of category IDs into the format expected by Webflow API.
+    
+    Args:
+        category_ids (list): A list of category IDs.
+
+    Returns:
+        list: A formatted list of dictionaries, each containing an 'id' key.
+    """
+    return [{"id": category_id} for category_id in category_ids]
+
 # Define the list of categories with their names and IDs
 # Define the list of categories with their names and IDs
 categories = [
