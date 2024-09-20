@@ -21,85 +21,7 @@ openai.api_key = openai_api_key
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def format_categories_for_webflow(category_ids):
-    """
-    Converts a list of category IDs into the format expected by Webflow API.
-    
-    Args:
-        category_ids (list): A list of category IDs.
-
-    Returns:
-        list: A formatted list of dictionaries, each containing an '_id' key.
-    """
-    formatted_categories = [{"_id": category_id} for category_id in category_ids]
-    logging.debug(f"Formatted Categories for Webflow:\n{formatted_categories}")
-    return formatted_categories
 # Define the list of categories with their names and IDs
-# Define the list of categories with their names and IDs
-
-def parse_categories(model_response, categories):
-    """
-    Parses the model response to extract category IDs.
-
-    Args:
-        model_response (str): The response from the model, expected to be a list of categories with names and IDs.
-        categories (list): A list of predefined categories with 'name' and 'id' fields.
-
-    Returns:
-        list: A list of valid category IDs extracted from the response.
-    """
-    parsed_categories = []
-    try:
-        # Clean the response and split it into lines
-        category_lines = [line.strip() for line in model_response.split('\n') if line.strip()]
-        logging.debug(f"Category Lines Extracted: {category_lines}")
-        
-        for line in category_lines:
-            # Split by comma and clean the extracted fields
-            try:
-                name, category_id = line.strip("[]").split(", ")
-                name = name.strip().replace('"', '').replace("'", "")
-                category_id = category_id.strip().replace('"', '').replace("'", "")
-                
-                # Check if the extracted ID matches any in the predefined categories
-                if any(cat['id'] == category_id for cat in categories):
-                    parsed_categories.append(category_id)
-                    logging.info(f"Valid Category Parsed - Name: {name}, ID: {category_id}")
-                else:
-                    logging.warning(f"Invalid Category ID: {category_id} not found in predefined list.")
-            
-            except ValueError as ve:
-                logging.error(f"Error parsing category line: {line} - {ve}")
-    
-    except Exception as e:
-        logging.error(f"Failed to parse categories from response: {e}")
-
-    return parsed_categories
-
-def validate_and_format_categories(category_ids, categories):
-    """
-    Validate category IDs and format them for the Webflow API.
-
-    Args:
-        category_ids (list): A list of category IDs extracted from the model response.
-        categories (list): A list of predefined categories with 'name' and 'id' fields.
-
-    Returns:
-        list: A formatted list of dictionaries with '_id' fields for Webflow API.
-    """
-    formatted_categories = []
-    
-    # Validate each ID and format it for Webflow
-    for category_id in category_ids:
-        # Check if the category ID exists in predefined categories
-        if any(cat['id'] == category_id for cat in categories):
-            formatted_categories.append({"_id": category_id})
-            logging.info(f"Validated and formatted category ID: {category_id}")
-        else:
-            logging.warning(f"Category ID {category_id} not found in predefined categories.")
-    
-    return formatted_categories
-
 categories = [
     {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
     {"name": "International Relations", "id": "663299c73b94826974bd24da"},
@@ -137,18 +59,18 @@ categories = [
     {"name": "Taxes", "id": "655288ef928edb128306745c"}
 ]
 
-
+# Function to categorize the bill text and select top categories
 def get_top_categories(bill_text, categories, model="gpt-4o"):
     # Prepare the system message with instructions
     system_message = (
         "You are an AI that categorizes legislative texts into predefined categories. "
         "You will receive a list of categories and the text of a legislative bill. "
-        "Your task is to select the three most relevant categories for the given text and return them in this format: [Category Name, Category ID]."
+        "Your task is to select the three most relevant categories for the given text."
     )
-
-    # Prepare the categories list to send to the model
-    categories_list = "\n".join([f"- {category['name']}: {category['id']}" for category in categories])
-    user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}"
+    
+    # Construct the list of categories as a user message
+    categories_list = "\n".join([f"- {category['name']}" for category in categories])
+    user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}. NOTE: YOU MUST RETURN THEM IN THE FOLLOWING FORMAT: [CATEGORY: CATEGORY ID]. For example, [Disney, 655288ef928edb128306742c]"
 
     # Create the ChatCompletion request using the GPT-4o model
     response = openai.ChatCompletion.create(
@@ -158,38 +80,30 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
             {"role": "user", "content": user_message}
         ],
     )
-
-    # Extract and log the raw response content for debugging
-    top_categories_response = response['choices'][0]['message']['content']
-    logging.debug(f"Raw Model Response:\n{top_categories_response}")
-
-    # Split and clean the response into individual categories
-    top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
-    logging.debug(f"Extracted Categories from Model:\n{top_categories}")
-
-    # Initialize list for valid categories
-    valid_categories = []
-
-    # Validate and extract category IDs
-    for category in top_categories:
-        try:
-            # Parse the category assuming the format: "[Category Name, Category ID]"
-            name, category_id = category.strip("[]").split(", ")
-            logging.debug(f"Parsed Category - Name: {name}, ID: {category_id}")
-
-            # Check if the category_id exists in the predefined list
-            if any(cat['id'] == category_id for cat in categories):
-                valid_categories.append(category_id)
-                logging.debug(f"Valid Category ID: {category_id}")
-            else:
-                logging.warning(f"Invalid Category ID: {category_id} not found in predefined list.")
-        except Exception as e:
-            logging.error(f"Error parsing category: {category}, error: {e}")
-
-    # Log the final valid categories
-    logging.debug(f"Final Valid Categories: {valid_categories}")
     
-    return valid_categories
+    # Extract the response content
+    top_categories_response = response['choices'][0]['message']['content']
+    
+    # Split the response into individual categories
+    top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
+    
+    return top_categories
+
+# Function to format the OpenAI output for Webflow
+def format_categories_for_webflow(openai_output):
+    # Extract category IDs from the OpenAI output
+    category_ids = []
+    for category in openai_output:
+        # Assuming the format is: "[Category Name, Category ID]"
+        # We split by commas and strip the brackets
+        parts = category.strip("[]").split(",")
+        if len(parts) == 2:
+            # Get the ID, which is the second part, and strip whitespace
+            category_id = parts[1].strip()
+            category_ids.append(category_id)
+    
+    # Return the list of IDs formatted for Webflow's ItemRefSet field
+    return category_ids
 
 
 # Function to upload files to S3
@@ -253,10 +167,9 @@ def fetch_bill_details(bill_page_url):
                 full_text += page.get_text()
 
         # Get top categories for the bill text
-    # Fetch top categories
         top_categories = get_top_categories(full_text, categories)
         formatted_categories = format_categories_for_webflow(top_categories)
-        bill_details["categories"] = formatted_categories  # Ensure it's a list of {"_id": "category_id"}
+        bill_details["categories"] = formatted_categories  # Add categories to bill details
 
         return bill_details
     else:
