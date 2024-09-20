@@ -127,7 +127,6 @@ class WebflowAPI:
             return None
 
 
-
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
 

@@ -74,26 +74,36 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
     user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}. NOTE: YOU MUST RETURN THEM IN THE FOLLOWING FORMAT: [CATEGORY: CATEGORY ID]. For example, [Disney, 655288ef928edb128306742c]"
 
     # Create the ChatCompletion request using the GPT-4o model
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": user_message}
-        ],
-    )
+    try:
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_message}
+            ],
+        )
+        
+        # Extract the response content
+        top_categories_response = response['choices'][0]['message']['content']
+        
+        # Log the response for debugging purposes
+        logging.info(f"OpenAI Category Response: {top_categories_response}")
+        
+        # Split the response into individual categories
+        top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
+        return top_categories
     
-    # Extract the response content
-    top_categories_response = response['choices'][0]['message']['content']
-    
-    # Split the response into individual categories
-    top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
-    
-    return top_categories
+    # Handle any exceptions and log the error message
+    except Exception as e:
+        logging.error(f"Error in OpenAI category generation: {str(e)}")
+        return []
 
 # Function to format the OpenAI output for Webflow
-def format_categories_for_webflow(openai_output):
+def format_categories_for_webflow(openai_output, valid_categories):
     # Extract category IDs from the OpenAI output
     category_ids = []
+    valid_category_ids = {category["id"] for category in valid_categories}
+    
     for category in openai_output:
         # Assuming the format is: "[Category Name, Category ID]"
         # We split by commas and strip the brackets
@@ -101,9 +111,14 @@ def format_categories_for_webflow(openai_output):
         if len(parts) == 2:
             # Get the ID, which is the second part, and strip whitespace
             category_id = parts[1].strip()
-            category_ids.append(category_id)
+            
+            # Check if the category ID is valid
+            if category_id in valid_category_ids:
+                category_ids.append(category_id)
+            else:
+                logging.warning(f"Invalid Category ID detected: {category_id}")
     
-    # Return the list of IDs formatted for Webflow's ItemRefSet field
+    # Return the list of valid IDs formatted for Webflow's ItemRefSet field
     return category_ids
 
 
@@ -169,12 +184,17 @@ def fetch_bill_details(bill_page_url):
 
         # Get top categories for the bill text
         top_categories = get_top_categories(full_text, categories)
-        formatted_categories = format_categories_for_webflow(top_categories)
+        formatted_categories = format_categories_for_webflow(top_categories, categories)
+        
+        # Log the formatted categories for Webflow
+        logging.info(f"Formatted Categories for Webflow: {formatted_categories}")
+        
         bill_details["categories"] = formatted_categories  # Add categories to bill details
 
         return bill_details
     else:
         raise Exception("Failed to fetch bill details due to HTTP error.")
+    
 
 def fetch_federal_bill_details(session, bill, bill_type):
     base_url = 'https://www.congress.gov'
