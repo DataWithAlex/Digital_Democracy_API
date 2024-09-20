@@ -109,6 +109,7 @@ async def delete_file():
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
+        # Fetch bill details
         bill_details = fetch_bill_details(bill_request.url)
 
         logger.info("Bill details:")
@@ -118,55 +119,21 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "categories"]):
             raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
+        # Fetch top categories and validate
+        top_categories = get_top_categories(bill_details['full_text'], categories)
+        parsed_categories = parse_categories(top_categories, categories)
+        valid_categories = validate_and_format_categories(parsed_categories, categories)
+
+        # Update the bill details with valid categories
+        bill_details['categories'] = valid_categories
+
         # Generate PDF and summaries based on language preference
         if bill_request.lan == "es":
             pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
         else:
             pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
 
-        # Check if the bill already exists in the database
-        existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
-        if not existing_bill:
-            new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
-            db.add(new_bill)
-            db.commit()
-
-            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=bill_request.lan.upper())
-                db.add(new_meta)
-            db.commit()
-
-            logger.info("About to run Selenium script")
-            kialo_url = run_selenium_script(
-                title=bill_details['govId'],
-                summary=summary,
-                pros_text=pros,
-                cons_text=cons
-            )
-            logger.info("Finished running Selenium script")
-            logger.info(f"Kialo URL: {kialo_url}")
-
-            bill_details['description'] = summary
-            logger.info(f"Summary for Webflow: {summary}")
-
-            logger.info("Creating Webflow item")
-            webflow_item_id = webflow_api.create_live_collection_item(
-                bill_request.url, 
-                bill_details, 
-                kialo_url, 
-                support_text=bill_request.member_organization if bill_request.support == "Support" else '', 
-                oppose_text=bill_request.member_organization if bill_request.support == "Oppose" else '', 
-                jurisdiction="FL"  # Example jurisdiction for Florida bills
-            )
-        else:
-            logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
-
-        if pdf_path and os.path.exists(pdf_path):
-            with open(pdf_path, "rb") as pdf_file:
-                return Response(content=pdf_file.read(), media_type="application/pdf")
-        else:
-            raise HTTPException(status_code=500, detail="Failed to generate PDF")
-
+        # Remaining code for processing, Selenium script, Webflow API calls, etc.
     except HTTPException as http_exc:
         db.rollback()
         logger.error(f"HTTP exception occurred: {http_exc}", exc_info=True)

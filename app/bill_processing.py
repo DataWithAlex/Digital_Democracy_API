@@ -36,6 +36,70 @@ def format_categories_for_webflow(category_ids):
     return formatted_categories
 # Define the list of categories with their names and IDs
 # Define the list of categories with their names and IDs
+
+def parse_categories(model_response, categories):
+    """
+    Parses the model response to extract category IDs.
+
+    Args:
+        model_response (str): The response from the model, expected to be a list of categories with names and IDs.
+        categories (list): A list of predefined categories with 'name' and 'id' fields.
+
+    Returns:
+        list: A list of valid category IDs extracted from the response.
+    """
+    parsed_categories = []
+    try:
+        # Clean the response and split it into lines
+        category_lines = [line.strip() for line in model_response.split('\n') if line.strip()]
+        logging.debug(f"Category Lines Extracted: {category_lines}")
+        
+        for line in category_lines:
+            # Split by comma and clean the extracted fields
+            try:
+                name, category_id = line.strip("[]").split(", ")
+                name = name.strip().replace('"', '').replace("'", "")
+                category_id = category_id.strip().replace('"', '').replace("'", "")
+                
+                # Check if the extracted ID matches any in the predefined categories
+                if any(cat['id'] == category_id for cat in categories):
+                    parsed_categories.append(category_id)
+                    logging.info(f"Valid Category Parsed - Name: {name}, ID: {category_id}")
+                else:
+                    logging.warning(f"Invalid Category ID: {category_id} not found in predefined list.")
+            
+            except ValueError as ve:
+                logging.error(f"Error parsing category line: {line} - {ve}")
+    
+    except Exception as e:
+        logging.error(f"Failed to parse categories from response: {e}")
+
+    return parsed_categories
+
+def validate_and_format_categories(category_ids, categories):
+    """
+    Validate category IDs and format them for the Webflow API.
+
+    Args:
+        category_ids (list): A list of category IDs extracted from the model response.
+        categories (list): A list of predefined categories with 'name' and 'id' fields.
+
+    Returns:
+        list: A formatted list of dictionaries with '_id' fields for Webflow API.
+    """
+    formatted_categories = []
+    
+    # Validate each ID and format it for Webflow
+    for category_id in category_ids:
+        # Check if the category ID exists in predefined categories
+        if any(cat['id'] == category_id for cat in categories):
+            formatted_categories.append({"_id": category_id})
+            logging.info(f"Validated and formatted category ID: {category_id}")
+        else:
+            logging.warning(f"Category ID {category_id} not found in predefined categories.")
+    
+    return formatted_categories
+
 categories = [
     {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
     {"name": "International Relations", "id": "663299c73b94826974bd24da"},

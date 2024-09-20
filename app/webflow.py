@@ -73,61 +73,91 @@ class WebflowAPI:
             'US': '65810f6b889af86635a71b49'  # Replace with the actual ItemRef for US
         }
 
-    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
-        slug = generate_slug(bill_details['title'])
-        title = reformat_title(bill_details['title'])
-        kialo_url = clean_kialo_url(kialo_url)
 
-        # Log the pre-formatted data
-        logging.info(f"Pre-Formatted Data - Title: {title}, Slug: {slug}, Kialo URL: {kialo_url}")
+        
+    def create_webflow_payload(bill_details, kialo_url, support_text, oppose_text, jurisdiction):
+        """
+        Creates the payload for Webflow API.
 
-        # Map jurisdiction to its corresponding ItemRef
-        jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
-        if not jurisdiction_item_ref:
-            logging.error(f"Invalid jurisdiction: {jurisdiction}")
-            return None
+        Args:
+            bill_details (dict): A dictionary containing details about the bill.
+            kialo_url (str): The URL to the discussion on Kialo.
+            support_text (str): The support text for the bill.
+            oppose_text (str): The oppose text for the bill.
+            jurisdiction (str): The jurisdiction identifier.
 
-        logging.info(f"Jurisdiction ItemRef: {jurisdiction_item_ref}")
+        Returns:
+            dict: A dictionary formatted as the payload for the Webflow API.
+        """
+        try:
+            # Generate slug from the title
+            slug = generate_slug(bill_details['title'])
+            title = reformat_title(bill_details['title'])
+            
+            # Validate jurisdiction mapping
+            jurisdiction_item_ref = jurisdiction_map.get(jurisdiction)
+            if not jurisdiction_item_ref:
+                logging.error(f"Invalid jurisdiction: {jurisdiction}")
+                return None
 
-        # Log the complete JSON payload
-        data = {
-            "isArchived": False,
-            "isDraft": False,
-            "fieldData": {
-                "name": title,
-                "slug": slug,
-                "post-body": "",
-                "jurisdiction": jurisdiction_item_ref,
-                "voatzid": "",
-                "kialo-url": kialo_url,
-                "gov-url": bill_url,
-                "bill-score": 0.0,
-                "description": bill_details['description'],
-                "support": support_text,
-                "oppose": oppose_text,
-                "public": True,
-                "featured": True,
-                "category": bill_details["categories"]
+            # Format the payload data
+            payload = {
+                "isArchived": False,
+                "isDraft": False,
+                "fieldData": {
+                    "name": title,
+                    "slug": slug,
+                    "post-body": "",
+                    "jurisdiction": jurisdiction_item_ref,
+                    "voatzid": "",
+                    "kialo-url": kialo_url,
+                    "gov-url": bill_details['gov-url'],
+                    "bill-score": 0.0,
+                    "description": bill_details.get('description', ''),
+                    "support": support_text,
+                    "oppose": oppose_text,
+                    "public": True,
+                    "featured": True,
+                    "category": bill_details["categories"]
+                }
             }
-        }
-
-        # Debugging: Print the JSON payload to verify the structure before sending
-        logging.info(f"JSON Payload:\n{json.dumps(data, indent=4)}")
-
-        # Make the request to Webflow API
-        create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
-        response = requests.post(create_item_endpoint, headers=self.headers, json=data)
-        logging.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
-
-        # Check if the response status code indicates success (200, 201, or 202)
-        if response.status_code in [200, 201, 202]:
-            item_id = response.json().get('id')
-            logging.info(f"Live collection item created successfully, ID: {item_id}")
-            return item_id, slug
-        else:
-            logging.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
+            
+            logging.info(f"Webflow Payload Created: {json.dumps(payload, indent=4)}")
+            return payload
+        
+        except Exception as e:
+            logging.error(f"Failed to create Webflow payload: {e}")
             return None
+        
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
+        try:
+            slug = generate_slug(bill_details['title'])
+            title = reformat_title(bill_details['title'])
+            kialo_url = clean_kialo_url(kialo_url)
 
+            # Ensure categories are formatted correctly
+            if not isinstance(bill_details['categories'], list):
+                logger.error("Categories field is not a list.")
+                return None
+
+            data = create_webflow_payload(bill_details, kialo_url, support_text, oppose_text, jurisdiction)
+            if not data:
+                logger.error("Failed to create Webflow payload.")
+                return None
+
+            # Send request to Webflow API
+            response = requests.post(f"{self.base_url}/v2/collections/{self.collection_id}/items/live", headers=self.headers, json=data)
+            if response.status_code in [200, 201]:
+                item_id = response.json().get('id')
+                slug = data['fieldData']['slug']
+                logger.info(f"Created Webflow item: ID={item_id}, Slug={slug}")
+                return item_id, slug
+            else:
+                logger.error(f"Failed to create Webflow item: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Exception in create_live_collection_item: {e}", exc_info=True)
+            return None
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
