@@ -78,18 +78,18 @@ class WebflowAPI:
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
 
-        if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
-            logger.error(f"Invalid gov-url: {bill_url}")
-            return None
+        # Log the pre-formatted data
+        logging.info(f"Pre-Formatted Data - Title: {title}, Slug: {slug}, Kialo URL: {kialo_url}")
 
         # Map jurisdiction to its corresponding ItemRef
         jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
         if not jurisdiction_item_ref:
-            logger.error(f"Invalid jurisdiction: {jurisdiction}")
+            logging.error(f"Invalid jurisdiction: {jurisdiction}")
             return None
 
-        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
+        logging.info(f"Jurisdiction ItemRef: {jurisdiction_item_ref}")
 
+        # Log the complete JSON payload
         data = {
             "isArchived": False,
             "isDraft": False,
@@ -97,7 +97,7 @@ class WebflowAPI:
                 "name": title,
                 "slug": slug,
                 "post-body": "",
-                "jurisdiction": jurisdiction_item_ref,  # Use the ItemRef for the jurisdiction
+                "jurisdiction": jurisdiction_item_ref,
                 "voatzid": "",
                 "kialo-url": kialo_url,
                 "gov-url": bill_url,
@@ -107,25 +107,26 @@ class WebflowAPI:
                 "oppose": oppose_text,
                 "public": True,
                 "featured": True,
-                "category": bill_details["categories"]  # Ensure the categories field is in the correct format
+                "category": bill_details["categories"]
             }
         }
 
-        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+        # Debugging: Print the JSON payload to verify the structure before sending
+        logging.info(f"JSON Payload:\n{json.dumps(data, indent=4)}")
 
+        # Make the request to Webflow API
         create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
-        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+        logging.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         # Check if the response status code indicates success (200, 201, or 202)
         if response.status_code in [200, 201, 202]:
             item_id = response.json().get('id')
-            logger.info(f"Live collection item created successfully, ID: {item_id}")
+            logging.info(f"Live collection item created successfully, ID: {item_id}")
             return item_id, slug
         else:
-            logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
+            logging.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
-
 
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:

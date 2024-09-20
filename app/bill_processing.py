@@ -82,6 +82,7 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
         "Your task is to select the three most relevant categories for the given text and return them in this format: [Category Name, Category ID]."
     )
 
+    # Prepare the categories list to send to the model
     categories_list = "\n".join([f"- {category['name']}: {category['id']}" for category in categories])
     user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}"
 
@@ -94,21 +95,21 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
         ],
     )
 
-    # Extract the response content and log it for debugging
+    # Extract and log the raw response content for debugging
     top_categories_response = response['choices'][0]['message']['content']
-    logging.debug(f"Model Response:\n{top_categories_response}")
+    logging.debug(f"Raw Model Response:\n{top_categories_response}")
 
-    # Split the response into individual lines
+    # Split and clean the response into individual categories
     top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
-    
-    # Log the extracted top categories
     logging.debug(f"Extracted Categories from Model:\n{top_categories}")
 
-    # Validate and extract category IDs
+    # Initialize list for valid categories
     valid_categories = []
+
+    # Validate and extract category IDs
     for category in top_categories:
         try:
-            # Parse the category string, assuming format: "[Category Name, Category ID]"
+            # Parse the category assuming the format: "[Category Name, Category ID]"
             name, category_id = category.strip("[]").split(", ")
             logging.debug(f"Parsed Category - Name: {name}, ID: {category_id}")
 
@@ -121,8 +122,9 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
         except Exception as e:
             logging.error(f"Error parsing category: {category}, error: {e}")
 
+    # Log the final valid categories
     logging.debug(f"Final Valid Categories: {valid_categories}")
-
+    
     return valid_categories
 
 
