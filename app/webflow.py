@@ -73,9 +73,7 @@ class WebflowAPI:
             'US': '65810f6b889af86635a71b49'  # Replace with the actual ItemRef for US
         }
 
-
-        
-    def create_webflow_payload(bill_details, kialo_url, support_text, oppose_text, jurisdiction):
+    def create_webflow_payload(self, bill_details, kialo_url, support_text, oppose_text, jurisdiction):
         """
         Creates the payload for Webflow API.
 
@@ -95,7 +93,7 @@ class WebflowAPI:
             title = reformat_title(bill_details['title'])
             
             # Validate jurisdiction mapping
-            jurisdiction_item_ref = jurisdiction_map.get(jurisdiction)
+            jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
             if not jurisdiction_item_ref:
                 logging.error(f"Invalid jurisdiction: {jurisdiction}")
                 return None
@@ -128,7 +126,7 @@ class WebflowAPI:
         except Exception as e:
             logging.error(f"Failed to create Webflow payload: {e}")
             return None
-        
+
     def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
         try:
             slug = generate_slug(bill_details['title'])
@@ -140,7 +138,7 @@ class WebflowAPI:
                 logger.error("Categories field is not a list.")
                 return None
 
-            data = create_webflow_payload(bill_details, kialo_url, support_text, oppose_text, jurisdiction)
+            data = self.create_webflow_payload(bill_details, kialo_url, support_text, oppose_text, jurisdiction)
             if not data:
                 logger.error("Failed to create Webflow payload.")
                 return None
@@ -158,6 +156,8 @@ class WebflowAPI:
         except Exception as e:
             logger.error(f"Exception in create_live_collection_item: {e}", exc_info=True)
             return None
+
+    # ... Other methods remain unchanged ...
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
