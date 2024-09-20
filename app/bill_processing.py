@@ -22,6 +22,7 @@ openai.api_key = openai_api_key
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Define the list of categories with their names and IDs
+# Define the list of categories with their names and IDs
 categories = [
     {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
     {"name": "International Relations", "id": "663299c73b94826974bd24da"},
