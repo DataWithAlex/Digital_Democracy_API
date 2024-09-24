@@ -183,128 +183,27 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
-        # Fetch federal bill details
-        logger.info(f"About to run fetch_federal_bill_details() with session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
-        try:
-            bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
-        except ValueError as e:
-            logger.error(f"An error occurred: {e}")
-            raise HTTPException(status_code=404, detail=str(e))
+        bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
+        logger.info(f"Fetched bill details: {bill_details}")
 
-        logger.info("Bill details:")
-        for key, value in bill_details.items():
-            logger.info(f"{key}: {value}")
+        validate_bill_details(bill_details)
 
-        # Ensure required bill details are present
-        if not all(k in bill_details for k in ["govId", "billTextPath", "full_text", "history", "gov-url"]):
-            raise HTTPException(status_code=500, detail="Required bill details are missing.")
-
-        # Generate PDF and summaries
-        if request.lan == "es":
-            pdf_path, summary, pros, cons = create_federal_summary_pdf_spanish(
-                bill_details['full_text'], 
-                "output/federal_bill_summary_spanish.pdf", 
-                bill_details['title']
-            )
-        else:
-            pdf_path, summary, pros, cons = create_federal_summary_pdf(
-                bill_details['full_text'], 
-                "output/federal_bill_summary.pdf", 
-                bill_details['title']
-            )
-
-        # Check if the bill already exists in the database
+        pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
+        
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
-            # Insert new bill into the database
-            new_bill = Bill(
-                govId=bill_details["govId"],
-                billTextPath=bill_details["billTextPath"],
-                history=bill_details["history"]
-            )
-            db.add(new_bill)
-            db.commit()
-
-            # Insert metadata for the new bill
-            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=request.lan.upper())
-                db.add(new_meta)
-            db.commit()
-
-            # Generate a Kialo URL using the Selenium script
-            logger.info("About to run Selenium script")
-            kialo_url = run_selenium_script(
-                title=bill_details['govId'],
-                summary=summary,
-                pros_text=pros,
-                cons_text=cons
-            )
-            logger.info("Finished running Selenium script")
-            logger.info(f"Kialo URL: {kialo_url}")
-
-            bill_details['description'] = summary
-            logger.info(f"Summary for Webflow: {summary}")
-
-            # Create a new Webflow item
-            logger.info("Creating Webflow item")
-            result = webflow_api.create_live_collection_item(
-                bill_details['gov-url'],
-                bill_details,
-                kialo_url,
-                support_text=request.member_organization if request.support == "Support" else '',
-                oppose_text=request.member_organization if request.support == "Oppose" else '',
-                jurisdiction="US"  # Set jurisdiction to "US" for federal bills
-            )
+            new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
+            kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+            result = create_webflow_item(bill_details, kialo_url, request)
 
             if result is None:
                 logger.error("Failed to create Webflow item")
                 raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
-            webflow_item_id, slug = result
-            webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
-
-            new_bill.webflow_link = webflow_url
-            new_bill.webflow_item_id = webflow_item_id
-            db.commit()
+            update_bill_with_webflow_info(new_bill, result, db)
         else:
-            # If the bill already exists, update it
-            webflow_item_id = existing_bill.webflow_item_id
-            if not webflow_item_id:
-                logger.error("Webflow item ID is missing for the existing bill")
-                raise HTTPException(status_code=500, detail="Webflow item ID is missing for the existing bill")
+            update_existing_bill(existing_bill, request, db)
 
-            webflow_item = webflow_api.get_collection_item(webflow_item_id)
-            if not webflow_item or 'items' not in webflow_item or not webflow_item['items']:
-                logger.error("Failed to retrieve valid Webflow item")
-                raise HTTPException(status_code=500, detail="Failed to retrieve valid Webflow item")
-
-            fields = webflow_item['items'][0]
-
-            support_text = fields.get('support', '') or ''
-            oppose_text = fields.get('oppose', '') or ''
-
-            if request.support == "Support":
-                support_text += f"\n{request.member_organization}"
-            else:
-                oppose_text += f"\n{request.member_organization}"
-
-            data = {
-                "fields": {
-                    "support": support_text.strip(),
-                    "oppose": oppose_text.strip(),
-                    "name": fields['name'],
-                    "slug": fields['slug'],
-                    "_draft": fields['_draft'],
-                    "_archived": fields['_archived']
-                }
-            }
-
-            # Validate and update the Webflow item
-            if not webflow_api.update_collection_item(webflow_item_id, data):
-                logger.error("Failed to update Webflow item")
-                raise HTTPException(status_code=500, detail="Failed to update Webflow item")
-
-        # Save the form data to the database
         save_form_data(
             name=request.name,
             email=request.email,
@@ -319,7 +218,6 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             db=db
         )
 
-        # Return the generated PDF if available
         if pdf_path and os.path.exists(pdf_path):
             with open(pdf_path, "rb") as pdf_file:
                 return Response(content=pdf_file.read(), media_type="application/pdf")
@@ -329,13 +227,24 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
     except HTTPException as http_exc:
         db.rollback()
         logger.error(f"HTTP exception occurred: {http_exc}", exc_info=True)
-        raise
+        raise http_exc
     except Exception as e:
         db.rollback()
         logger.error(f"An error occurred: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
+def validate_bill_details(bill_details):
+    required_fields = ["govId", "billTextPath", "full_text", "history", "gov-url"]
+    if not all(k in bill_details for k in required_fields):
+        raise HTTPException(status_code=500, detail="Required bill details are missing.")
+
+def generate_bill_summary(full_text, language, title):
+    if language == "es":
+        return create_federal_summary_pdf_spanish(full_text, "output/federal_bill_summary_spanish.pdf", title)
+    else:
+        return create_federal_summary_pdf(full_text, "output/federal_bill_summary.pdf", title)
 
 
 
@@ -512,3 +421,64 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
 async def universal_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception occurred: {exc}", exc_info=True)
     return JSONResponse(content={"message": "An internal server error occurred."})
+
+def add_new_bill(db, bill_details, summary, pros, cons, language):
+    new_bill = Bill(
+        govId=bill_details["govId"],
+        billTextPath=bill_details["billTextPath"],
+        history=bill_details["history"]
+    )
+    db.add(new_bill)
+    db.commit()
+
+    for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+        new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=language.upper())
+        db.add(new_meta)
+    db.commit()
+
+    return new_bill
+
+def create_webflow_item(bill_details, kialo_url, request):
+    return webflow_api.create_live_collection_item(
+        bill_details['gov-url'],
+        bill_details,
+        kialo_url,
+        support_text=request.member_organization if request.support == "Support" else '',
+        oppose_text=request.member_organization if request.support == "Oppose" else '',
+        jurisdiction="US" if 'US' in bill_details['govId'] else 'FL'
+    )
+
+def update_bill_with_webflow_info(new_bill, result, db):
+    webflow_item_id, slug = result
+    webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
+    new_bill.webflow_link = webflow_url
+    new_bill.webflow_item_id = webflow_item_id
+    db.commit()
+
+def update_existing_bill(existing_bill, request, db):
+    webflow_item_id = existing_bill.webflow_item_id
+    webflow_item = webflow_api.get_collection_item(webflow_item_id)
+
+    fields = webflow_item['items'][0]
+    support_text = fields.get('support', '') or ''
+    oppose_text = fields.get('oppose', '') or ''
+
+    if request.support == "Support":
+        support_text += f"\n{request.member_organization}"
+    else:
+        oppose_text += f"\n{request.member_organization}"
+
+    data = {
+        "fields": {
+            "support": support_text.strip(),
+            "oppose": oppose_text.strip(),
+            "name": fields['name'],
+            "slug": fields['slug'],
+            "_draft": fields['_draft'],
+            "_archived": fields['_archived']
+        }
+    }
+
+    if not webflow_api.update_collection_item(webflow_item_id, data):
+        logger.error("Failed to update Webflow item")
+        raise HTTPException(status_code=500, detail="Failed to update Webflow item")

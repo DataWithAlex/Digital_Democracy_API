@@ -176,17 +176,10 @@ def fetch_bill_details(bill_page_url):
             bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)
 
         # Extract text from PDF and get top categories
-        full_text = ""
-        with fitz.open(bill_details["pdf_path"]) as pdf:
-            for page_num in range(len(pdf)):
-                page = pdf[page_num]
-                full_text += page.get_text()
-
-        # Get top categories for the bill text
+        full_text = extract_text_from_pdf(bill_details["pdf_path"])
         top_categories = get_top_categories(full_text, categories)
         formatted_categories = format_categories_for_webflow(top_categories, categories)
         
-        # Log the formatted categories for Webflow
         logging.info(f"Formatted Categories for Webflow: {formatted_categories}")
         
         bill_details["categories"] = formatted_categories  # Add categories to bill details
@@ -194,6 +187,14 @@ def fetch_bill_details(bill_page_url):
         return bill_details
     else:
         raise Exception("Failed to fetch bill details due to HTTP error.")
+
+def extract_text_from_pdf(pdf_path):
+    full_text = ""
+    with fitz.open(pdf_path) as pdf:
+        for page_num in range(len(pdf)):
+            page = pdf[page_num]
+            full_text += page.get_text()
+    return full_text
     
 
 def fetch_federal_bill_details(session, bill, bill_type):
@@ -239,46 +240,39 @@ def fetch_federal_bill_details(session, bill, bill_type):
             response.raise_for_status()
             valid_url = url
             break
-        except requests.exceptions.HTTPError as e:
-            if response.status_code == 404:
-                continue
-            else:
-                raise e
+        except requests.exceptions.HTTPError:
+            continue
     else:
         raise ValueError(f"Bill {bill_type}{bill} not found for session {session}")
 
-    # Check if response content is empty
     if not response.content:
         raise ValueError("Empty response from Congress.gov")
 
-    # Use lxml-xml parser
     soup = BeautifulSoup(response.content, 'lxml-xml')
     bill_text = soup.get_text()
-
-    # Extracting title for the sake of the example
     title = soup.find('title').get_text() if soup.find('title') else "No title available"
     description = "No description available"
 
-    # Create a local file with the extracted bill text
-    local_file_path = 'temp_path_for_federal_bill.txt'
-    with open(local_file_path, 'w', encoding='utf-8') as file:
-        file.write(bill_text)
-
-    # Upload the local file to S3
+    local_file_path = save_text_to_file(bill_text)
     bill_text_path = upload_to_s3('ddp-bills-2', local_file_path)
 
-    # Construct bill details dictionary with the correct govId, history, and gov-url format
     bill_details = {
         "title": title,
         "description": description,
         "full_text": bill_text,
-        "govId": f"{bill_type} {bill}",  # Correct format: bill type + bill number
+        "govId": f"{bill_type} {bill}",
         "billTextPath": bill_text_path,
-        "history": f"{session}{bill_type}{bill}",  # Correct format: session + bill type + bill number
-        "gov-url": valid_url  # Correct URL for the bill
+        "history": f"{session}{bill_type}{bill}",
+        "gov-url": valid_url,
+        "categories": []  # Default empty list for categories
     }
+
     return bill_details
 
+def save_text_to_file(text, file_name='temp_path_for_federal_bill.txt'):
+    with open(file_name, 'w', encoding='utf-8') as file:
+        file.write(text)
+    return file_name
 
 
 # Function to summarize text with OpenAI
