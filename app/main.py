@@ -106,6 +106,7 @@ async def delete_file():
 
 
 # Function to process bill requests
+# Function to process bill requests
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
@@ -123,6 +124,9 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
             pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
         else:
             pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+
+        # Ensure the description field is updated with the summary
+        bill_details['description'] = summary
 
         # Check if the bill already exists in the database
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
@@ -146,7 +150,6 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
             logger.info("Finished running Selenium script")
             logger.info(f"Kialo URL: {kialo_url}")
 
-            bill_details['description'] = summary
             logger.info(f"Summary for Webflow: {summary}")
 
             logger.info("Creating Webflow item")
@@ -179,6 +182,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         db.close()
 
 
+
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
@@ -189,6 +193,9 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         validate_bill_details(bill_details)
 
         pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
+
+        # Ensure the description field is updated with the summary
+        bill_details['description'] = summary
         
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
