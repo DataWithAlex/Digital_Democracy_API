@@ -38,48 +38,89 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
     
     return top_categories
 
+
+# Define the list of categories with their names and IDs
+categories = [
+    {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
+    {"name": "International Relations", "id": "663299c73b94826974bd24da"},
+    {"name": "National Security", "id": "6632997a194f0d20b0d24108"},
+    {"name": "Civil Rights", "id": "663298e4562bd3696c89b3ea"},
+    {"name": "Arts", "id": "660ede71e88a45fcd08e2e39"},
+    {"name": "Energy", "id": "660ed44984debef46e8d5c5d"},
+    {"name": "Military and Veterans", "id": "65ce5778dae6450ac15a2d2f"},
+    {"name": "Priority Bill", "id": "65ba9dbe9768a6290a95c945"},
+    {"name": "Media", "id": "65b550562534316ee17131c0"},
+    {"name": "LGBT", "id": "655288ef928edb128306753e"},
+    {"name": "Public Records", "id": "655288ef928edb128306753d"},
+    {"name": "Social Welfare", "id": "655288ef928edb12830673e2"},
+    {"name": "Technology", "id": "655288ef928edb128306743e"},
+    {"name": "Government", "id": "655288ef928edb12830673e1"},
+    {"name": "Business", "id": "655288ef928edb128306746b"},
+    {"name": "Employment", "id": "655288ef928edb1283067425"},
+    {"name": "Public Safety", "id": "655288ef928edb1283067442"},
+    {"name": "Drugs", "id": "655288ef928edb128306745e"},
+    {"name": "Immigration", "id": "655288ef928edb12830673e5"},
+    {"name": "Transportation", "id": "655288ef928edb1283067415"},
+    {"name": "Criminal Justice", "id": "655288ef928edb12830673dc"},
+    {"name": "Elections", "id": "655288ef928edb12830673e0"},
+    {"name": "Culture", "id": "655288ef928edb1283067436"},
+    {"name": "Sports", "id": "655288ef928edb12830673df"},
+    {"name": "Marriage", "id": "655288ef928edb128306742d"},
+    {"name": "Housing", "id": "655288ef928edb128306743d"},
+    {"name": "Education", "id": "655288ef928edb12830673e4"},
+    {"name": "Medical", "id": "655288ef928edb12830673e9"},
+    {"name": "State Parks", "id": "655288ef928edb128306745d"},
+    {"name": "Guns", "id": "655288ef928edb128306741f"},
+    {"name": "Disney", "id": "655288ef928edb128306742c"},
+    {"name": "Natural Disasters", "id": "655288ef928edb1283067435"},
+    {"name": "Environment", "id": "655288ef928edb128306741b"},
+    {"name": "Taxes", "id": "655288ef928edb128306745c"}
+]
+
+# Create a dictionary for quick lookup
+category_dict = {category["name"].lower(): category["id"] for category in categories}
+
 # Function to format the OpenAI output for Webflow
 # Updated function to include logging and better matching logic
-def format_categories_for_webflow(openai_output, valid_categories):
+def format_categories_for_webflow(openai_output):
     """
     Formats the OpenAI output for Webflow by extracting valid category IDs.
 
     Parameters:
-    - openai_output (list): A list of category strings returned by OpenAI, expected to be in the format
-                            '[Category Name, Category ID]' or similar.
-    - valid_categories (list): A list of valid category dictionaries with 'name' and 'id' keys.
+    - openai_output (list): A list of category names returned by OpenAI.
 
     Returns:
     - list: A list of valid category IDs that match the categories in the OpenAI output.
     """
-    # Create a dictionary of valid categories for quick lookup
-    valid_category_map = {category["name"].lower(): category["id"] for category in valid_categories}
+    # Only use the category names from the OpenAI response and get their IDs
+    category_names = [category.split(",")[0].strip("[]").strip() for category in openai_output]
     
-    logging.info(f"Valid categories available: {valid_category_map}")
-    logging.info(f"OpenAI response received: {openai_output}")
-
-    category_ids = []  # To store the extracted and validated category IDs
-
-    for category in openai_output:
-        category = category.strip("[]")
-        parts = category.split(",")  # Split by comma to separate name and ID
-        if len(parts) == 2:
-            category_name = parts[0].strip().lower()
-            category_id = parts[1].strip()
-            
-            # Validate if the extracted ID matches the name in the valid category map
-            if category_name in valid_category_map:
-                if category_id == valid_category_map[category_name]:
-                    category_ids.append(category_id)
-                    logging.info(f"Valid category matched: {category_name} with ID: {category_id}")
-                else:
-                    logging.warning(f"ID mismatch for category '{category_name}': received ID '{category_id}' does not match valid ID '{valid_category_map[category_name]}'")
-            else:
-                logging.warning(f"Category name '{category_name}' not found in valid categories.")
-        else:
-            logging.warning(f"Unrecognized category format: {category}")
-
+    # Fetch the valid category IDs using get_category_ids function
+    category_ids = get_category_ids(category_names)
+    
     logging.info(f"Formatted Categories for Webflow: {category_ids}")
+    return category_ids
+
+# Example OpenAI output with just names
+openai_output = ['[Government]', '[Housing]', '[Business]']
+
+# Format the output for Webflow
+formatted_categories = format_categories_for_webflow(openai_output)
+print(f"Formatted Categories for Webflow: {formatted_categories}")
+
+def get_category_ids(category_names):
+    """
+    Given a list of category names, return the corresponding category IDs.
+    """
+    category_ids = []
+    for name in category_names:
+        # Convert name to lowercase to match the dictionary keys
+        category_id = category_dict.get(name.lower())
+        if category_id:
+            category_ids.append(category_id)
+            logging.info(f"Matched category '{name}' to ID '{category_id}'")
+        else:
+            logging.warning(f"Warning: Category '{name}' not found in predefined categories.")
     return category_ids
 
 
