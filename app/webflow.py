@@ -37,8 +37,6 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
     top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
     
     return top_categories
-
-
 # Define the list of categories with their names and IDs
 categories = [
     {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
@@ -80,34 +78,6 @@ categories = [
 # Create a dictionary for quick lookup
 category_dict = {category["name"].lower(): category["id"] for category in categories}
 
-# Function to format the OpenAI output for Webflow
-# Updated function to include logging and better matching logic
-def format_categories_for_webflow(openai_output):
-    """
-    Formats the OpenAI output for Webflow by extracting valid category IDs.
-
-    Parameters:
-    - openai_output (list): A list of category names returned by OpenAI.
-
-    Returns:
-    - list: A list of valid category IDs that match the categories in the OpenAI output.
-    """
-    # Only use the category names from the OpenAI response and get their IDs
-    category_names = [category.split(",")[0].strip("[]").strip() for category in openai_output]
-    
-    # Fetch the valid category IDs using get_category_ids function
-    category_ids = get_category_ids(category_names)
-    
-    logging.info(f"Formatted Categories for Webflow: {category_ids}")
-    return category_ids
-
-# Example OpenAI output with just names
-openai_output = ['[Government]', '[Housing]', '[Business]']
-
-# Format the output for Webflow
-formatted_categories = format_categories_for_webflow(openai_output)
-print(f"Formatted Categories for Webflow: {formatted_categories}")
-
 def get_category_ids(category_names):
     """
     Given a list of category names, return the corresponding category IDs.
@@ -122,6 +92,32 @@ def get_category_ids(category_names):
         else:
             logging.warning(f"Warning: Category '{name}' not found in predefined categories.")
     return category_ids
+
+def format_categories_for_webflow(openai_output):
+    """
+    Formats the OpenAI output for Webflow by extracting valid category IDs.
+
+    Parameters:
+    - openai_output (list): A list of category names returned by OpenAI.
+
+    Returns:
+    - list: A list of valid category IDs that match the categories in the OpenAI output.
+    """
+    # Extract category names from the OpenAI output
+    category_names = [category.split(",")[0].strip("[]").strip() for category in openai_output]
+    
+    # Fetch the valid category IDs using get_category_ids function
+    category_ids = get_category_ids(category_names)
+    
+    logging.info(f"Formatted Categories for Webflow: {category_ids}")
+    return category_ids
+
+# Example OpenAI output with just names
+openai_output = ['[Government]', '[Housing]', '[Business]']
+
+# Format the output for Webflow
+formatted_categories = format_categories_for_webflow(openai_output)
+print(f"Formatted Categories for Webflow: {formatted_categories}")
 
 
 def generate_slug(title):
