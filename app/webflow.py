@@ -21,7 +21,7 @@ def generate_slug(title):
 
 def reformat_title(title):
     """
-    Reformat the title to include the bill type and number in parentheses.
+    Reformat the title to include only the bill type and number in parentheses.
     For example, convert "118 HR 9056 IH: VA Insurance Improvement Act" to 
     "VA Insurance Improvement Act (HR 9056)".
     """
@@ -37,12 +37,19 @@ def reformat_title(title):
     # Extract only the description part
     description = parts[1].strip()
     
-    # Extract the bill type and number (e.g., "HR 9056") including prefix
-    # Modify the extraction logic to get only the letter and number parts
-    bill_type_number = " ".join([part for part in bill_identifier.split() if part.isalpha() or part.isdigit()])
+    # Use a regular expression to find the bill type and number
+    # This will match patterns like "HR 9056" or "S 3187"
+    match = re.search(r'([A-Z]+) (\d+)', bill_identifier)
+    
+    if not match:
+        # If the pattern is not found, return the original title
+        return title
+
+    # Extract the bill type and number
+    bill_type, bill_number = match.groups()
 
     # Format the new title as "Description (Bill Type Number)"
-    new_title = f"{description} ({bill_type_number})"
+    new_title = f"{description} ({bill_type} {bill_number})"
     return new_title
 
 def clean_kialo_url(url: str) -> str:
