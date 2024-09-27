@@ -216,64 +216,64 @@ class WebflowAPI:
             'US': '65810f6b889af86635a71b49'
         }
 
-def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
-    slug = generate_slug(bill_details['title'])
-    title = reformat_title(bill_details['title'])
-    kialo_url = clean_kialo_url(kialo_url)
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
+        slug = generate_slug(bill_details['title'])
+        title = reformat_title(bill_details['title'])
+        kialo_url = clean_kialo_url(kialo_url)
 
-    if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
-        logger.error(f"Invalid gov-url: {bill_url}")
-        return None
+        if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
+            logger.error(f"Invalid gov-url: {bill_url}")
+            return None
 
-    jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
-    if not jurisdiction_item_ref:
-        logger.error(f"Invalid jurisdiction: {jurisdiction}")
-        return None
+        jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
+        if not jurisdiction_item_ref:
+            logger.error(f"Invalid jurisdiction: {jurisdiction}")
+            return None
 
-    # Generate categories based on the bill text
-    bill_text = bill_details.get("full_text", "")
-    category_names = bill_details.get("categories", [])  # Get category names
-    formatted_categories = get_category_ids(category_names)  # Convert names to IDs
+        # Generate categories based on the bill text
+        bill_text = bill_details.get("full_text", "")
+        category_names = bill_details.get("categories", [])  # Get category names
+        formatted_categories = get_category_ids(category_names)  # Convert names to IDs
 
-    # Log the correct formatted categories
-    logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
+        # Log the correct formatted categories
+        logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
 
-    # Use the correct categories that are logged
-    data = {
-        "isArchived": False,
-        "isDraft": False,
-        "fieldData": {
-            "name": title,
-            "slug": slug,
-            "post-body": bill_text,  # Include bill text in the post-body field
-            "jurisdiction": jurisdiction_item_ref,
-            "voatzid": "",
-            "kialo-url": kialo_url,
-            "gov-url": bill_url,
-            "bill-score": 0.0,
-            "description": bill_details['description'],
-            "support": support_text,
-            "oppose": oppose_text,
-            "public": True,
-            "featured": True,
-            "category": formatted_categories  # Use the logged formatted categories directly here
+        # Use the correct categories that are logged
+        data = {
+            "isArchived": False,
+            "isDraft": False,
+            "fieldData": {
+                "name": title,
+                "slug": slug,
+                "post-body": bill_text,  # Include bill text in the post-body field
+                "jurisdiction": jurisdiction_item_ref,
+                "voatzid": "",
+                "kialo-url": kialo_url,
+                "gov-url": bill_url,
+                "bill-score": 0.0,
+                "description": bill_details['description'],
+                "support": support_text,
+                "oppose": oppose_text,
+                "public": True,
+                "featured": True,
+                "category": formatted_categories  # Use the logged formatted categories directly here
+            }
         }
-    }
 
-    # Log the final payload
-    logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+        # Log the final payload
+        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-    create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
-    response = requests.post(create_item_endpoint, headers=self.headers, json=data)
-    logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+        create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
+        response = requests.post(create_item_endpoint, headers=self.headers, json=data)
+        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-    if response.status_code in [200, 201, 202]:
-        item_id = response.json().get('id')
-        logger.info(f"Live collection item created successfully, ID: {item_id}")
-        return item_id, slug
-    else:
-        logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
-        return None
+        if response.status_code in [200, 201, 202]:
+            item_id = response.json().get('id')
+            logger.info(f"Live collection item created successfully, ID: {item_id}")
+            return item_id, slug
+        else:
+            logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
+            return None
 
 
     def get_collection_item(self, item_id: str) -> Optional[Dict]:
