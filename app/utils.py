@@ -1,4 +1,4 @@
-# category_utils.py
+# utils.py
 
 # Define the list of categories with their names and IDs
 categories = [

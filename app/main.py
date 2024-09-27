@@ -1,5 +1,3 @@
-# main.py
-
 import os
 import logging
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
@@ -15,7 +13,7 @@ from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
-from .utils import categories, get_category_ids  # Updated import statement
+from .utils import get_category_ids  # Only import get_category_ids
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -88,69 +86,6 @@ logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
 logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")  # Updated with the actual collection ID
 logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
-from fastapi import FastAPI, HTTPException, Request, Response, Depends
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy import create_engine
-
-# Define the list of categories with their names and IDs
-categories = [
-    {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
-    {"name": "International Relations", "id": "663299c73b94826974bd24da"},
-    {"name": "National Security", "id": "6632997a194f0d20b0d24108"},
-    {"name": "Civil Rights", "id": "663298e4562bd3696c89b3ea"},
-    {"name": "Arts", "id": "660ede71e88a45fcd08e2e39"},
-    {"name": "Energy", "id": "660ed44984debef46e8d5c5d"},
-    {"name": "Military and Veterans", "id": "65ce5778dae6450ac15a2d2f"},
-    {"name": "Priority Bill", "id": "65ba9dbe9768a6290a95c945"},
-    {"name": "Media", "id": "65b550562534316ee17131c0"},
-    {"name": "LGBT", "id": "655288ef928edb128306753e"},
-    {"name": "Public Records", "id": "655288ef928edb128306753d"},
-    {"name": "Social Welfare", "id": "655288ef928edb12830673e2"},
-    {"name": "Technology", "id": "655288ef928edb128306743e"},
-    {"name": "Government", "id": "655288ef928edb12830673e1"},
-    {"name": "Business", "id": "655288ef928edb128306746b"},
-    {"name": "Employment", "id": "655288ef928edb1283067425"},
-    {"name": "Public Safety", "id": "655288ef928edb1283067442"},
-    {"name": "Drugs", "id": "655288ef928edb128306745e"},
-    {"name": "Immigration", "id": "655288ef928edb12830673e5"},
-    {"name": "Transportation", "id": "655288ef928edb1283067415"},
-    {"name": "Criminal Justice", "id": "655288ef928edb12830673dc"},
-    {"name": "Elections", "id": "655288ef928edb12830673e0"},
-    {"name": "Culture", "id": "655288ef928edb1283067436"},
-    {"name": "Sports", "id": "655288ef928edb12830673df"},
-    {"name": "Marriage", "id": "655288ef928edb128306742d"},
-    {"name": "Housing", "id": "655288ef928edb128306743d"},
-    {"name": "Education", "id": "655288ef928edb12830673e4"},
-    {"name": "Medical", "id": "655288ef928edb12830673e9"},
-    {"name": "State Parks", "id": "655288ef928edb128306745d"},
-    {"name": "Guns", "id": "655288ef928edb128306741f"},
-    {"name": "Disney", "id": "655288ef928edb128306742c"},
-    {"name": "Natural Disasters", "id": "655288ef928edb1283067435"},
-    {"name": "Environment", "id": "655288ef928edb128306741b"},
-    {"name": "Taxes", "id": "655288ef928edb128306745c"}
-]
-
-# Create a dictionary for quick lookup
-category_dict = {category["name"].lower(): category["id"] for category in categories}
-
-def get_category_ids(category_names):
-    """
-    Given a list of category names, return the corresponding category IDs.
-    """
-    category_ids = []
-    for name in category_names:
-        # Convert name to lowercase to match the dictionary keys
-        category_id = category_dict.get(name.lower())
-        if category_id:
-            category_ids.append(category_id)
-        else:
-            print(f"Warning: Category '{name}' not found in predefined categories.")
-    return category_ids
-
-
-
-
-
 
 @app.post("/upload-file/")
 async def upload_file():
@@ -172,7 +107,6 @@ async def delete_file():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Function to process bill requests
 # Function to process bill requests
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
@@ -248,8 +182,6 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
     finally:
         db.close()
 
-
-
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
@@ -305,11 +237,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
     except HTTPException as http_exc:
         db.rollback()
-        logger.error(f"HTTP exception occurred: {http_exc}", exc_info=True)
+        logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
         raise http_exc
     except Exception as e:
         db.rollback()
-        logger.error(f"An error occurred: {e}", exc_info=True)
+        logger.error(f"An error occurred: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
@@ -324,8 +256,6 @@ def generate_bill_summary(full_text, language, title):
         return create_federal_summary_pdf_spanish(full_text, "output/federal_bill_summary_spanish.pdf", title)
     else:
         return create_federal_summary_pdf(full_text, "output/federal_bill_summary.pdf", title)
-
-
 
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):

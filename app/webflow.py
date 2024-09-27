@@ -1,5 +1,3 @@
-# webflow.py
-
 import openai
 import logging
 import json
@@ -24,7 +22,7 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
         "Your task is to select the three most relevant categories for the given text."
     )
     
-    categories_list = "\n".join([f"- {category['name']}" for category in categories])
+    categories_list = "\n".join([f"- {category['name']}"] for category in categories)
     user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}. NOTE: YOU MUST RETURN THEM IN THE FOLLOWING FORMAT: [CATEGORY: CATEGORY ID]. For example, [Disney, 655288ef928edb128306742c]"
 
     response = openai.ChatCompletion.create(
