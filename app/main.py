@@ -9,7 +9,7 @@ from .bill_processing import fetch_bill_details, fetch_federal_bill_details, cre
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest  # Ensure FormRequest is imported
-from .webflow import WebflowAPI
+from .webflow import WebflowAPI, get_top_categories, format_categories_for_webflow, categories
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
@@ -109,17 +109,20 @@ async def delete_file():
 
 
 # Function to process bill requests
+# main.py
+
+# Function to process bill requests
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
         bill_details = fetch_bill_details(bill_request.url)
-
-        logger.info("Bill details:")
-        for key, value in bill_details.items():
-            logger.info(f"{key}: {value}")
-
-        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "categories"]):
-            raise HTTPException(status_code=500, detail="Required bill details are missing.")
+        
+        # Generate and format categories using GPT-4
+        bill_text = bill_details.get("full_text", "")
+        openai_categories = get_top_categories(bill_text, categories)
+        formatted_categories = format_categories_for_webflow(openai_categories)
+        
+        logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
 
         # Generate PDF and summaries based on language preference
         if bill_request.lan == "es":
@@ -152,8 +155,6 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
             logger.info("Finished running Selenium script")
             logger.info(f"Kialo URL: {kialo_url}")
 
-            logger.info(f"Summary for Webflow: {summary}")
-
             logger.info("Creating Webflow item")
             webflow_item_id = webflow_api.create_live_collection_item(
                 bill_request.url, 
@@ -161,7 +162,8 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
                 kialo_url, 
                 support_text=bill_request.member_organization if bill_request.support == "Support" else '', 
                 oppose_text=bill_request.member_organization if bill_request.support == "Oppose" else '', 
-                jurisdiction="FL"  # Example jurisdiction for Florida bills
+                jurisdiction="FL",  # Example jurisdiction for Florida bills
+                formatted_categories=formatted_categories  # Pass the formatted categories here
             )
         else:
             logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
@@ -182,6 +184,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
 
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):

@@ -104,6 +104,7 @@ def get_category_ids(category_names):
         else:
             logging.warning(f"Warning: Category '{name}' not found in predefined categories.")
     return category_ids
+
 # Function to get the top 3 categories using GPT-4o
 def get_top_categories(bill_text, categories, model="gpt-4o"):
     system_message = (
@@ -133,6 +134,7 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
     top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
 
     return top_categories
+# webflow.py
 
 # Update the `format_categories_for_webflow` function
 def format_categories_for_webflow(openai_output):
@@ -173,6 +175,7 @@ def format_categories_for_webflow(openai_output):
         logger.error(f"Failed to format OpenAI output correctly: {openai_output}")
 
     return category_ids
+
 
 # Example usage for testing/debugging purposes
 openai_output = [
@@ -254,7 +257,8 @@ class WebflowAPI:
             'US': '65810f6b889af86635a71b49'
         }
 
-    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
+
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str, formatted_categories: list) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -268,15 +272,7 @@ class WebflowAPI:
             logger.error(f"Invalid jurisdiction: {jurisdiction}")
             return None
 
-        # Generate categories based on the bill text
-        bill_text = bill_details.get("full_text", "")
-        category_names = bill_details.get("categories", [])  # Get category names
-        formatted_categories = get_category_ids(category_names)  # Convert names to IDs
-
-        # Log the correct formatted categories
-        logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
-
-        # Use the correct categories that are logged
+        # Use the formatted categories passed as a parameter
         data = {
             "isArchived": False,
             "isDraft": False,
@@ -294,7 +290,7 @@ class WebflowAPI:
                 "oppose": oppose_text,
                 "public": True,
                 "featured": True,
-                "category": formatted_categories  # Use the logged formatted categories directly here
+                "category": formatted_categories  # Use formatted categories here
             }
         }
 
