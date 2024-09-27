@@ -110,29 +110,43 @@ def format_categories_for_webflow(openai_output):
     Formats the OpenAI output for Webflow by extracting valid category IDs.
 
     Parameters:
-    - openai_output (list): A list of category names returned by OpenAI.
+    - openai_output (list): A list of category names and IDs returned by OpenAI.
 
     Returns:
     - list: A list of valid category IDs that match the categories in the OpenAI output.
     """
-    # Extract category names from the OpenAI output
-    category_names = [category.split(",")[0].strip("[]").strip() for category in openai_output]
-    
-    # Fetch the valid category IDs using get_category_ids function
-    category_ids = get_category_ids(category_names)
-    
-    logging.info(f"Formatted Categories for Webflow: {category_ids}")
+    # Initialize an empty list to store valid category IDs
+    category_ids = []
+
+    # Iterate through each line of the OpenAI output
+    for category in openai_output:
+        # Extract text within square brackets (e.g., [Public Safety: d8856afc5a46364392334030])
+        match = re.search(r'\[(.+?): (.+?)\]', category)
+        if match:
+            # Extract category name and ID
+            category_name, category_id = match.groups()
+
+            # Verify if the category ID exists in the predefined categories
+            if category_id in category_dict.values():
+                category_ids.append(category_id)
+                logging.info(f"Matched category '{category_name}' to ID '{category_id}'")
+            else:
+                logging.warning(f"Warning: Category ID '{category_id}' not found in predefined categories.")
+        else:
+            logging.warning(f"Warning: OpenAI output '{category}' does not match the expected format.")
+
     return category_ids
 
-# Example OpenAI output with just names
-openai_output = ['[Government]', '[Housing]', '[Business]']
+# Example OpenAI output for testing
+openai_output = [
+    '[Public Safety: d8856afc5a46364392334030]',
+    '[Government: 655288ef928edb12830673e1]',
+    '[Transportation: 655288ef928edb1283067415]'
+]
 
 # Format the output for Webflow
 formatted_categories = format_categories_for_webflow(openai_output)
 print(f"Formatted Categories for Webflow: {formatted_categories}")
-
-
-
 
 def generate_slug(title):
     # Convert to lowercase
@@ -202,71 +216,65 @@ class WebflowAPI:
             'US': '65810f6b889af86635a71b49'
         }
 
-    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
-        slug = generate_slug(bill_details['title'])
-        title = reformat_title(bill_details['title'])
-        kialo_url = clean_kialo_url(kialo_url)
+def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
+    slug = generate_slug(bill_details['title'])
+    title = reformat_title(bill_details['title'])
+    kialo_url = clean_kialo_url(kialo_url)
 
-        if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
-            logger.error(f"Invalid gov-url: {bill_url}")
-            return None
+    if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
+        logger.error(f"Invalid gov-url: {bill_url}")
+        return None
 
-        jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
-        if not jurisdiction_item_ref:
-            logger.error(f"Invalid jurisdiction: {jurisdiction}")
-            return None
+    jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
+    if not jurisdiction_item_ref:
+        logger.error(f"Invalid jurisdiction: {jurisdiction}")
+        return None
 
-        # Generate categories based on the bill text
-        bill_text = bill_details.get("full_text", "")
-        category_names = bill_details.get("categories", [])  # Get category names
-        formatted_categories = get_category_ids(category_names)  # Convert names to IDs
+    # Generate categories based on the bill text
+    bill_text = bill_details.get("full_text", "")
+    category_names = bill_details.get("categories", [])  # Get category names
+    formatted_categories = get_category_ids(category_names)  # Convert names to IDs
 
-        logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
+    # Log the correct formatted categories
+    logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
 
-        data = {
-            "isArchived": False,
-            "isDraft": False,
-            "fieldData": {
-                "name": title,
-                "slug": slug,
-                "post-body": bill_text,  # Include bill text in the post-body field
-                "jurisdiction": jurisdiction_item_ref,
-                "voatzid": "",
-                "kialo-url": kialo_url,
-                "gov-url": bill_url,
-                "bill-score": 0.0,
-                "description": bill_details['description'],
-                "support": support_text,
-                "oppose": oppose_text,
-                "public": True,
-                "featured": True,
-                "category": formatted_categories  # Set the categories field
-            }
+    # Use the correct categories that are logged
+    data = {
+        "isArchived": False,
+        "isDraft": False,
+        "fieldData": {
+            "name": title,
+            "slug": slug,
+            "post-body": bill_text,  # Include bill text in the post-body field
+            "jurisdiction": jurisdiction_item_ref,
+            "voatzid": "",
+            "kialo-url": kialo_url,
+            "gov-url": bill_url,
+            "bill-score": 0.0,
+            "description": bill_details['description'],
+            "support": support_text,
+            "oppose": oppose_text,
+            "public": True,
+            "featured": True,
+            "category": formatted_categories  # Use the logged formatted categories directly here
         }
+    }
 
-        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+    # Log the final payload
+    logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-        create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
-        response = requests.post(create_item_endpoint, headers=self.headers, json=data)
-        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+    create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
+    response = requests.post(create_item_endpoint, headers=self.headers, json=data)
+    logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-        if response.status_code in [200, 201, 202]:
-            item_id = response.json().get('id')
-            logger.info(f"Live collection item created successfully, ID: {item_id}")
-            return item_id, slug
-        else:
-            logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
-            return None
+    if response.status_code in [200, 201, 202]:
+        item_id = response.json().get('id')
+        logger.info(f"Live collection item created successfully, ID: {item_id}")
+        return item_id, slug
+    else:
+        logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
+        return None
 
-    def update_collection_item(self, item_id: str, data: Dict) -> bool:
-        update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
-
-        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
-
-        response = requests.put(update_item_endpoint, headers=self.headers, data=json.dumps(data))
-        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
-
-        return response.status_code in [200, 201]
 
     def get_collection_item(self, item_id: str) -> Optional[Dict]:
         get_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
