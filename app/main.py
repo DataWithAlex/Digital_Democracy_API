@@ -1,3 +1,5 @@
+# main.py
+
 import os
 import logging
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
@@ -13,6 +15,7 @@ from .webflow import WebflowAPI
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
+from .utils import categories, get_category_ids  # Updated import statement
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")

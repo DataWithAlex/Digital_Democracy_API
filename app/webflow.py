@@ -1,3 +1,5 @@
+# webflow.py
+
 import openai
 import logging
 import json
@@ -6,7 +8,8 @@ import requests
 import os
 from typing import Dict, Optional
 from .logger_config import logger
-from .main import categories, get_category_ids  # Import categories and helper function
+from .utils import categories, get_category_ids  # Updated import statement
+
 
 
 # Logging configuration
