@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse
 import datetime
 from .utils import get_category_ids  # Only import get_category_ids
 
+
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 

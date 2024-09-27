@@ -40,19 +40,52 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
 
 # Function to format the OpenAI output for Webflow
 def format_categories_for_webflow(openai_output, valid_categories):
-    category_ids = []
-    valid_category_ids = {category["id"] for category in valid_categories}
+    """
+    Formats the OpenAI output for Webflow by extracting valid category IDs.
     
+    Parameters:
+    - openai_output (list): A list of category strings returned by OpenAI, expected to be in the format
+                            '[Category Name, Category ID]' or similar.
+    - valid_categories (list): A list of valid category dictionaries with 'name' and 'id' keys.
+
+    Returns:
+    - list: A list of valid category IDs that match the categories in the OpenAI output.
+    """
+    # Create a set of valid category IDs for quick lookup
+    valid_category_ids = {category["id"] for category in valid_categories}
+
+    # Create a set of valid category names for matching when IDs are missing
+    valid_category_names = {category["name"].lower(): category["id"] for category in valid_categories}
+
+    category_ids = []  # To store the extracted and validated category IDs
+
     for category in openai_output:
-        parts = category.strip("[]").split(",")
+        # Try to parse the category in various expected formats
+        category = category.strip("[]")
+        parts = category.split(",")  # Split by comma first
         if len(parts) == 2:
-            category_id = parts[1].strip()
+            category_name, category_id = parts[0].strip(), parts[1].strip()
+            # Check if ID is directly provided and valid
             if category_id in valid_category_ids:
                 category_ids.append(category_id)
             else:
                 logging.warning(f"Invalid Category ID detected: {category_id}")
-    
+        else:
+            # If ID is not provided, try to extract and validate using the category name
+            name_parts = category.split(" - ")  # Fallback to split by ' - ' if necessary
+            if len(name_parts) > 1:
+                category_name = name_parts[0].strip()
+                category_id = valid_category_names.get(category_name.lower())
+                if category_id:
+                    category_ids.append(category_id)
+                else:
+                    logging.warning(f"Category name '{category_name}' not found in predefined categories.")
+            else:
+                logging.warning(f"Unrecognized category format: {category}")
+
+    # Return the list of valid IDs formatted for Webflow's ItemRefSet field
     return category_ids
+
 
 def generate_slug(title):
     # Convert to lowercase
