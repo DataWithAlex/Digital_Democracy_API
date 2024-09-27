@@ -104,7 +104,37 @@ def get_category_ids(category_names):
         else:
             logging.warning(f"Warning: Category '{name}' not found in predefined categories.")
     return category_ids
+# Function to get the top 3 categories using GPT-4o
+def get_top_categories(bill_text, categories, model="gpt-4o"):
+    system_message = (
+        "You are an AI that categorizes legislative texts into predefined categories. "
+        "You will receive a list of categories and the text of a legislative bill. "
+        "Your task is to select the three most relevant categories for the given text."
+    )
 
+    # Properly formatting categories list for OpenAI input
+    categories_list = "\n".join([f"- {category['name']}"] for category in categories)
+    user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}. NOTE: YOU MUST RETURN THEM IN THE FOLLOWING FORMAT: [CATEGORY: CATEGORY ID]. For example, [Disney, 655288ef928edb128306742c]"
+
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
+        ],
+    )
+
+    top_categories_response = response['choices'][0]['message']['content']
+
+    # Debug logging the response
+    logger.info(f"OpenAI Category Response: {top_categories_response}")
+
+    # Splitting the response and stripping to clean any extraneous spaces/newlines
+    top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
+
+    return top_categories
+
+# Update the `format_categories_for_webflow` function
 def format_categories_for_webflow(openai_output):
     """
     Formats the OpenAI output for Webflow by extracting valid category IDs.
@@ -118,6 +148,9 @@ def format_categories_for_webflow(openai_output):
     # Initialize an empty list to store valid category IDs
     category_ids = []
 
+    # Debug log the OpenAI output
+    logger.info(f"OpenAI Output Before Formatting: {openai_output}")
+
     # Iterate through each line of the OpenAI output
     for category in openai_output:
         # Extract text within square brackets (e.g., [Public Safety: d8856afc5a46364392334030])
@@ -129,15 +162,19 @@ def format_categories_for_webflow(openai_output):
             # Verify if the category ID exists in the predefined categories
             if category_id in category_dict.values():
                 category_ids.append(category_id)
-                logging.info(f"Matched category '{category_name}' to ID '{category_id}'")
+                logger.info(f"Matched category '{category_name}' to ID '{category_id}'")
             else:
                 logging.warning(f"Warning: Category ID '{category_id}' not found in predefined categories.")
         else:
             logging.warning(f"Warning: OpenAI output '{category}' does not match the expected format.")
 
+    # If category_ids is empty, log the issue for further debugging
+    if not category_ids:
+        logger.error(f"Failed to format OpenAI output correctly: {openai_output}")
+
     return category_ids
 
-# Example OpenAI output for testing
+# Example usage for testing/debugging purposes
 openai_output = [
     '[Public Safety: d8856afc5a46364392334030]',
     '[Government: 655288ef928edb12830673e1]',
@@ -147,6 +184,7 @@ openai_output = [
 # Format the output for Webflow
 formatted_categories = format_categories_for_webflow(openai_output)
 print(f"Formatted Categories for Webflow: {formatted_categories}")
+
 
 def generate_slug(title):
     # Convert to lowercase
