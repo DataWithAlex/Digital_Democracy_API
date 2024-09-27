@@ -13,6 +13,8 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from .translation import translate_to_spanish
 import openai
+from .main import categories, get_category_ids  # Import categories and helper function
+
 
 # Ensure that the OpenAI API key is set
 from .dependencies import openai_api_key
@@ -177,8 +179,10 @@ def fetch_bill_details(bill_page_url):
 
         # Extract text from PDF and get top categories
         full_text = extract_text_from_pdf(bill_details["pdf_path"])
-        top_categories = get_top_categories(full_text, categories)
-        formatted_categories = format_categories_for_webflow(top_categories, categories)
+
+        # Set categories based on extracted text
+        category_names = get_top_categories(full_text, categories)  # Use function from your own logic
+        formatted_categories = get_category_ids(category_names)  # Convert names to IDs
         
         logging.info(f"Formatted Categories for Webflow: {formatted_categories}")
         

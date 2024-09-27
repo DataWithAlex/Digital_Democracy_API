@@ -6,6 +6,8 @@ import requests
 import os
 from typing import Dict, Optional
 from .logger_config import logger
+from .main import categories, get_category_ids  # Import categories and helper function
+
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -175,8 +177,9 @@ class WebflowAPI:
 
         # Generate categories based on the bill text
         bill_text = bill_details.get("full_text", "")
-        top_categories = get_top_categories(bill_text, categories)
-        formatted_categories = format_categories_for_webflow(top_categories, categories)
+        category_names = bill_details.get("categories", [])  # Get category names
+        formatted_categories = get_category_ids(category_names)  # Convert names to IDs
+
         logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
 
         data = {

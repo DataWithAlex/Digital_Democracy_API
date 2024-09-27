@@ -85,6 +85,70 @@ logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
 logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")  # Updated with the actual collection ID
 logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
+from fastapi import FastAPI, HTTPException, Request, Response, Depends
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import create_engine
+
+# Define the list of categories with their names and IDs
+categories = [
+    {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
+    {"name": "International Relations", "id": "663299c73b94826974bd24da"},
+    {"name": "National Security", "id": "6632997a194f0d20b0d24108"},
+    {"name": "Civil Rights", "id": "663298e4562bd3696c89b3ea"},
+    {"name": "Arts", "id": "660ede71e88a45fcd08e2e39"},
+    {"name": "Energy", "id": "660ed44984debef46e8d5c5d"},
+    {"name": "Military and Veterans", "id": "65ce5778dae6450ac15a2d2f"},
+    {"name": "Priority Bill", "id": "65ba9dbe9768a6290a95c945"},
+    {"name": "Media", "id": "65b550562534316ee17131c0"},
+    {"name": "LGBT", "id": "655288ef928edb128306753e"},
+    {"name": "Public Records", "id": "655288ef928edb128306753d"},
+    {"name": "Social Welfare", "id": "655288ef928edb12830673e2"},
+    {"name": "Technology", "id": "655288ef928edb128306743e"},
+    {"name": "Government", "id": "655288ef928edb12830673e1"},
+    {"name": "Business", "id": "655288ef928edb128306746b"},
+    {"name": "Employment", "id": "655288ef928edb1283067425"},
+    {"name": "Public Safety", "id": "655288ef928edb1283067442"},
+    {"name": "Drugs", "id": "655288ef928edb128306745e"},
+    {"name": "Immigration", "id": "655288ef928edb12830673e5"},
+    {"name": "Transportation", "id": "655288ef928edb1283067415"},
+    {"name": "Criminal Justice", "id": "655288ef928edb12830673dc"},
+    {"name": "Elections", "id": "655288ef928edb12830673e0"},
+    {"name": "Culture", "id": "655288ef928edb1283067436"},
+    {"name": "Sports", "id": "655288ef928edb12830673df"},
+    {"name": "Marriage", "id": "655288ef928edb128306742d"},
+    {"name": "Housing", "id": "655288ef928edb128306743d"},
+    {"name": "Education", "id": "655288ef928edb12830673e4"},
+    {"name": "Medical", "id": "655288ef928edb12830673e9"},
+    {"name": "State Parks", "id": "655288ef928edb128306745d"},
+    {"name": "Guns", "id": "655288ef928edb128306741f"},
+    {"name": "Disney", "id": "655288ef928edb128306742c"},
+    {"name": "Natural Disasters", "id": "655288ef928edb1283067435"},
+    {"name": "Environment", "id": "655288ef928edb128306741b"},
+    {"name": "Taxes", "id": "655288ef928edb128306745c"}
+]
+
+# Create a dictionary for quick lookup
+category_dict = {category["name"].lower(): category["id"] for category in categories}
+
+def get_category_ids(category_names):
+    """
+    Given a list of category names, return the corresponding category IDs.
+    """
+    category_ids = []
+    for name in category_names:
+        # Convert name to lowercase to match the dictionary keys
+        category_id = category_dict.get(name.lower())
+        if category_id:
+            category_ids.append(category_id)
+        else:
+            print(f"Warning: Category '{name}' not found in predefined categories.")
+    return category_ids
+
+
+
+
+
+
 @app.post("/upload-file/")
 async def upload_file():
     file_path = 'test.txt'  # Confirm the file path is correct and accessible
@@ -191,6 +255,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         logger.info(f"Fetched bill details: {bill_details}")
 
         validate_bill_details(bill_details)
+
+        # Generate category IDs based on bill text
+        category_names = bill_details.get("categories", [])  # Assume this key contains category names
+        category_ids = get_category_ids(category_names)
+        bill_details["categories"] = category_ids  # Update the bill details with category IDs
 
         pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
 
@@ -319,6 +388,11 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
                 raise HTTPException(status_code=500, detail="Required bill details are missing.")
+
+            # Generate category IDs based on bill text
+            category_names = bill_details.get("categories", [])
+            category_ids = get_category_ids(category_names)
+            bill_details["categories"] = category_ids
 
             new_bill = Bill(
                 govId=bill_details["govId"], 
