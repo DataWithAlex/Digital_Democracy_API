@@ -38,14 +38,11 @@ def reformat_title(title):
     description = parts[1].strip()
     
     # Extract the bill type and number (e.g., "HR 9056") including prefix
-    bill_type_number = " ".join(bill_identifier.split()[1:3])  # Takes only the second and third parts, which are the type and number
-    
-    # Append prefix to bill number
-    prefix = bill_identifier.split()[0]  # Extracts "SB", "HR", etc.
-    formatted_bill_number = f"{prefix} {bill_type_number}"
+    # Modify the extraction logic to get only the letter and number parts
+    bill_type_number = " ".join([part for part in bill_identifier.split() if part.isalpha() or part.isdigit()])
 
     # Format the new title as "Description (Bill Type Number)"
-    new_title = f"{description} ({formatted_bill_number})"
+    new_title = f"{description} ({bill_type_number})"
     return new_title
 
 def clean_kialo_url(url: str) -> str:
