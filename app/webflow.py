@@ -44,6 +44,11 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 # Define the list of categories with their names and IDs
 categories = [
     {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
@@ -110,8 +115,8 @@ def format_categories_for_webflow(openai_output):
     Returns:
     - list: A list of valid category IDs that match the categories in the OpenAI output.
     """
-    # Extract category names from the OpenAI output by removing unwanted text patterns
-    category_names = [re.sub(r'[\[\]Category: ]', '', category).strip() for category in openai_output]
+    # Extract category names from the OpenAI output
+    category_names = [category.split(",")[0].strip("[]").strip() for category in openai_output]
     
     # Fetch the valid category IDs using get_category_ids function
     category_ids = get_category_ids(category_names)
@@ -119,12 +124,13 @@ def format_categories_for_webflow(openai_output):
     logging.info(f"Formatted Categories for Webflow: {category_ids}")
     return category_ids
 
-# Example OpenAI output with corrected format
-openai_output = ['[Category: Government]', '[Category: Housing]', '[Category: Business]', '[Category: Criminal Justice]', '[Category: Public Safety]']
+# Example OpenAI output with just names
+openai_output = ['[Government]', '[Housing]', '[Business]']
 
 # Format the output for Webflow
 formatted_categories = format_categories_for_webflow(openai_output)
 print(f"Formatted Categories for Webflow: {formatted_categories}")
+
 
 
 
