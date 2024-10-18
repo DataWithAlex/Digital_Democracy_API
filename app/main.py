@@ -463,59 +463,37 @@ def update_bill_with_webflow_info(new_bill, result, db):
     db.commit()
 
 def update_existing_bill(existing_bill, request, db):
-    """
-    Function to update an existing bill or create a new one using data from Webflow and the request.
-
-    Parameters:
-    - existing_bill: the current bill data from the database.
-    - request: the incoming request data to update the bill.
-    - db: database connection/session.
-
-    Returns:
-    None. This function performs updates and logs errors as needed.
-    """
     try:
-        # Step 1: Fetch all CMS items from Webflow (bills collection)
         cms_items = webflow_api.fetch_all_cms_items()
 
-        # Step 2: Generate the slug for the bill
-        slug = existing_bill.slug  # Assuming you have slug generation logic
-
-        # Step 3: Check if the slug exists in the Webflow CMS
+        slug = existing_bill.slug
         slug_exists, webflow_item_id = webflow_api.check_slug_exists(slug, cms_items)
 
         if slug_exists:
             logger.info(f"Bill with slug '{slug}' exists in Webflow. Proceeding to update.")
 
-            # Fetch the Webflow item details
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
 
             if not webflow_item:
                 logger.error(f"Failed to fetch Webflow item with ID: {webflow_item_id}")
                 raise HTTPException(status_code=500, detail="Failed to fetch Webflow item.")
 
-            # Update the bill with Webflow data
             fields = webflow_item['items'][0]
 
-            # Update the existing bill with data from Webflow and request inputs
             existing_bill.title = fields.get('name', existing_bill.title)
             existing_bill.description = fields.get('description', existing_bill.description)
             existing_bill.slug = fields.get('slug', existing_bill.slug)
             existing_bill.kialo_url = fields.get('kialo-url', existing_bill.kialo_url)
             existing_bill.gov_url = fields.get('gov-url', existing_bill.gov_url)
 
-            # Log the update success
             logger.info(f"Updated bill {existing_bill.id} with Webflow data and request inputs")
-
-            # Commit changes to the database
             db.commit()
 
         else:
             logger.info(f"Slug '{slug}' does not exist in Webflow. Creating new CMS item.")
 
-            # Step 4: Create a new CMS item in Webflow if the slug doesn't exist
             result = webflow_api.create_live_collection_item(
-                existing_bill.gov_url,  # Assuming gov_url is available
+                existing_bill.gov_url,
                 {
                     'name': existing_bill.title,
                     'slug': slug,
@@ -524,14 +502,13 @@ def update_existing_bill(existing_bill, request, db):
                 existing_bill.kialo_url,
                 support_text=request.member_organization if request.support == "Support" else '',
                 oppose_text=request.member_organization if request.support == "Oppose" else '',
-                jurisdiction="US" if 'US' in existing_bill.govId else 'FL'  # Example jurisdiction logic
+                jurisdiction="US" if 'US' in existing_bill.govId else 'FL'
             )
 
             if result is None:
                 logger.error("Failed to create new Webflow CMS item")
                 raise HTTPException(status_code=500, detail="Failed to create Webflow CMS item")
 
-            # Update the existing bill with the new Webflow item info
             webflow_item_id, new_slug = result
             webflow_url = f"https://digitaldemocracyproject.org/bills/{new_slug}"
 
@@ -540,10 +517,8 @@ def update_existing_bill(existing_bill, request, db):
             db.commit()
 
     except Exception as e:
-        # Log any unexpected exceptions
         logger.error(f"An error occurred while updating the bill ID: {existing_bill.id}. Error: {str(e)}", exc_info=True)
 
     finally:
-        # Ensure that the database connection is properly closed
         db.close()
         logger.info(f"Database connection closed for bill ID: {existing_bill.id}")

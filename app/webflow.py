@@ -154,3 +154,15 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to get collection item: {response.status_code} - {response.text}")
             return None
+        
+    def fetch_all_cms_items(self):
+        items_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
+        response = requests.get(items_endpoint, headers=self.headers)
+
+        if response.status_code == 200:
+            items_data = response.json().get('items', [])
+            logger.info(f"Successfully fetched {len(items_data)} CMS items from Webflow.")
+            return items_data
+        else:
+            logger.error(f"Failed to fetch CMS items: {response.status_code} - {response.text}")
+            return []
