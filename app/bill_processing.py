@@ -13,7 +13,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from .translation import translate_to_spanish
 import openai
-from .utils import categories, get_category_ids
+from .utils import categories, get_category_ids, category_dict  # Added category_dict here
 from .logger_config import logger
 
 # Ensure that the OpenAI API key is set
