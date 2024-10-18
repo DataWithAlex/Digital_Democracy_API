@@ -120,7 +120,13 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
         # Fetch all CMS items from Webflow to check if the slug already exists
         cms_items = webflow_api.fetch_all_cms_items()
-        if webflow_api.check_slug_exists(slug, cms_items):  # Corrected this line
+        
+        # If fetching CMS items fails, stop the process
+        if not cms_items:
+            raise HTTPException(status_code=500, detail="Failed to fetch CMS items from Webflow.")
+
+        # If the slug already exists, stop further processing
+        if webflow_api.check_slug_exists(slug, cms_items):
             logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
             return JSONResponse(content={"message": f"Bill with slug '{slug}' already exists"}, status_code=200)
 

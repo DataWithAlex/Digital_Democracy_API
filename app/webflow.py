@@ -82,12 +82,17 @@ class WebflowAPI:
         items_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
         response = requests.get(items_endpoint, headers=self.headers)
 
+        logger.info(f"Fetching CMS items from: {items_endpoint}")
+
         if response.status_code == 200:
             items_data = response.json().get('items', [])
             logger.info(f"Successfully fetched {len(items_data)} CMS items from Webflow.")
             return items_data
         else:
+            # Log response details for more debugging
             logger.error(f"Failed to fetch CMS items: {response.status_code} - {response.text}")
+            logger.error(f"Headers: {response.headers}")
+            logger.error(f"Request Body: {response.request.body}")
             return []
 
     def check_slug_exists(self, slug, items_data):
