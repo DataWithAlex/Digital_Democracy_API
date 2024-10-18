@@ -9,7 +9,7 @@ from .bill_processing import fetch_bill_details, fetch_federal_bill_details, cre
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest  # Ensure FormRequest is imported
-from .webflow import WebflowAPI
+from .webflow import WebflowAPI, generate_slug
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
