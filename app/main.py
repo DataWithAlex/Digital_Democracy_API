@@ -110,7 +110,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         # Generate and format categories using GPT-4
         bill_text = bill_details.get("full_text", "")
         openai_categories = get_top_categories(bill_text, categories)
-        formatted_categories = format_categories_for_webflow(openai_categories)
+        formatted_categories = format_categories_for_webflow(openai_categories, categories)
         logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
 
         # Generate PDF and summaries based on language preference
@@ -273,7 +273,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-        
+
 def validate_bill_details(bill_details):
     required_fields = ["govId", "billTextPath", "full_text", "history", "gov-url"]
     if not all(k in bill_details for k in required_fields):
