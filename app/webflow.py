@@ -1,63 +1,12 @@
-import openai
+import requests
 import logging
 import json
 import re
-import requests
-import os
 from typing import Dict, Optional
 from .logger_config import logger
-from .utils import categories, category_dict
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
-
-# Define OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-def get_top_categories(bill_text, categories, model="gpt-4"):
-    system_message = (
-        "You are an AI that categorizes legislative texts into predefined categories. "
-        "You will receive a list of categories and the text of a legislative bill. "
-        "Your task is to select the three most relevant categories for the given text."
-    )
-
-    categories_list = "\n".join([f"- {category['name']}: {category['id']}" for category in categories])
-    user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}\nNOTE: YOU MUST RETURN THEM IN THE FOLLOWING FORMAT: [Category Name: Category ID]. For example, [Disney: 655288ef928edb128306742c]"
-
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": user_message}
-        ],
-    )
-
-    top_categories_response = response['choices'][0]['message']['content']
-
-    # Debug logging the response
-    logger.info(f"OpenAI Category Response: {top_categories_response}")
-
-    # Splitting the response and stripping to clean any extraneous spaces/newlines
-    top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
-
-    return top_categories
-
-def format_categories_for_webflow(openai_output, predefined_categories):
-    formatted_categories = []
-    category_pattern = re.compile(r'\[?(.*?)\s*:\s*(.*?)\]?')
-    for line in openai_output:
-        matches = category_pattern.findall(line)
-        if not matches:
-            logger.warning(f"Warning: Could not parse categories from line '{line}'")
-            continue
-        for match in matches:
-            category_name = match[0].strip()
-            category_id = match[1].strip()
-            if category_id in predefined_categories.values():
-                formatted_categories.append(category_id)
-            else:
-                logger.warning(f"Warning: Category ID '{category_id}' not found in predefined categories.")
-    return formatted_categories
 
 def generate_slug(title):
     # Convert to lowercase
@@ -121,35 +70,38 @@ class WebflowAPI:
             'accept': 'application/json'
         }
         self.base_url = "https://api.webflow.com"
+        
+        # Add a mapping for the jurisdictions
         self.jurisdiction_map = {
-            'FL': '655288ef928edb128306745f',
-            'US': '65810f6b889af86635a71b49'
+            'FL': '655288ef928edb128306745f',  # Replace with the actual ItemRef for FL
+            'US': '65810f6b889af86635a71b49'  # Replace with the actual ItemRef for US
         }
 
-    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str, formatted_categories: list) -> Optional[tuple]:
-        logger.info("Preparing to create Webflow collection item...")
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
-        bill_text = bill_details.get('full_text', '')
-
-        logger.info(f"Slug generated: {slug}, Title formatted: {title}, Bill text: {len(bill_text)} characters.")
 
         if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
             logger.error(f"Invalid gov-url: {bill_url}")
             return None
 
+        # Map jurisdiction to its corresponding ItemRef
         jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
         if not jurisdiction_item_ref:
             logger.error(f"Invalid jurisdiction: {jurisdiction}")
             return None
 
+        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
+
         data = {
-            "fields": {
+            "isArchived": False,
+            "isDraft": False,
+            "fieldData": {
                 "name": title,
                 "slug": slug,
-                "post-body": bill_text,  # Include bill text in the post-body field
-                "jurisdiction": jurisdiction_item_ref,
+                "post-body": "",
+                "jurisdiction": jurisdiction_item_ref,  # Use the ItemRef for the jurisdiction
                 "voatzid": "",
                 "kialo-url": kialo_url,
                 "gov-url": bill_url,
@@ -159,29 +111,37 @@ class WebflowAPI:
                 "oppose": oppose_text,
                 "public": True,
                 "featured": True,
-                # "category": formatted_categories,  # Exclude categories from being pushed
-                "_draft": False,
-                "_archived": False
+                "category": bill_details["categories"]  # Include categories in field data
             }
         }
 
-        # Log the final payload
-        logger.info(f"JSON Payload for Webflow (categories excluded): {json.dumps(data, indent=4)}")
+        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-        # Make the API request to Webflow
-        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items?live=true"
+        create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
+        # Check if the response status code indicates success (200, 201, or 202)
         if response.status_code in [200, 201, 202]:
-            item = response.json().get('item')
-            item_id = item.get('_id')
-            slug = item.get('slug')
-            logger.info(f"Live collection item created successfully. ID: {item_id}, Slug: {slug}")
+            item_id = response.json().get('id')
+            logger.info(f"Live collection item created successfully, ID: {item_id}")
             return item_id, slug
         else:
-            logger.error(f"Failed to create live collection item. Status: {response.status_code}, Response: {response.text}")
+            logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
+
+
+    def update_collection_item(self, item_id: str, data: Dict) -> bool:
+        update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
+
+        # Debugging: Print the JSON payload to verify the structure before sending
+        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+
+        # Making the PUT request to update the collection item
+        response = requests.put(update_item_endpoint, headers=self.headers, data=json.dumps(data))
+        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+
+        return response.status_code in [200, 201]
 
     def get_collection_item(self, item_id: str) -> Optional[Dict]:
         get_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
@@ -194,16 +154,3 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to get collection item: {response.status_code} - {response.text}")
             return None
-
-    def update_collection_item(self, item_id: str, data: Dict) -> bool:
-        update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}?live=true"
-
-        response = requests.put(update_item_endpoint, headers=self.headers, json=data)
-        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
-
-        if response.status_code in [200, 201, 202]:
-            logger.info(f"Collection item updated successfully, ID: {item_id}")
-            return True
-        else:
-            logger.error(f"Failed to update collection item: {response.status_code} - {response.text}")
-            return False
