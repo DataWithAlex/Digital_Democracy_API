@@ -69,7 +69,13 @@ class WebflowAPI:
             'Content-Type': 'application/json',
             'accept': 'application/json'
         }
-        self.base_url = "https://api.webflow.com/v2"  # Updated to V2 URL
+        self.base_url = "https://api.webflow.com/v2"
+
+        # Add a mapping for the jurisdictions
+        self.jurisdiction_map = {
+            'US': '65810f6b889af86635a71b49',  # Replace with the correct ItemRef for US
+            'FL': '655288ef928edb128306745f',  # Replace with the correct ItemRef for FL
+        }
 
     def fetch_all_cms_items(self):
         """Fetch all CMS items from the Webflow collection (V2 API)."""
