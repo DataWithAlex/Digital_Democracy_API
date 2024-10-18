@@ -132,7 +132,7 @@ class WebflowAPI:
                 "oppose": oppose_text,
                 "public": True,
                 "featured": True,
-                "category": ["655288ef928edb128306742c", "655288ef928edb128306743a", "655288ef928edb1283067432"]
+                "category": ["655288ef928edb12830673e1", "65ba9dbe9768a6290a95c945"]
             }
         }
 
