@@ -116,18 +116,21 @@ class WebflowAPI:
             return None
 
         data = {
-            "isArchived": False,
-            "isDraft": False,
-            "fieldData": {
+            "fields": {
                 "name": title,
                 "slug": slug,
+                "post-body": "",
                 "jurisdiction": jurisdiction_item_ref,
+                "voatzid": "",
                 "kialo-url": kialo_url,
                 "gov-url": bill_url,
+                "bill-score": 0.0,
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
-                "category": bill_details["categories"]
+                "public": True,
+                "featured": True,
+                "category": bill_details.get("categories", [])
             }
         }
 
