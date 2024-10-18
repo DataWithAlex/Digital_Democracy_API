@@ -42,7 +42,6 @@ def get_top_categories(bill_text, categories, model="gpt-4"):
 
     return top_categories
 
-
 def format_categories_for_webflow(openai_output, predefined_categories):
     formatted_categories = []
     category_pattern = re.compile(r'\[?(.*?)\s*:\s*(.*?)\]?')
@@ -160,14 +159,14 @@ class WebflowAPI:
                 "oppose": oppose_text,
                 "public": True,
                 "featured": True,
-                "category": formatted_categories,  # Use formatted categories here
+                # "category": formatted_categories,  # Exclude categories from being pushed
                 "_draft": False,
                 "_archived": False
             }
         }
 
         # Log the final payload
-        logger.info(f"JSON Payload for Webflow: {json.dumps(data, indent=4)}")
+        logger.info(f"JSON Payload for Webflow (categories excluded): {json.dumps(data, indent=4)}")
 
         # Make the API request to Webflow
         create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items?live=true"
