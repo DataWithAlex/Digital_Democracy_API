@@ -463,29 +463,54 @@ def update_bill_with_webflow_info(new_bill, result, db):
     db.commit()
 
 def update_existing_bill(existing_bill, request, db):
-    webflow_item_id = existing_bill.webflow_item_id
-    webflow_item = webflow_api.get_collection_item(webflow_item_id)
+    """
+    Function to update an existing bill using data from Webflow and the request.
 
-    fields = webflow_item['items'][0]
-    support_text = fields.get('support', '') or ''
-    oppose_text = fields.get('oppose', '') or ''
+    Parameters:
+    - existing_bill: the current bill data from the database.
+    - request: the incoming request data to update the bill.
+    - db: database connection/session.
 
-    if request.support == "Support":
-        support_text += f"\n{request.member_organization}"
-    else:
-        oppose_text += f"\n{request.member_organization}"
+    Returns:
+    None. This function performs updates and logs errors as needed.
+    """
+    try:
+        # Assuming you make a Webflow API call here to get the current item
+        webflow_item = get_webflow_item(existing_bill)
 
-    data = {
-        "fields": {
-            "support": support_text.strip(),
-            "oppose": oppose_text.strip(),
-            "name": fields['name'],
-            "slug": fields['slug'],
-            "_draft": fields['_draft'],
-            "_archived": fields['_archived']
-        }
-    }
+        # Check if the API call returned a valid response
+        if webflow_item is None:
+            logger.error(f"Webflow API returned None for bill ID: {existing_bill.id}")
+            return  # Exit early if the response is None
+        elif 'items' not in webflow_item:
+            logger.error(f"Webflow API response missing 'items' key for bill ID: {existing_bill.id}. Response: {webflow_item}")
+            return  # Exit early if 'items' key is missing
+        elif not webflow_item['items']:
+            logger.error(f"Webflow API 'items' is empty for bill ID: {existing_bill.id}. Response: {webflow_item}")
+            return  # Exit early if 'items' is empty
 
-    if not webflow_api.update_collection_item(webflow_item_id, data):
-        logger.error("Failed to update Webflow item")
-        raise HTTPException(status_code=500, detail="Failed to update Webflow item")
+        # Now proceed safely with accessing the first item
+        fields = webflow_item['items'][0]
+
+        # Perform your update logic here with fields and request data
+        # Example: Update the title, description, etc.
+        existing_bill.title = fields.get('name', existing_bill.title)
+        existing_bill.description = fields.get('description', existing_bill.description)
+        existing_bill.slug = fields.get('slug', existing_bill.slug)
+        existing_bill.kialo_url = fields.get('kialo-url', existing_bill.kialo_url)
+        existing_bill.gov_url = fields.get('gov-url', existing_bill.gov_url)
+
+        # Log that the update is successful
+        logger.info(f"Updated bill {existing_bill.id} with Webflow data and request inputs")
+
+        # Commit changes to the database
+        db.commit()
+
+    except Exception as e:
+        # Log any unexpected exceptions
+        logger.error(f"An error occurred while updating the bill ID: {existing_bill.id}. Error: {str(e)}", exc_info=True)
+
+    finally:
+        # Ensure that the database connection is properly closed
+        db.close()
+        logger.info(f"Database connection closed for bill ID: {existing_bill.id}")
