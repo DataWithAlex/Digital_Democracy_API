@@ -127,38 +127,93 @@ def download_pdf(pdf_url, local_path="bill_text.pdf"):
 
 def fetch_bill_details(bill_page_url):
     base_url = 'https://www.flsenate.gov'
-    response = requests.get(urljoin(base_url, bill_page_url))
     bill_details = {"title": "", "description": "", "pdf_path": "", "govId": "", "billTextPath": "", "full_text": ""}
-
-    if response.status_code == 200:
+    
+    # Step 1: Fetch the bill page
+    logger.info(f"Fetching bill details from: {urljoin(base_url, bill_page_url)}")
+    try:
+        response = requests.get(urljoin(base_url, bill_page_url))
+        response.raise_for_status()  # Raise an HTTPError if the response code was unsuccessful
+        logger.info(f"Successfully fetched bill page content. Status code: {response.status_code}")
+    except requests.RequestException as e:
+        logger.error(f"Error fetching bill page: {e}")
+        raise Exception(f"Failed to fetch bill page due to: {e}")
+    
+    # Step 2: Parse the bill page content
+    try:
         soup = BeautifulSoup(response.content, 'html.parser')
         bill_title_tag = soup.find('div', id='prevNextBillNav').find_next('h2')
+        
         if bill_title_tag:
             bill_details["title"] = bill_title_tag.get_text(strip=True)
+            logger.info(f"Extracted bill title: {bill_details['title']}")
+            
+            # Extract the Gov ID from the title
             gov_id_match = re.search(r"([A-Z]{2} \d+):", bill_details["title"])
             if gov_id_match:
                 bill_details["govId"] = gov_id_match.group(1)
-
+                logger.info(f"Extracted Gov ID: {bill_details['govId']}")
+            else:
+                logger.warning("Gov ID not found in the bill title.")
+        else:
+            logger.warning("Bill title not found on the page.")
+        
+        # Step 3: Find the PDF link for the bill text
         bill_pdf_link = soup.find('a', class_='lnk_BillTextPDF')
         if bill_pdf_link:
             pdf_url = urljoin(base_url, bill_pdf_link['href'])
-            local_pdf_path = download_pdf(pdf_url)
-            bill_details["pdf_path"] = local_pdf_path
-            bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)
-
-        # Extract text from PDF and get top categories
-        full_text = extract_text_from_pdf(bill_details["pdf_path"])
-        bill_details["full_text"] = full_text
-
-        # Set categories based on extracted text
-        openai_categories = get_top_categories(full_text, categories)
-        formatted_categories = format_categories_for_webflow(openai_categories)
-        logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
-        bill_details["categories"] = formatted_categories
-
+            logger.info(f"Found bill PDF link: {pdf_url}")
+            
+            # Step 4: Download the PDF file
+            try:
+                local_pdf_path = download_pdf(pdf_url)
+                bill_details["pdf_path"] = local_pdf_path
+                logger.info(f"Downloaded bill PDF to: {local_pdf_path}")
+                
+                # Step 5: Upload PDF to S3
+                try:
+                    s3_path = upload_to_s3('ddp-bills-2', local_pdf_path)
+                    bill_details["billTextPath"] = s3_path
+                    logger.info(f"Uploaded PDF to S3 at: {s3_path}")
+                except Exception as e:
+                    logger.error(f"Failed to upload PDF to S3: {e}")
+                    raise
+            except Exception as e:
+                logger.error(f"Failed to download PDF from: {pdf_url}, Error: {e}")
+                raise
+        else:
+            logger.warning("PDF link not found on the page.")
+        
+        # Step 6: Extract text from the PDF
+        if bill_details["pdf_path"]:
+            try:
+                full_text = extract_text_from_pdf(bill_details["pdf_path"])
+                bill_details["full_text"] = full_text
+                logger.info(f"Extracted full text from PDF. First 500 characters: {full_text[:500]}...")
+            except Exception as e:
+                logger.error(f"Failed to extract text from PDF at {bill_details['pdf_path']}: {e}")
+                raise
+        else:
+            logger.warning("No PDF path available to extract text.")
+        
+        # Step 7: Generate categories based on the extracted text
+        if bill_details["full_text"]:
+            try:
+                openai_categories = get_top_categories(bill_details["full_text"], categories)
+                formatted_categories = format_categories_for_webflow(openai_categories)
+                bill_details["categories"] = formatted_categories
+                logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
+            except Exception as e:
+                logger.error(f"Failed to generate categories using OpenAI: {e}")
+                raise
+        else:
+            logger.warning("No full text available to generate categories.")
+        
         return bill_details
-    else:
-        raise Exception("Failed to fetch bill details due to HTTP error.")
+
+    except Exception as e:
+        logger.error(f"An error occurred while processing bill details: {e}")
+        raise Exception(f"Failed to process bill details due to: {e}")
 
 def extract_text_from_pdf(pdf_path):
     full_text = ""

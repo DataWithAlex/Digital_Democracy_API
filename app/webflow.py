@@ -42,44 +42,23 @@ def get_top_categories(bill_text, categories, model="gpt-4"):
 
     return top_categories
 
-def format_categories_for_webflow(openai_output):
-    """
-    Formats the OpenAI output for Webflow by extracting valid category IDs.
 
-    Parameters:
-    - openai_output (list): A list of category names and IDs returned by OpenAI.
-
-    Returns:
-    - list: A list of valid category IDs that match the categories in the OpenAI output.
-    """
-    # Initialize an empty list to store valid category IDs
-    category_ids = []
-
-    # Debug log the OpenAI output
-    logger.info(f"OpenAI Output Before Formatting: {openai_output}")
-
-    # Iterate through each line of the OpenAI output
-    for category in openai_output:
-        # Extract text within square brackets (e.g., [Category Name: Category ID])
-        match = re.search(r'\[(.+?):\s*(.+?)\]', category)
-        if match:
-            # Extract category name and ID
-            category_name, category_id = match.groups()
-
-            # Verify if the category ID exists in the predefined categories
-            if category_id in category_dict.values():
-                category_ids.append(category_id)
-                logger.info(f"Matched category '{category_name}' to ID '{category_id}'")
+def format_categories_for_webflow(openai_output, predefined_categories):
+    formatted_categories = []
+    category_pattern = re.compile(r'\[?(.*?)\s*:\s*(.*?)\]?')
+    for line in openai_output:
+        matches = category_pattern.findall(line)
+        if not matches:
+            logger.warning(f"Warning: Could not parse categories from line '{line}'")
+            continue
+        for match in matches:
+            category_name = match[0].strip()
+            category_id = match[1].strip()
+            if category_id in predefined_categories.values():
+                formatted_categories.append(category_id)
             else:
                 logger.warning(f"Warning: Category ID '{category_id}' not found in predefined categories.")
-        else:
-            logger.warning(f"Warning: OpenAI output '{category}' does not match the expected format.")
-
-    # If category_ids is empty, log the issue for further debugging
-    if not category_ids:
-        logger.error(f"Failed to format OpenAI output correctly: {openai_output}")
-
-    return category_ids
+    return formatted_categories
 
 def generate_slug(title):
     # Convert to lowercase
@@ -149,10 +128,13 @@ class WebflowAPI:
         }
 
     def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str, formatted_categories: list) -> Optional[tuple]:
+        logger.info("Preparing to create Webflow collection item...")
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
         bill_text = bill_details.get('full_text', '')
+
+        logger.info(f"Slug generated: {slug}, Title formatted: {title}, Bill text: {len(bill_text)} characters.")
 
         if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
             logger.error(f"Invalid gov-url: {bill_url}")
@@ -185,8 +167,9 @@ class WebflowAPI:
         }
 
         # Log the final payload
-        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+        logger.info(f"JSON Payload for Webflow: {json.dumps(data, indent=4)}")
 
+        # Make the API request to Webflow
         create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items?live=true"
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
@@ -195,10 +178,10 @@ class WebflowAPI:
             item = response.json().get('item')
             item_id = item.get('_id')
             slug = item.get('slug')
-            logger.info(f"Live collection item created successfully, ID: {item_id}")
+            logger.info(f"Live collection item created successfully. ID: {item_id}, Slug: {slug}")
             return item_id, slug
         else:
-            logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
+            logger.error(f"Failed to create live collection item. Status: {response.status_code}, Response: {response.text}")
             return None
 
     def get_collection_item(self, item_id: str) -> Optional[Dict]:

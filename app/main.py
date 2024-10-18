@@ -180,44 +180,67 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
-    logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
+    logger.info(f"Received request to generate federal bill summary. Session: {request.session}, Bill: {request.bill_number}, Type: {request.bill_type}")
+    
     try:
+        # Step 1: Fetch bill details
+        logger.info("Fetching federal bill details...")
         bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
         logger.info(f"Fetched bill details: {bill_details}")
 
+        # Validate if bill details have the required fields
+        logger.info("Validating bill details...")
         validate_bill_details(bill_details)
+        logger.info("Bill details validation passed.")
 
-        # Generate category IDs based on bill text
+        # Step 2: Generate categories using OpenAI
         full_text = bill_details.get("full_text", "")
-        openai_categories = get_top_categories(full_text, categories)  # 'categories' is now defined
+        logger.info("Generating categories for bill text using OpenAI...")
+        openai_categories = get_top_categories(full_text, categories)
+        logger.info(f"OpenAI returned categories: {openai_categories}")
+
+        logger.info("Formatting categories for Webflow...")
         formatted_categories = format_categories_for_webflow(openai_categories)
         bill_details["categories"] = formatted_categories
+        logger.info(f"Formatted Categories: {formatted_categories}")
 
-
+        # Step 3: Generate PDF and Summary
+        logger.info("Generating bill summary PDF...")
         pdf_path, summary, pros, cons = generate_bill_summary(full_text, request.lan, bill_details['title'])
+        logger.info(f"Generated PDF at: {pdf_path}, Summary: {summary}")
 
         # Ensure the description field is updated with the summary
         bill_details['description'] = summary
 
+        # Step 4: Check if the bill already exists in the database
+        logger.info(f"Checking if the bill exists in the database (govId: {bill_details['govId']})...")
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
+
         if not existing_bill:
+            logger.info("Bill does not exist, creating a new bill record.")
             new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
+            
+            logger.info("Running Selenium script to get Kialo URL...")
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+            logger.info(f"Kialo URL: {kialo_url}")
+            
+            # Step 5: Create a Webflow item
+            logger.info("Creating Webflow item...")
             result = create_webflow_item(bill_details, kialo_url, request)
 
             if result is None:
-                logger.error("Failed to create Webflow item")
+                logger.error("Failed to create Webflow item. Webflow API returned None.")
                 raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
             webflow_item_id, slug = result
-            if not webflow_item_id:
-                logger.error("Webflow item ID is None after creating Webflow item")
-                raise HTTPException(status_code=500, detail="Webflow item ID is None")
+            logger.info(f"Webflow item created successfully. Item ID: {webflow_item_id}, Slug: {slug}")
 
             update_bill_with_webflow_info(new_bill, result, db)
         else:
+            logger.info(f"Bill with govId {bill_details['govId']} already exists, updating existing bill...")
             update_existing_bill(existing_bill, request, db)
 
+        logger.info("Saving form data to the database...")
         save_form_data(
             name=request.name,
             email=request.email,
@@ -233,22 +256,24 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         )
 
         if pdf_path and os.path.exists(pdf_path):
+            logger.info(f"Returning PDF from path: {pdf_path}")
             with open(pdf_path, "rb") as pdf_file:
                 return Response(content=pdf_file.read(), media_type="application/pdf")
         else:
+            logger.error("Failed to generate or find PDF for the bill.")
             raise HTTPException(status_code=500, detail="Failed to generate PDF")
 
     except HTTPException as http_exc:
-        db.rollback()
         logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
+        db.rollback()
         raise http_exc
     except Exception as e:
-        db.rollback()
         logger.error(f"An error occurred: {str(e)}", exc_info=True)
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
+        
 def validate_bill_details(bill_details):
     required_fields = ["govId", "billTextPath", "full_text", "history", "gov-url"]
     if not all(k in bill_details for k in required_fields):
