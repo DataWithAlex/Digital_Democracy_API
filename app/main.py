@@ -387,6 +387,7 @@ def update_existing_bill(existing_bill, request, db):
             "gov-url": existing_bill.billTextPath,
             "description": existing_bill.govId,
             "title": existing_bill.govId,
+            "govId": existing_bill.govId,  # Add this line
             "categories": [],  # You may fetch categories if available
         }
 
@@ -426,6 +427,7 @@ def update_existing_bill(existing_bill, request, db):
         # Update the bill with the new Webflow info
         update_bill_with_webflow_info(existing_bill, result, db)
         webflow_item_id = existing_bill.webflow_item_id
+
 
     # Proceed with updating the Webflow item
     webflow_item = webflow_api.get_collection_item(webflow_item_id)
