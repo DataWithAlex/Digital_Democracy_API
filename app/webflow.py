@@ -6,7 +6,7 @@ import requests
 import os
 from typing import Dict, Optional
 from .logger_config import logger
-from .utils import categories, get_category_ids
+from .utils import categories, category_dict
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
