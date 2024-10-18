@@ -65,20 +65,14 @@ class WebflowAPI:
         self.site_id = site_id
         self.headers = {
             'Authorization': f'Bearer {api_key}',
-            'accept-version': '1.0.0',
+            'accept-version': '2.0.0',  # Use V2 API version
             'Content-Type': 'application/json',
             'accept': 'application/json'
         }
-        self.base_url = "https://api.webflow.com"
-        
-        # Add a mapping for the jurisdictions
-        self.jurisdiction_map = {
-            'FL': '655288ef928edb128306745f',  # Replace with the actual ItemRef for FL
-            'US': '65810f6b889af86635a71b49'  # Replace with the actual ItemRef for US
-        }
+        self.base_url = "https://api.webflow.com/v2"  # Updated to V2 URL
 
     def fetch_all_cms_items(self):
-        """Fetch all CMS items from the Webflow collection."""
+        """Fetch all CMS items from the Webflow collection (V2 API)."""
         items_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
         response = requests.get(items_endpoint, headers=self.headers)
 
@@ -89,17 +83,14 @@ class WebflowAPI:
             logger.info(f"Successfully fetched {len(items_data)} CMS items from Webflow.")
             return items_data
         else:
-            # Log response details for more debugging
             logger.error(f"Failed to fetch CMS items: {response.status_code} - {response.text}")
-            logger.error(f"Headers: {response.headers}")
-            logger.error(f"Request Body: {response.request.body}")
             return []
 
     def check_slug_exists(self, slug, items_data):
-        """Check if the generated slug already exists in the fetched CMS items."""
+        """Check if the generated slug already exists in the fetched CMS items (V2 API)."""
         for item in items_data:
-            if item['slug'] == slug:
-                logger.info(f"Slug '{slug}' already exists with ID: {item['_id']}")
+            if item['fieldData']['slug'] == slug:  # Adjusted for V2 API response structure
+                logger.info(f"Slug '{slug}' already exists with ID: {item['id']}")
                 return True
         return False
 
@@ -118,36 +109,29 @@ class WebflowAPI:
             logger.error(f"Invalid jurisdiction: {jurisdiction}")
             return None
 
-        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
-
         data = {
             "isArchived": False,
             "isDraft": False,
             "fieldData": {
                 "name": title,
                 "slug": slug,
-                "post-body": "",
-                "jurisdiction": jurisdiction_item_ref,  # Use the ItemRef for the jurisdiction
-                "voatzid": "",
+                "jurisdiction": jurisdiction_item_ref,
                 "kialo-url": kialo_url,
                 "gov-url": bill_url,
-                "bill-score": 0.0,
                 "description": bill_details['description'],
                 "support": support_text,
                 "oppose": oppose_text,
-                "public": True,
-                "featured": True,
-                "category": bill_details["categories"]  # Include categories in field data
+                "category": bill_details["categories"]
             }
         }
 
         logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-        create_item_endpoint = f"{self.base_url}/v2/collections/{self.collection_id}/items/live"
+        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
+
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-        # Check if the response status code indicates success (200, 201, or 202)
         if response.status_code in [200, 201, 202]:
             item_id = response.json().get('id')
             logger.info(f"Live collection item created successfully, ID: {item_id}")

@@ -104,8 +104,14 @@ async def delete_file():
         logger.error(f"Failed to delete file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Initialize WebflowAPI for V2
+webflow_api = WebflowAPI(
+    api_key=os.getenv("WEBFLOW_KEY"),
+    collection_id="655288ef928edb1283067256",  # Update with your actual collection ID
+    site_id=os.getenv("WEBFLOW_SITE_ID")
+)
 
-# Function to process bill requests
+# Process federal bill request
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
@@ -118,14 +124,13 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         # Generate slug from the bill title
         slug = generate_slug(bill_details['title'])
 
-        # Fetch all CMS items from Webflow to check if the slug already exists
+        # Fetch all CMS items from Webflow to check if the slug already exists (V2 API)
         cms_items = webflow_api.fetch_all_cms_items()
-        
-        # If fetching CMS items fails, stop the process
-        if not cms_items:
-            raise HTTPException(status_code=500, detail="Failed to fetch CMS items from Webflow.")
 
-        # If the slug already exists, stop further processing
+        if not cms_items:
+            logger.error("Failed to fetch CMS items from Webflow.")
+            raise HTTPException(status_code=500, detail="Failed to fetch CMS items from Webflow.")
+        
         if webflow_api.check_slug_exists(slug, cms_items):
             logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
             return JSONResponse(content={"message": f"Bill with slug '{slug}' already exists"}, status_code=200)
@@ -141,12 +146,13 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         result = create_webflow_item(bill_details, kialo_url, request, slug)
 
         if result is None:
-            logger.error("Failed to create Webflow item")
+            logger.error("Failed to create Webflow item.")
             raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
         # Update the bill with Webflow info
         update_bill_with_webflow_info(new_bill, result, db)
 
+        # Save form data
         save_form_data(
             name=request.name,
             email=request.email,
@@ -161,6 +167,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             db=db
         )
 
+        # Return the PDF if it was successfully generated
         if pdf_path and os.path.exists(pdf_path):
             with open(pdf_path, "rb") as pdf_file:
                 return Response(content=pdf_file.read(), media_type="application/pdf")
@@ -169,11 +176,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
     except HTTPException as http_exc:
         db.rollback()
-        logger.error(f"HTTP exception occurred: {http_exc}", exc_info=True)
+        logger.error(f"HTTP exception occurred: {http_exc.detail}")
         raise http_exc
     except Exception as e:
         db.rollback()
-        logger.error(f"An error occurred: {e}", exc_info=True)
+        logger.error(f"An error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
