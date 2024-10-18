@@ -100,7 +100,7 @@ class WebflowAPI:
                 return True
         return False
 
-    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[tuple]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -114,6 +114,8 @@ class WebflowAPI:
         if not jurisdiction_item_ref:
             logger.error(f"Invalid jurisdiction: {jurisdiction}")
             return None
+
+        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
             "fields": {
@@ -136,13 +138,14 @@ class WebflowAPI:
 
         logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
+        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items?live=true"
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
-
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-        if response.status_code in [200, 201, 202]:
-            item_id = response.json().get('id')
+        if response.status_code in [200, 201]:
+            item = response.json()['item']
+            item_id = item.get('_id')
+            slug = item.get('slug')
             logger.info(f"Live collection item created successfully, ID: {item_id}")
             return item_id, slug
         else:
