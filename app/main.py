@@ -520,18 +520,37 @@ def update_bill_with_webflow_info(new_bill, result, db):
     db.commit()
 
 def update_existing_bill(existing_bill, request, db):
-    webflow_item_id = existing_bill.webflow_item_id
-    webflow_item = webflow_api.get_collection_item(webflow_item_id)
+    logger.info(f"Updating existing bill with govId: {existing_bill.govId}")
 
+    # Ensure the existing bill has a Webflow item ID
+    webflow_item_id = existing_bill.webflow_item_id
+    if not webflow_item_id:
+        logger.error(f"Webflow item ID is missing for bill with govId: {existing_bill.govId}")
+        raise HTTPException(status_code=400, detail="Webflow item ID is missing for the existing bill.")
+
+    # Fetch the Webflow collection item using the Webflow API
+    webflow_item = webflow_api.get_collection_item(webflow_item_id)
+    logger.info(f"Webflow API response for item ID {webflow_item_id}: {webflow_item}")
+
+    # Check if the response from Webflow is valid
+    if not webflow_item or 'items' not in webflow_item or not webflow_item['items']:
+        logger.error(f"Failed to retrieve valid Webflow item for item ID {webflow_item_id}. Response: {webflow_item}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve valid Webflow item from Webflow API.")
+
+    # Safely extract fields from the Webflow item
     fields = webflow_item['items'][0]
+
+    # Existing support and oppose text
     support_text = fields.get('support', '') or ''
     oppose_text = fields.get('oppose', '') or ''
 
+    # Append member organization to either support or oppose text
     if request.support == "Support":
         support_text += f"\n{request.member_organization}"
-    else:
+    elif request.support == "Oppose":
         oppose_text += f"\n{request.member_organization}"
 
+    # Update the Webflow item with the new data
     data = {
         "fields": {
             "support": support_text.strip(),
@@ -543,6 +562,10 @@ def update_existing_bill(existing_bill, request, db):
         }
     }
 
-    if not webflow_api.update_collection_item(webflow_item_id, data):
-        logger.error("Failed to update Webflow item")
-        raise HTTPException(status_code=500, detail="Failed to update Webflow item")
+    # Update the Webflow collection item with the new data
+    update_result = webflow_api.update_collection_item(webflow_item_id, data)
+    if not update_result:
+        logger.error(f"Failed to update Webflow item with item ID {webflow_item_id}")
+        raise HTTPException(status_code=500, detail="Failed to update Webflow item.")
+    
+    logger.info(f"Successfully updated Webflow item with item ID {webflow_item_id}")
