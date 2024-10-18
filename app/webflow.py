@@ -118,7 +118,7 @@ class WebflowAPI:
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
-            "fields": {
+            "fieldData": {  # Change "fields" to "fieldData"
                 "name": title,
                 "slug": slug,
                 "post-body": "",
