@@ -4,7 +4,6 @@ import json
 import re
 from typing import Dict, Optional
 from .logger_config import logger
-import time
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -101,9 +100,7 @@ class WebflowAPI:
                 return True
         return False
 
-
-
-    def create_live_collection_item(bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[tuple]:
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[tuple]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -121,7 +118,7 @@ class WebflowAPI:
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
-            "fieldData": {
+            "fieldData": {  # Change "fields" to "fieldData"
                 "name": title,
                 "slug": slug,
                 "post-body": "",
@@ -134,7 +131,8 @@ class WebflowAPI:
                 "support": support_text,
                 "oppose": oppose_text,
                 "public": True,
-                "featured": True
+                "featured": True #,
+                #"category": ["655288ef928edb12830673e1", "65ba9dbe9768a6290a95c945"]
             }
         }
 
@@ -144,37 +142,15 @@ class WebflowAPI:
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-        if response.status_code in [200, 201]:  # Successful response
-            item = response.json().get('item', {})
-            item_id = item.get('_id', None)
-            slug = item.get('slug', None)
-
-            if not item_id or not slug:
-                logger.error("Missing item ID or slug in Webflow API response")
-                return None
-
+        if response.status_code in [200, 201]:
+            item = response.json()['item']
+            item_id = item.get('_id')
+            slug = item.get('slug')
             logger.info(f"Live collection item created successfully, ID: {item_id}")
             return item_id, slug
-
-        elif response.status_code == 202:  # Accepted but processing
-            logger.info("Received 202 Accepted from Webflow, waiting for completion...")
-            time.sleep(10)  # Wait for 10 seconds to allow Webflow to process
-
-            # Re-fetch the item from Webflow to confirm creation
-            item_id = response.json().get('item', {}).get('_id')
-            created_item = self.get_collection_item(item_id)
-
-            if created_item:
-                logger.info("Webflow item creation confirmed.")
-                return item_id, slug
-            else:
-                logger.error("Webflow item creation not completed after waiting.")
-                return None
-
         else:
             logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
-
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
