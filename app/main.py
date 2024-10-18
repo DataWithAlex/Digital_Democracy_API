@@ -21,7 +21,8 @@ from .webflow import WebflowAPI, get_top_categories, format_categories_for_webfl
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
-from .utils import categories, get_category_ids  # Add 'categories' here
+#from .utils import categories, get_category_ids  # Add 'categories' here
+from .utils import get_category_ids, categories
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -178,7 +179,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
     finally:
         db.close()
 
-from utils import get_category_ids, categories
+
 
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
