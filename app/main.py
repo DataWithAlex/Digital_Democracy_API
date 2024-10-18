@@ -459,7 +459,7 @@ def add_new_bill(db, bill_details, summary, pros, cons, language):
 
     return new_bill
 
-def create_webflow_item(bill_details, kialo_url, request):
+def create_webflow_item(bill_details, kialo_url, request, slug):
     return webflow_api.create_live_collection_item(
         bill_details['gov-url'],
         bill_details,
