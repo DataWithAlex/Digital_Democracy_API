@@ -183,7 +183,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
 
 
 # Import fetch_all_cms_items and check_slug_exists from webflow
-from .webflow import WebflowAPI, generate_slug, fetch_all_cms_items, check_slug_exists
+#from .webflow import WebflowAPI, generate_slug, fetch_all_cms_items, check_slug_exists
 
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
