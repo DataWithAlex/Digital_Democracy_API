@@ -179,8 +179,6 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
     finally:
         db.close()
 
-
-
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary. Session: {request.session}, Bill: {request.bill_number}, Type: {request.bill_type}")
@@ -198,25 +196,31 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
         # Step 2: Generate categories using OpenAI
         full_text = bill_details.get("full_text", "")
-        logger.info("Generating categories for bill text using OpenAI...")
-        openai_categories = get_top_categories(full_text, categories)
-        logger.info(f"OpenAI returned categories: {openai_categories}")
+        try:
+            logger.info("Generating categories for bill text using OpenAI...")
+            openai_categories = get_top_categories(full_text, categories)
+            logger.info(f"OpenAI returned categories: {openai_categories}")
 
-        # Extract category names from OpenAI output
-        category_names = [cat.split(":")[0].strip() for cat in openai_categories]
+            # Extract category names from OpenAI output
+            category_names = [cat.split(":")[0].strip() for cat in openai_categories]
 
-        # Convert category names to category IDs using the predefined categories
-        logger.info("Matching OpenAI categories with predefined categories...")
-        category_ids = get_category_ids(category_names)
-        logger.info(f"Matched Categories: {category_ids}")
+            # Convert category names to category IDs using the predefined categories
+            logger.info("Matching OpenAI categories with predefined categories...")
+            category_ids = get_category_ids(category_names)
+            logger.info(f"Matched Categories: {category_ids}")
 
-        # Step 3: Format categories for Webflow using category IDs
-        logger.info("Formatting categories for Webflow...")
-        formatted_categories = format_categories_for_webflow(category_ids)
-        bill_details["categories"] = formatted_categories
-        logger.info(f"Formatted Categories: {formatted_categories}")
+            logger.info("Formatting categories for Webflow...")
+            formatted_categories = format_categories_for_webflow(category_ids, categories)
+            bill_details["categories"] = formatted_categories
+            logger.info(f"Formatted Categories: {formatted_categories}")
+        
+        except Exception as e:
+            # Log the error but continue processing the rest of the bill
+            logger.error(f"Failed to format OpenAI output correctly: {str(e)}")
+            logger.info("Proceeding without categories.")
+            bill_details["categories"] = []
 
-        # Step 4: Generate PDF and Summary
+        # Step 3: Generate PDF and Summary
         logger.info("Generating bill summary PDF...")
         pdf_path, summary, pros, cons = generate_bill_summary(full_text, request.lan, bill_details['title'])
         logger.info(f"Generated PDF at: {pdf_path}, Summary: {summary}")
@@ -224,7 +228,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         # Ensure the description field is updated with the summary
         bill_details['description'] = summary
 
-        # Step 5: Check if the bill already exists in the database
+        # Step 4: Check if the bill already exists in the database
         logger.info(f"Checking if the bill exists in the database (govId: {bill_details['govId']})...")
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
 
@@ -236,7 +240,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
             logger.info(f"Kialo URL: {kialo_url}")
             
-            # Step 6: Create a Webflow item
+            # Step 5: Create a Webflow item
             logger.info("Creating Webflow item...")
             result = create_webflow_item(bill_details, kialo_url, request)
 
@@ -252,7 +256,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             logger.info(f"Bill with govId {bill_details['govId']} already exists, updating existing bill...")
             update_existing_bill(existing_bill, request, db)
 
-        # Step 7: Save form data to the database
+        # Step 6: Save form data to the database
         logger.info("Saving form data to the database...")
         save_form_data(
             name=request.name,
@@ -268,7 +272,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             db=db
         )
 
-        # Step 8: Return the generated PDF
+        # Step 7: Return the generated PDF
         if pdf_path and os.path.exists(pdf_path):
             logger.info(f"Returning PDF from path: {pdf_path}")
             with open(pdf_path, "rb") as pdf_file:
