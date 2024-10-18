@@ -464,7 +464,7 @@ def update_bill_with_webflow_info(new_bill, result, db):
 
 def update_existing_bill(existing_bill, request, db):
     """
-    Function to update an existing bill using data from Webflow and the request.
+    Function to update an existing bill or create a new one using data from Webflow and the request.
 
     Parameters:
     - existing_bill: the current bill data from the database.
@@ -475,36 +475,69 @@ def update_existing_bill(existing_bill, request, db):
     None. This function performs updates and logs errors as needed.
     """
     try:
-        # Assuming you make a Webflow API call here to get the current item
-        webflow_item = get_webflow_item(existing_bill)
+        # Step 1: Fetch all CMS items from Webflow (bills collection)
+        cms_items = webflow_api.fetch_all_cms_items()
 
-        # Check if the API call returned a valid response
-        if webflow_item is None:
-            logger.error(f"Webflow API returned None for bill ID: {existing_bill.id}")
-            return  # Exit early if the response is None
-        elif 'items' not in webflow_item:
-            logger.error(f"Webflow API response missing 'items' key for bill ID: {existing_bill.id}. Response: {webflow_item}")
-            return  # Exit early if 'items' key is missing
-        elif not webflow_item['items']:
-            logger.error(f"Webflow API 'items' is empty for bill ID: {existing_bill.id}. Response: {webflow_item}")
-            return  # Exit early if 'items' is empty
+        # Step 2: Generate the slug for the bill
+        slug = existing_bill.slug  # Assuming you have slug generation logic
 
-        # Now proceed safely with accessing the first item
-        fields = webflow_item['items'][0]
+        # Step 3: Check if the slug exists in the Webflow CMS
+        slug_exists, webflow_item_id = webflow_api.check_slug_exists(slug, cms_items)
 
-        # Perform your update logic here with fields and request data
-        # Example: Update the title, description, etc.
-        existing_bill.title = fields.get('name', existing_bill.title)
-        existing_bill.description = fields.get('description', existing_bill.description)
-        existing_bill.slug = fields.get('slug', existing_bill.slug)
-        existing_bill.kialo_url = fields.get('kialo-url', existing_bill.kialo_url)
-        existing_bill.gov_url = fields.get('gov-url', existing_bill.gov_url)
+        if slug_exists:
+            logger.info(f"Bill with slug '{slug}' exists in Webflow. Proceeding to update.")
 
-        # Log that the update is successful
-        logger.info(f"Updated bill {existing_bill.id} with Webflow data and request inputs")
+            # Fetch the Webflow item details
+            webflow_item = webflow_api.get_collection_item(webflow_item_id)
 
-        # Commit changes to the database
-        db.commit()
+            if not webflow_item:
+                logger.error(f"Failed to fetch Webflow item with ID: {webflow_item_id}")
+                raise HTTPException(status_code=500, detail="Failed to fetch Webflow item.")
+
+            # Update the bill with Webflow data
+            fields = webflow_item['items'][0]
+
+            # Update the existing bill with data from Webflow and request inputs
+            existing_bill.title = fields.get('name', existing_bill.title)
+            existing_bill.description = fields.get('description', existing_bill.description)
+            existing_bill.slug = fields.get('slug', existing_bill.slug)
+            existing_bill.kialo_url = fields.get('kialo-url', existing_bill.kialo_url)
+            existing_bill.gov_url = fields.get('gov-url', existing_bill.gov_url)
+
+            # Log the update success
+            logger.info(f"Updated bill {existing_bill.id} with Webflow data and request inputs")
+
+            # Commit changes to the database
+            db.commit()
+
+        else:
+            logger.info(f"Slug '{slug}' does not exist in Webflow. Creating new CMS item.")
+
+            # Step 4: Create a new CMS item in Webflow if the slug doesn't exist
+            result = webflow_api.create_live_collection_item(
+                existing_bill.gov_url,  # Assuming gov_url is available
+                {
+                    'name': existing_bill.title,
+                    'slug': slug,
+                    'description': existing_bill.description
+                },
+                existing_bill.kialo_url,
+                support_text=request.member_organization if request.support == "Support" else '',
+                oppose_text=request.member_organization if request.support == "Oppose" else '',
+                jurisdiction="US" if 'US' in existing_bill.govId else 'FL'  # Example jurisdiction logic
+            )
+
+            if result is None:
+                logger.error("Failed to create new Webflow CMS item")
+                raise HTTPException(status_code=500, detail="Failed to create Webflow CMS item")
+
+            # Update the existing bill with the new Webflow item info
+            webflow_item_id, new_slug = result
+            webflow_url = f"https://digitaldemocracyproject.org/bills/{new_slug}"
+
+            existing_bill.webflow_item_id = webflow_item_id
+            existing_bill.webflow_link = webflow_url
+            db.commit()
 
     except Exception as e:
         # Log any unexpected exceptions
