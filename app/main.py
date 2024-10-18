@@ -1,3 +1,4 @@
+# Existing imports in main.py
 import os
 import logging
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
@@ -20,7 +21,7 @@ from .webflow import WebflowAPI, get_top_categories, format_categories_for_webfl
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
-from .utils import get_category_ids
+from .utils import categories, get_category_ids  # Add 'categories' here
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -188,9 +189,10 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
         # Generate category IDs based on bill text
         full_text = bill_details.get("full_text", "")
-        openai_categories = get_top_categories(full_text, categories)
+        openai_categories = get_top_categories(full_text, categories)  # 'categories' is now defined
         formatted_categories = format_categories_for_webflow(openai_categories)
         bill_details["categories"] = formatted_categories
+
 
         pdf_path, summary, pros, cons = generate_bill_summary(full_text, request.lan, bill_details['title'])
 
