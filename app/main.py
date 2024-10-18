@@ -106,63 +106,54 @@ async def delete_file():
 
 
 # Function to process bill requests
-# Function to process bill requests
-def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
-    logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
+@app.post("/process-federal-bill/", response_class=Response)
+async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
+    logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
-        bill_details = fetch_bill_details(bill_request.url)
+        bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
+        logger.info(f"Fetched bill details: {bill_details}")
 
-        logger.info("Bill details:")
-        for key, value in bill_details.items():
-            logger.info(f"{key}: {value}")
+        validate_bill_details(bill_details)
 
-        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "categories"]):
-            raise HTTPException(status_code=500, detail="Required bill details are missing.")
+        # Generate slug from the bill title
+        slug = generate_slug(bill_details['title'])
 
-        # Generate PDF and summaries based on language preference
-        if bill_request.lan == "es":
-            pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
-        else:
-            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+        # Fetch all CMS items from Webflow to check if the slug already exists
+        cms_items = webflow_api.fetch_all_cms_items()
+        if webflow_api.check_slug_exists(slug, cms_items):  # Corrected this line
+            logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
+            return JSONResponse(content={"message": f"Bill with slug '{slug}' already exists"}, status_code=200)
 
-        # Ensure the description field is updated with the summary
-        bill_details['description'] = summary
+        # Generate bill summary and PDF
+        pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
 
-        # Check if the bill already exists in the database
-        existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
-        if not existing_bill:
-            new_bill = Bill(govId=bill_details["govId"], billTextPath=bill_details["billTextPath"])
-            db.add(new_bill)
-            db.commit()
+        # Proceed with creating the new bill
+        new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
+        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
-            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=bill_request.lan.upper())
-                db.add(new_meta)
-            db.commit()
+        # Create new CMS item in Webflow
+        result = create_webflow_item(bill_details, kialo_url, request, slug)
 
-            logger.info("About to run Selenium script")
-            kialo_url = run_selenium_script(
-                title=bill_details['govId'],
-                summary=summary,
-                pros_text=pros,
-                cons_text=cons
-            )
-            logger.info("Finished running Selenium script")
-            logger.info(f"Kialo URL: {kialo_url}")
+        if result is None:
+            logger.error("Failed to create Webflow item")
+            raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
-            logger.info(f"Summary for Webflow: {summary}")
+        # Update the bill with Webflow info
+        update_bill_with_webflow_info(new_bill, result, db)
 
-            logger.info("Creating Webflow item")
-            webflow_item_id = webflow_api.create_live_collection_item(
-                bill_request.url, 
-                bill_details, 
-                kialo_url, 
-                support_text=bill_request.member_organization if bill_request.support == "Support" else '', 
-                oppose_text=bill_request.member_organization if bill_request.support == "Oppose" else '', 
-                jurisdiction="FL"  # Example jurisdiction for Florida bills
-            )
-        else:
-            logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
+        save_form_data(
+            name=request.name,
+            email=request.email,
+            member_organization=request.member_organization,
+            year=request.year,
+            legislation_type="Federal Bills",
+            session=request.session,
+            bill_number=request.bill_number,
+            bill_type=request.bill_type,
+            support=request.support,
+            govId=bill_details["govId"],
+            db=db
+        )
 
         if pdf_path and os.path.exists(pdf_path):
             with open(pdf_path, "rb") as pdf_file:
@@ -173,7 +164,7 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
     except HTTPException as http_exc:
         db.rollback()
         logger.error(f"HTTP exception occurred: {http_exc}", exc_info=True)
-        raise
+        raise http_exc
     except Exception as e:
         db.rollback()
         logger.error(f"An error occurred: {e}", exc_info=True)
