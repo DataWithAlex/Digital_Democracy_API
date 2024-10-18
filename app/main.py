@@ -479,35 +479,63 @@ def update_bill_with_webflow_info(new_bill, result, db):
 def update_existing_bill(existing_bill, request, db):
     webflow_item_id = existing_bill.webflow_item_id
     if not webflow_item_id:
-        logger.error("Webflow item ID is missing for the existing bill.")
-        raise HTTPException(status_code=500, detail="Webflow item ID is missing for the existing bill.")
-
-    webflow_item = webflow_api.get_collection_item(webflow_item_id)
-    if webflow_item is None:
-        logger.error("Failed to retrieve Webflow item.")
-        raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
-
-    fields = webflow_item['items'][0]
-    support_text = fields.get('support', '') or ''
-    oppose_text = fields.get('oppose', '') or ''
-
-    if request.support == "Support":
-        support_text += f"\n{request.member_organization}"
-    else:
-        oppose_text += f"\n{request.member_organization}"
-
-    data = {
-        "fields": {
-            "support": support_text.strip(),
-            "oppose": oppose_text.strip(),
-            "name": fields['name'],
-            "slug": fields['slug'],
-            "description": fields.get('description', ''),
-            "_draft": fields['_draft'],
-            "_archived": fields['_archived']
+        logger.warning("Webflow item ID is missing for the existing bill. Creating a new Webflow item.")
+        
+        # Create a new Webflow item
+        bill_details = {
+            'title': existing_bill.govId,
+            'description': existing_bill.description,  # Make sure to have the description
+            'gov-url': existing_bill.billTextPath,     # Assuming this is the gov URL
+            'full_text': existing_bill.full_text       # Make sure to have the full text
         }
-    }
+        
+        # Generate categories if needed
+        full_text = existing_bill.full_text or ''
+        openai_categories = get_top_categories(full_text, categories)
+        formatted_categories = format_categories_for_webflow(openai_categories)
+        
+        kialo_url = ''  # If you have a method to generate or retrieve the kialo_url, include it
+        
+        result = create_webflow_item(bill_details, kialo_url, request)
+        if result is None:
+            logger.error("Failed to create Webflow item")
+            raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+        
+        webflow_item_id, slug = result
+        webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
+        
+        # Update the existing bill with new Webflow details
+        existing_bill.webflow_link = webflow_url
+        existing_bill.webflow_item_id = webflow_item_id
+        db.commit()
+    else:
+        # Existing code to update the Webflow item
+        webflow_item = webflow_api.get_collection_item(webflow_item_id)
+        if webflow_item is None:
+            logger.error("Failed to retrieve Webflow item.")
+            raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
 
-    if not webflow_api.update_collection_item(webflow_item_id, data):
-        logger.error("Failed to update Webflow item")
-        raise HTTPException(status_code=500, detail="Failed to update Webflow item")
+        fields = webflow_item['items'][0]
+        support_text = fields.get('support', '') or ''
+        oppose_text = fields.get('oppose', '') or ''
+
+        if request.support == "Support":
+            support_text += f"\n{request.member_organization}"
+        else:
+            oppose_text += f"\n{request.member_organization}"
+
+        data = {
+            "fields": {
+                "support": support_text.strip(),
+                "oppose": oppose_text.strip(),
+                "name": fields['name'],
+                "slug": fields['slug'],
+                "description": fields.get('description', ''),
+                "_draft": fields['_draft'],
+                "_archived": fields['_archived']
+            }
+        }
+
+        if not webflow_api.update_collection_item(webflow_item_id, data):
+            logger.error("Failed to update Webflow item")
+            raise HTTPException(status_code=500, detail="Failed to update Webflow item")
