@@ -131,8 +131,8 @@ class WebflowAPI:
                 "support": support_text,
                 "oppose": oppose_text,
                 "public": True,
-                "featured": True,
-                "category": ["655288ef928edb12830673e1", "65ba9dbe9768a6290a95c945"]
+                "featured": True #,
+                #"category": ["655288ef928edb12830673e1", "65ba9dbe9768a6290a95c945"]
             }
         }
 
