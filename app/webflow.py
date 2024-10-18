@@ -132,7 +132,7 @@ class WebflowAPI:
                 "oppose": oppose_text,
                 "public": True,
                 "featured": True,
-                "category": bill_details.get("categories", [])
+                "category": ["655288ef928edb128306742c", "655288ef928edb128306743a", "655288ef928edb1283067432"]
             }
         }
 
