@@ -77,6 +77,27 @@ class WebflowAPI:
             'US': '65810f6b889af86635a71b49'  # Replace with the actual ItemRef for US
         }
 
+    def fetch_all_cms_items(self):
+        """Fetch all CMS items from the Webflow collection."""
+        items_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
+        response = requests.get(items_endpoint, headers=self.headers)
+
+        if response.status_code == 200:
+            items_data = response.json().get('items', [])
+            logger.info(f"Successfully fetched {len(items_data)} CMS items from Webflow.")
+            return items_data
+        else:
+            logger.error(f"Failed to fetch CMS items: {response.status_code} - {response.text}")
+            return []
+
+    def check_slug_exists(self, slug, items_data):
+        """Check if the generated slug already exists in the fetched CMS items."""
+        for item in items_data:
+            if item['slug'] == slug:
+                logger.info(f"Slug '{slug}' already exists with ID: {item['_id']}")
+                return True
+        return False
+
     def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[str]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
@@ -130,7 +151,6 @@ class WebflowAPI:
             logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
 
-
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
 
@@ -154,15 +174,3 @@ class WebflowAPI:
         else:
             logger.error(f"Failed to get collection item: {response.status_code} - {response.text}")
             return None
-        
-    def fetch_all_cms_items(self):
-        items_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
-        response = requests.get(items_endpoint, headers=self.headers)
-
-        if response.status_code == 200:
-            items_data = response.json().get('items', [])
-            logger.info(f"Successfully fetched {len(items_data)} CMS items from Webflow.")
-            return items_data
-        else:
-            logger.error(f"Failed to fetch CMS items: {response.status_code} - {response.text}")
-            return []

@@ -182,6 +182,8 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
         db.close()
 
 
+# Import fetch_all_cms_items and check_slug_exists from webflow
+from .webflow import WebflowAPI, generate_slug, fetch_all_cms_items, check_slug_exists
 
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
@@ -192,24 +194,32 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
         validate_bill_details(bill_details)
 
+        # Generate slug from the bill title
+        slug = generate_slug(bill_details['title'])
+
+        # Fetch all CMS items from Webflow to check if the slug already exists
+        cms_items = webflow_api.fetch_all_cms_items()
+        if check_slug_exists(slug, cms_items):
+            logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
+            # Optionally, you can decide to update the existing CMS item here if necessary
+            return JSONResponse(content={"message": f"Bill with slug '{slug}' already exists"}, status_code=200)
+
+        # Generate bill summary and PDF
         pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
-
-        # Ensure the description field is updated with the summary
-        bill_details['description'] = summary
         
-        existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
-        if not existing_bill:
-            new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
-            kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
-            result = create_webflow_item(bill_details, kialo_url, request)
+        # Proceed with creating the new bill
+        new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
+        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+        
+        # Create new CMS item in Webflow
+        result = create_webflow_item(bill_details, kialo_url, request, slug)
 
-            if result is None:
-                logger.error("Failed to create Webflow item")
-                raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+        if result is None:
+            logger.error("Failed to create Webflow item")
+            raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
-            update_bill_with_webflow_info(new_bill, result, db)
-        else:
-            update_existing_bill(existing_bill, request, db)
+        # Update the bill with Webflow info
+        update_bill_with_webflow_info(new_bill, result, db)
 
         save_form_data(
             name=request.name,
