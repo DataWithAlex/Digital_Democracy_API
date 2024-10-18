@@ -5,16 +5,22 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
 import openai
-from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish, validate_and_generate_pros_cons
+from .bill_processing import (
+    fetch_bill_details,
+    fetch_federal_bill_details,
+    create_summary_pdf,
+    create_summary_pdf_spanish,
+    create_federal_summary_pdf,
+    create_federal_summary_pdf_spanish,
+)
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
-from .models import BillRequest, Bill, BillMeta, FormData, FormRequest  # Ensure FormRequest is imported
-from .webflow import WebflowAPI, get_top_categories, format_categories_for_webflow, categories
+from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
+from .webflow import WebflowAPI, get_top_categories, format_categories_for_webflow
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
-from .utils import get_category_ids  # Only import get_category_ids
-
+from .utils import get_category_ids
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -22,14 +28,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # FastAPI app initialization
 app = FastAPI()
 
-# Check and log AWS credentials
+# Check and log AWS credentials (do not log sensitive information)
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_DEFAULT_REGION")
-
-logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
-logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
-logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
 
 if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
     logger.error("AWS credentials are not set correctly.")
@@ -41,13 +43,33 @@ s3_client = boto3.client(
     "s3",
     aws_access_key_id=aws_access_key_id,
     aws_secret_access_key=aws_secret_access_key,
-    region_name=aws_region
+    region_name=aws_region,
 )
 
 BUCKET_NAME = "ddp-bills-2"  # Confirm this is the correct bucket name
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
+
+# Database connection details
+db_host = os.getenv('DB_HOST')
+db_name = os.getenv('DB_NAME')
+db_user = os.getenv('DB_USER')
+db_password = os.getenv('DB_PASSWORD')
+db_port = os.getenv('DB_PORT')
+
+# SQLAlchemy engine and session maker
+engine = create_engine(
+    f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Initialize WebflowAPI
+webflow_api = WebflowAPI(
+    api_key=os.getenv("WEBFLOW_KEY"),
+    collection_id="655288ef928edb1283067256",  # Updated with the actual collection ID
+    site_id=os.getenv("WEBFLOW_SITE_ID"),
+)
 
 # Dependency: Database connection
 def get_db():
@@ -58,35 +80,6 @@ def get_db():
     finally:
         logger.info("Closing database connection")
         db.close()
-
-# Database connection details
-db_host = os.getenv('DB_HOST')
-db_name = os.getenv('DB_NAME')
-db_user = os.getenv('DB_USER')
-db_password = os.getenv('DB_PASSWORD')
-db_port = os.getenv('DB_PORT')
-
-logger.info(f"DB_HOST: {db_host}")
-logger.info(f"DB_NAME: {db_name}")
-logger.info(f"DB_USER: {db_user}")
-logger.info(f"DB_PASSWORD: {db_password}")
-logger.info(f"DB_PORT: {db_port}")
-
-# SQLAlchemy engine and session maker
-engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Initialize WebflowAPI
-webflow_api = WebflowAPI(
-    api_key=os.getenv("WEBFLOW_KEY"),
-    collection_id="655288ef928edb1283067256",  # Updated with the actual collection ID
-    site_id=os.getenv("WEBFLOW_SITE_ID")
-)
-
-logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
-logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")  # Updated with the actual collection ID
-logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
-
 
 @app.post("/upload-file/")
 async def upload_file():
@@ -107,28 +100,27 @@ async def delete_file():
         logger.error(f"Failed to delete file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# Function to process bill requests
-# main.py
-
 # Function to process bill requests
 def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate bill summary for URL: {bill_request.url}")
     try:
         bill_details = fetch_bill_details(bill_request.url)
-        
+
         # Generate and format categories using GPT-4
         bill_text = bill_details.get("full_text", "")
         openai_categories = get_top_categories(bill_text, categories)
         formatted_categories = format_categories_for_webflow(openai_categories)
-        
         logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
 
         # Generate PDF and summaries based on language preference
         if bill_request.lan == "es":
-            pdf_path, summary, pros, cons = create_summary_pdf_spanish(bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title'])
+            pdf_path, summary, pros, cons = create_summary_pdf_spanish(
+                bill_details['pdf_path'], "output/bill_summary_spanish.pdf", bill_details['title']
+            )
         else:
-            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+            pdf_path, summary, pros, cons = create_summary_pdf(
+                bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title']
+            )
 
         # Ensure the description field is updated with the summary
         bill_details['description'] = summary
@@ -162,8 +154,8 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
                 kialo_url, 
                 support_text=bill_request.member_organization if bill_request.support == "Support" else '', 
                 oppose_text=bill_request.member_organization if bill_request.support == "Oppose" else '', 
-                jurisdiction="FL",  # Example jurisdiction for Florida bills
-                formatted_categories=formatted_categories  # Pass the formatted categories here
+                jurisdiction="FL",
+                formatted_categories=formatted_categories
             )
         else:
             logger.info(f"Bill with govId {bill_details['govId']} already exists. Skipping bill creation.")
@@ -185,7 +177,6 @@ def process_bill_request(bill_request: BillRequest, db: Session = Depends(get_db
     finally:
         db.close()
 
-
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
@@ -196,15 +187,16 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         validate_bill_details(bill_details)
 
         # Generate category IDs based on bill text
-        category_names = bill_details.get("categories", [])  # Assume this key contains category names
-        category_ids = get_category_ids(category_names)
-        bill_details["categories"] = category_ids  # Update the bill details with category IDs
+        full_text = bill_details.get("full_text", "")
+        openai_categories = get_top_categories(full_text, categories)
+        formatted_categories = format_categories_for_webflow(openai_categories)
+        bill_details["categories"] = formatted_categories
 
-        pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
+        pdf_path, summary, pros, cons = generate_bill_summary(full_text, request.lan, bill_details['title'])
 
         # Ensure the description field is updated with the summary
         bill_details['description'] = summary
-        
+
         existing_bill = db.query(Bill).filter(Bill.govId == bill_details["govId"]).first()
         if not existing_bill:
             new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
@@ -214,6 +206,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
             if result is None:
                 logger.error("Failed to create Webflow item")
                 raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+
+            webflow_item_id, slug = result
+            if not webflow_item_id:
+                logger.error("Webflow item ID is None after creating Webflow item")
+                raise HTTPException(status_code=500, detail="Webflow item ID is None")
 
             update_bill_with_webflow_info(new_bill, result, db)
         else:
@@ -276,21 +273,22 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             # Get the Webflow item ID
             webflow_item_id = existing_bill.webflow_item_id
             if not webflow_item_id:
+                logger.error("Webflow item ID is missing for the existing bill.")
                 raise HTTPException(status_code=500, detail="Webflow item ID is missing for the existing bill.")
 
             # Get the existing Webflow item
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
-            logger.info(f"Webflow API Response: {webflow_item}")
-            if not webflow_item:
+            if webflow_item is None:
+                logger.error("Failed to retrieve Webflow item.")
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
 
             # Ensure all required fields are present
-            webflow_item_data = webflow_item.get('items', [])[0]
-            name = webflow_item_data.get('name')
-            slug = webflow_item_data.get('slug')
-            support_text = webflow_item_data.get('support', '') or ''
-            oppose_text = webflow_item_data.get('oppose', '') or ''
-            description = webflow_item_data.get('description', '')  # Ensure description is retrieved
+            fields = webflow_item['items'][0]
+            name = fields.get('name')
+            slug = fields.get('slug')
+            support_text = fields.get('support', '') or ''
+            oppose_text = fields.get('oppose', '') or ''
+            description = fields.get('description', '')  # Ensure description is retrieved
 
             if not name or not slug:
                 raise HTTPException(status_code=500, detail="Required fields 'name' or 'slug' are missing in the Webflow item.")
@@ -308,9 +306,9 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                     "oppose": oppose_text.strip(),
                     "name": name,
                     "slug": slug,
-                    "description": description,  # Ensure description is updated
-                    "_draft": webflow_item_data.get("_draft", False),
-                    "_archived": webflow_item_data.get("_archived", False)
+                    "description": description,
+                    "_draft": fields.get("_draft", False),
+                    "_archived": fields.get("_archived", False)
                 }
             }
 
@@ -327,9 +325,10 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
             # Generate category IDs based on bill text
-            category_names = bill_details.get("categories", [])
-            category_ids = get_category_ids(category_names)
-            bill_details["categories"] = category_ids
+            full_text = bill_details.get("full_text", "")
+            openai_categories = get_top_categories(full_text, categories)
+            formatted_categories = format_categories_for_webflow(openai_categories)
+            bill_details["categories"] = formatted_categories
 
             new_bill = Bill(
                 govId=bill_details["govId"], 
@@ -351,17 +350,17 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             logger.info("Creating Webflow item")
-            # Pass the description field and support/oppose text to Webflow API
             result = webflow_api.create_live_collection_item(
                 bill_url,
                 {
-                    **bill_details,  # Ensure bill details include description
-                    "description": summary  # Set description to the generated summary
+                    **bill_details,
+                    "description": summary
                 },
                 kialo_url,
                 support_text=request.member_organization if request.support == "Support" else '',
                 oppose_text=request.member_organization if request.support == "Oppose" else '',
-                jurisdiction="FL"  # Set jurisdiction to "FL" for Florida bills
+                jurisdiction="FL",
+                formatted_categories=formatted_categories
             )
 
             if result is None:
@@ -372,7 +371,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
             new_bill.webflow_link = webflow_url
-            new_bill.webflow_item_id = webflow_item_id  # Store the Webflow item ID
+            new_bill.webflow_item_id = webflow_item_id
             db.commit()
 
             # Save form data to the database with new bill details
@@ -384,7 +383,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 legislation_type="Florida Bills",
                 session="N/A",
                 bill_number=request.bill_number,
-                bill_type=bill_details['govId'].split(" ")[0],  # Assuming bill type is part of govId
+                bill_type=bill_details['govId'].split(" ")[0],
                 support=request.support,
                 govId=bill_details["govId"],
                 db=db
@@ -400,7 +399,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 legislation_type="Florida Bills",
                 session="N/A",
                 bill_number=request.bill_number,
-                bill_type=existing_bill.govId.split(" ")[0],  # Assuming bill type is part of govId
+                bill_type=existing_bill.govId.split(" ")[0],
                 support=request.support,
                 govId=existing_bill.govId,
                 db=db
@@ -457,13 +456,15 @@ def add_new_bill(db, bill_details, summary, pros, cons, language):
     return new_bill
 
 def create_webflow_item(bill_details, kialo_url, request):
+    formatted_categories = bill_details.get('categories', [])
     return webflow_api.create_live_collection_item(
         bill_details['gov-url'],
         bill_details,
         kialo_url,
         support_text=request.member_organization if request.support == "Support" else '',
         oppose_text=request.member_organization if request.support == "Oppose" else '',
-        jurisdiction="US" if 'US' in bill_details['govId'] else 'FL'
+        jurisdiction="US" if 'US' in bill_details['govId'] else 'FL',
+        formatted_categories=formatted_categories
     )
 
 def update_bill_with_webflow_info(new_bill, result, db):
@@ -475,7 +476,14 @@ def update_bill_with_webflow_info(new_bill, result, db):
 
 def update_existing_bill(existing_bill, request, db):
     webflow_item_id = existing_bill.webflow_item_id
+    if not webflow_item_id:
+        logger.error("Webflow item ID is missing for the existing bill.")
+        raise HTTPException(status_code=500, detail="Webflow item ID is missing for the existing bill.")
+
     webflow_item = webflow_api.get_collection_item(webflow_item_id)
+    if webflow_item is None:
+        logger.error("Failed to retrieve Webflow item.")
+        raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
 
     fields = webflow_item['items'][0]
     support_text = fields.get('support', '') or ''
@@ -492,6 +500,7 @@ def update_existing_bill(existing_bill, request, db):
             "oppose": oppose_text.strip(),
             "name": fields['name'],
             "slug": fields['slug'],
+            "description": fields.get('description', ''),
             "_draft": fields['_draft'],
             "_archived": fields['_archived']
         }
