@@ -1,3 +1,4 @@
+# main.py
 import os
 import logging
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
@@ -5,14 +6,23 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
 import openai
-from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish, validate_and_generate_pros_cons
+from .bill_processing import (
+    fetch_bill_details,
+    fetch_federal_bill_details,
+    create_summary_pdf,
+    create_summary_pdf_spanish,
+    create_federal_summary_pdf,
+    create_federal_summary_pdf_spanish,
+    validate_and_generate_pros_cons
+)
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
-from .models import BillRequest, Bill, BillMeta, FormData, FormRequest  # Ensure FormRequest is imported
-from .webflow import WebflowAPI, generate_slug
+from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
+from .webflow import WebflowAPI, generate_slug, sanitize_html
 from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
+import html  # For sanitizing HTML input
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -137,7 +147,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         # Generate bill summary and PDF
         pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
         
-        # **Update bill_details with the summary as the description**
+        # Update bill_details with the summary as the description
         bill_details['description'] = summary
 
         # Proceed with creating the new bill
@@ -198,8 +208,6 @@ def generate_bill_summary(full_text, language, title):
     else:
         return create_federal_summary_pdf(full_text, "output/federal_bill_summary.pdf", title)
 
-
-
 @app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
@@ -210,7 +218,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         # Check if the history value exists
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
-            logger.info(f"Bill with history {history_value} already exists. Process not run.")
+            logger.info(f"Bill with history {history_value} already exists. Processing update.")
 
             # Get the Webflow item ID
             webflow_item_id = existing_bill.webflow_item_id
@@ -225,31 +233,44 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             # Ensure all required fields are present
             webflow_item_data = webflow_item.get('items', [])[0]
-            name = webflow_item_data.get('name')
-            slug = webflow_item_data.get('slug')
-            support_text = webflow_item_data.get('support', '') or ''
-            oppose_text = webflow_item_data.get('oppose', '') or ''
-            description = webflow_item_data.get('description', '')  # Ensure description is retrieved
+            field_data = webflow_item_data.get('fieldData', {})
+            name = field_data.get('name')
+            slug = field_data.get('slug')
+            description = field_data.get('description', '')  # Ensure description is retrieved
+
+            # Fetch existing support and oppose rich text fields
+            support_field = field_data.get('support', {}) or {}
+            support_text = support_field.get('html', '') or ''
+
+            oppose_field = field_data.get('oppose', {}) or {}
+            oppose_text = oppose_field.get('html', '') or ''
 
             if not name or not slug:
                 raise HTTPException(status_code=500, detail="Required fields 'name' or 'slug' are missing in the Webflow item.")
 
-            # Initialize support_text and oppose_text if None
+            # Append new member organization to the appropriate field
+            sanitized_org = sanitize_html(request.member_organization)
             if request.support == 'Support':
-                support_text += f"\n{request.member_organization}"
+                # Append new organization to support_text
+                support_text += f"<p>{sanitized_org}</p>"
             else:
-                oppose_text += f"\n{request.member_organization}"
+                # Append new organization to oppose_text
+                oppose_text += f"<p>{sanitized_org}</p>"
 
             # Prepare the data with the description field included
             data = {
                 "fields": {
-                    "support": support_text.strip(),
-                    "oppose": oppose_text.strip(),
+                    "support": {
+                        "html": support_text.strip()
+                    },
+                    "oppose": {
+                        "html": oppose_text.strip()
+                    },
                     "name": name,
                     "slug": slug,
-                    "description": description,  # Ensure description is updated
-                    "_draft": webflow_item_data.get("_draft", False),
-                    "_archived": webflow_item_data.get("_archived", False)
+                    "description": description,
+                    "_draft": field_data.get("_draft", False),
+                    "_archived": field_data.get("_archived", False)
                 }
             }
 
@@ -266,8 +287,8 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
             new_bill = Bill(
-                govId=bill_details["govId"], 
-                billTextPath=bill_details["billTextPath"], 
+                govId=bill_details["govId"],
+                billTextPath=bill_details["billTextPath"],
                 history=history_value
             )
             db.add(new_bill)
@@ -318,7 +339,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 legislation_type="Florida Bills",
                 session="N/A",
                 bill_number=request.bill_number,
-                bill_type=bill_details['govId'].split(" ")[0],  # Assuming bill type is part of govId
+                bill_type=bill_details['govId'].split(" ")[0],
                 support=request.support,
                 govId=bill_details["govId"],
                 db=db
@@ -334,7 +355,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 legislation_type="Florida Bills",
                 session="N/A",
                 bill_number=request.bill_number,
-                bill_type=existing_bill.govId.split(" ")[0],  # Assuming bill type is part of govId
+                bill_type=existing_bill.govId.split(" ")[0],
                 support=request.support,
                 govId=existing_bill.govId,
                 db=db
@@ -407,63 +428,8 @@ def update_bill_with_webflow_info(new_bill, result, db):
     new_bill.webflow_item_id = webflow_item_id
     db.commit()
 
-def update_existing_bill(existing_bill, request, db):
-    try:
-        cms_items = webflow_api.fetch_all_cms_items()
-
-        slug = existing_bill.slug
-        slug_exists, webflow_item_id = webflow_api.check_slug_exists(slug, cms_items)
-
-        if slug_exists:
-            logger.info(f"Bill with slug '{slug}' exists in Webflow. Proceeding to update.")
-
-            webflow_item = webflow_api.get_collection_item(webflow_item_id)
-
-            if not webflow_item:
-                logger.error(f"Failed to fetch Webflow item with ID: {webflow_item_id}")
-                raise HTTPException(status_code=500, detail="Failed to fetch Webflow item.")
-
-            fields = webflow_item['items'][0]
-
-            existing_bill.title = fields.get('name', existing_bill.title)
-            existing_bill.description = fields.get('description', existing_bill.description)
-            existing_bill.slug = fields.get('slug', existing_bill.slug)
-            existing_bill.kialo_url = fields.get('kialo-url', existing_bill.kialo_url)
-            existing_bill.gov_url = fields.get('gov-url', existing_bill.gov_url)
-
-            logger.info(f"Updated bill {existing_bill.id} with Webflow data and request inputs")
-            db.commit()
-
-        else:
-            logger.info(f"Slug '{slug}' does not exist in Webflow. Creating new CMS item.")
-
-            result = webflow_api.create_live_collection_item(
-                existing_bill.gov_url,
-                {
-                    'name': existing_bill.title,
-                    'slug': slug,
-                    'description': existing_bill.description
-                },
-                existing_bill.kialo_url,
-                support_text=request.member_organization if request.support == "Support" else '',
-                oppose_text=request.member_organization if request.support == "Oppose" else '',
-                jurisdiction="US" if 'US' in existing_bill.govId else 'FL'
-            )
-
-            if result is None:
-                logger.error("Failed to create new Webflow CMS item")
-                raise HTTPException(status_code=500, detail="Failed to create Webflow CMS item")
-
-            webflow_item_id, new_slug = result
-            webflow_url = f"https://digitaldemocracyproject.org/bills/{new_slug}"
-
-            existing_bill.webflow_item_id = webflow_item_id
-            existing_bill.webflow_link = webflow_url
-            db.commit()
-
-    except Exception as e:
-        logger.error(f"An error occurred while updating the bill ID: {existing_bill.id}. Error: {str(e)}", exc_info=True)
-
-    finally:
-        db.close()
-        logger.info(f"Database connection closed for bill ID: {existing_bill.id}")
+def sanitize_html(input_text: str) -> str:
+    """
+    Sanitizes the input text by escaping HTML special characters.
+    """
+    return html.escape(input_text)

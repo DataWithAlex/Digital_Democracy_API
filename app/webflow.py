@@ -5,6 +5,7 @@ import json
 import re
 from typing import Dict, Optional
 from .logger_config import logger
+import html  # For sanitizing HTML input
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -59,6 +60,12 @@ def clean_kialo_url(url: str) -> str:
     # Return the first part which contains the URL without the action parameter
     return parts[0]
 
+def sanitize_html(input_text: str) -> str:
+    """
+    Sanitizes the input text by escaping HTML special characters.
+    """
+    return html.escape(input_text)
+
 class WebflowAPI:
     def __init__(self, api_key: str, collection_id: str, site_id: str):
         self.api_key = api_key
@@ -96,7 +103,7 @@ class WebflowAPI:
     def check_slug_exists(self, slug, items_data):
         """Check if the generated slug already exists in the fetched CMS items (V2 API)."""
         for item in items_data:
-            if item['fieldData']['slug'] == slug:  # Adjusted for V2 API response structure
+            if item['fieldData']['slug'] == slug:
                 logger.info(f"Slug '{slug}' already exists with ID: {item['id']}")
                 return True
         return False
@@ -118,6 +125,10 @@ class WebflowAPI:
 
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
+        # Sanitize support and oppose texts
+        sanitized_support = sanitize_html(support_text.strip())
+        sanitized_oppose = sanitize_html(oppose_text.strip())
+
         data = {
             "fieldData": {
                 "name": title,
@@ -129,8 +140,12 @@ class WebflowAPI:
                 "gov-url": bill_url,
                 "bill-score": 0.0,
                 "description": bill_details['description'],
-                "support": support_text,
-                "oppose": oppose_text,
+                "support": {
+                    "html": f"<p>{sanitized_support}</p>" if sanitized_support else ''
+                },
+                "oppose": {
+                    "html": f"<p>{sanitized_oppose}</p>" if sanitized_oppose else ''
+                },
                 "public": True,
                 "featured": True
             }
@@ -164,7 +179,7 @@ class WebflowAPI:
         logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
         # Making the PUT request to update the collection item
-        response = requests.put(update_item_endpoint, headers=self.headers, data=json.dumps(data))
+        response = requests.put(update_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         return response.status_code in [200, 201]
