@@ -1,3 +1,4 @@
+# webflow.py
 import requests
 import logging
 import json
@@ -118,7 +119,7 @@ class WebflowAPI:
         logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
-            "fieldData": {  # Change "fields" to "fieldData"
+            "fieldData": {
                 "name": title,
                 "slug": slug,
                 "post-body": "",
@@ -131,8 +132,7 @@ class WebflowAPI:
                 "support": support_text,
                 "oppose": oppose_text,
                 "public": True,
-                "featured": True #,
-                #"category": ["655288ef928edb12830673e1", "65ba9dbe9768a6290a95c945"]
+                "featured": True
             }
         }
 
@@ -142,12 +142,17 @@ class WebflowAPI:
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-        if response.status_code in [200, 201]:
-            item = response.json()['item']
-            item_id = item.get('_id')
-            slug = item.get('slug')
-            logger.info(f"Live collection item created successfully, ID: {item_id}")
-            return item_id, slug
+        if response.status_code in [200, 201, 202]:
+            try:
+                response_data = response.json()
+                # For status code 202, the item details are at the root level
+                item_id = response_data.get('id')
+                slug = response_data['fieldData'].get('slug')
+                logger.info(f"Live collection item created successfully, ID: {item_id}, slug: {slug}")
+                return item_id, slug
+            except Exception as e:
+                logger.error(f"Error parsing Webflow API response: {str(e)}", exc_info=True)
+                return None
         else:
             logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
