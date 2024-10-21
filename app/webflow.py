@@ -138,14 +138,14 @@ class WebflowAPI:
 
         logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
-        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items?live=true"
+        # Updated endpoint for V2 API
+        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/live"
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
         logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         if response.status_code in [200, 201, 202]:
             try:
                 response_data = response.json()
-                # For status code 202, the item details are at the root level
                 item_id = response_data.get('id')
                 slug = response_data['fieldData'].get('slug')
                 logger.info(f"Live collection item created successfully, ID: {item_id}, slug: {slug}")
