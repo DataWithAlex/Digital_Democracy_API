@@ -111,7 +111,6 @@ webflow_api = WebflowAPI(
     site_id=os.getenv("WEBFLOW_SITE_ID")
 )
 
-# Process federal bill request
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
@@ -137,6 +136,9 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
         # Generate bill summary and PDF
         pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
+        
+        # **Update bill_details with the summary as the description**
+        bill_details['description'] = summary
 
         # Proceed with creating the new bill
         new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
@@ -181,77 +183,6 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
     except Exception as e:
         db.rollback()
         logger.error(f"An error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()
-
-
-# Import fetch_all_cms_items and check_slug_exists from webflow
-#from .webflow import WebflowAPI, generate_slug, fetch_all_cms_items, check_slug_exists
-
-@app.post("/process-federal-bill/", response_class=Response)
-async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
-    logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
-    try:
-        bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
-        logger.info(f"Fetched bill details: {bill_details}")
-
-        validate_bill_details(bill_details)
-
-        # Generate slug from the bill title
-        slug = generate_slug(bill_details['title'])
-
-        # Fetch all CMS items from Webflow to check if the slug already exists
-        cms_items = webflow_api.fetch_all_cms_items()
-        if check_slug_exists(slug, cms_items):
-            logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
-            # Optionally, you can decide to update the existing CMS item here if necessary
-            return JSONResponse(content={"message": f"Bill with slug '{slug}' already exists"}, status_code=200)
-
-        # Generate bill summary and PDF
-        pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
-        
-        # Proceed with creating the new bill
-        new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
-        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
-        
-        # Create new CMS item in Webflow
-        result = create_webflow_item(bill_details, kialo_url, request, slug)
-
-        if result is None:
-            logger.error("Failed to create Webflow item")
-            raise HTTPException(status_code=500, detail="Failed to create Webflow item")
-
-        # Update the bill with Webflow info
-        update_bill_with_webflow_info(new_bill, result, db)
-
-        save_form_data(
-            name=request.name,
-            email=request.email,
-            member_organization=request.member_organization,
-            year=request.year,
-            legislation_type="Federal Bills",
-            session=request.session,
-            bill_number=request.bill_number,
-            bill_type=request.bill_type,
-            support=request.support,
-            govId=bill_details["govId"],
-            db=db
-        )
-
-        if pdf_path and os.path.exists(pdf_path):
-            with open(pdf_path, "rb") as pdf_file:
-                return Response(content=pdf_file.read(), media_type="application/pdf")
-        else:
-            raise HTTPException(status_code=500, detail="Failed to generate PDF")
-
-    except HTTPException as http_exc:
-        db.rollback()
-        logger.error(f"HTTP exception occurred: {http_exc}", exc_info=True)
-        raise http_exc
-    except Exception as e:
-        db.rollback()
-        logger.error(f"An error occurred: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
