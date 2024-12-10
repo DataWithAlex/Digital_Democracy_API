@@ -61,3 +61,13 @@ class FormData(Base):
     support = Column(String(10))
     govId = Column(String(50))
     created_at = Column(DateTime, default=datetime.datetime.now)
+
+class ProcessingStatus(Base):
+    __tablename__ = 'processing_status'
+
+    id = Column(BIGINT, primary_key=True, autoincrement=True)
+    submission_id = Column(String(50), unique=True, nullable=False)
+    status = Column(String(20))  # queued, processing, completed, failed
+    message = Column(Text)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)

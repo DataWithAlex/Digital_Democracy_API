@@ -1,7 +1,7 @@
 import os
 import logging
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, HTTPException, Request, Response, Depends, BackgroundTasks
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
@@ -9,12 +9,13 @@ import openai
 from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish, validate_and_generate_pros_cons
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
-from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
+from .models import BillRequest, Bill, BillMeta, FormData, FormRequest, ProcessingStatus
 from .webflow import WebflowAPI, generate_slug
 from .logger_config import main_logger, get_bill_logger, selenium_logger, webflow_logger
 from .middleware import RequestLoggingMiddleware
 from fastapi.responses import JSONResponse
 import datetime
+import asyncio
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -145,84 +146,144 @@ async def delete_file():
         main_logger.error(f"Failed to delete file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/process-federal-bill/", response_class=Response)
-async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
-    submission_id = datetime.now().strftime("%Y%m%d%H%M%S")
-    bill_logger = setup_individual_logging(submission_id)
-    
-    bill_logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
+async def process_bill_background(request: FormRequest, db: Session, submission_id: str):
+    bill_logger = get_bill_logger(submission_id)
     try:
+        # Update status to processing
+        status = ProcessingStatus(
+            submission_id=submission_id,
+            status="processing",
+            message="Bill processing started",
+            created_at=datetime.datetime.now()
+        )
+        db.add(status)
+        db.commit()
+
+        # Fetch bill details and process
         bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
         bill_logger.info(f"Fetched bill details: {bill_details}")
 
         validate_bill_details(bill_details)
-
-        # Generate slug from the bill title
         slug = generate_slug(bill_details['title'])
-
-        # Fetch all CMS items from Webflow to check if the slug already exists
-        cms_items = webflow_api.fetch_all_cms_items()
-
-        if not cms_items:
-            bill_logger.error("Failed to fetch CMS items from Webflow.")
-            raise HTTPException(status_code=500, detail="Failed to fetch CMS items from Webflow.")
         
-        if webflow_api.check_slug_exists(slug, cms_items):
-            bill_logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
-            return JSONResponse(content={"message": f"Bill with slug '{slug}' already exists"}, status_code=200)
+        # Update status
+        status.message = "Generating bill summary"
+        db.commit()
 
-        # Generate bill summary and PDF
+        # Generate summary
         pdf_path, summary, pros, cons = generate_bill_summary(bill_details['full_text'], request.lan, bill_details['title'])
-        
-        # Update bill_details with the summary as the description
         bill_details['description'] = summary
 
-        # Proceed with creating the new bill
+        # Create new bill
         new_bill = add_new_bill(db, bill_details, summary, pros, cons, request.lan)
-        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+        
+        # Update status to indicate long-running process
+        status.message = "Bill details processed. Starting Kialo automation (this may take several minutes)"
+        db.commit()
 
-        # Create new CMS item in Webflow
+        # Run selenium script without timeout
+        try:
+            kialo_url = await run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+            if kialo_url:
+                status.message = "Kialo automation completed successfully"
+            else:
+                status.message = "Kialo automation in progress (may take several minutes to complete)"
+            db.commit()
+        except Exception as e:
+            bill_logger.error(f"Error in Selenium script: {str(e)}")
+            status.message = "Kialo automation encountered an error, but continuing with processing"
+            kialo_url = None
+            db.commit()
+
+        # Update status
+        status.message = "Creating Webflow item"
+        db.commit()
+
+        # Create Webflow item
         result = create_webflow_item(bill_details, kialo_url, request, slug)
+        if result:
+            update_bill_with_webflow_info(new_bill, result, db)
+            
+            # Save form data
+            save_form_data(
+                name=request.name,
+                email=request.email,
+                member_organization=request.member_organization,
+                year=request.year,
+                legislation_type="Federal Bills",
+                session=request.session,
+                bill_number=request.bill_number,
+                bill_type=request.bill_type,
+                support=request.support,
+                govId=bill_details["govId"],
+                db=db
+            )
 
-        if result is None:
-            bill_logger.error("Failed to create Webflow item.")
-            raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+            # Update final status
+            status.status = "completed"
+            status.message = "Bill processing completed. Note: Kialo discussion may still be in progress."
+            db.commit()
+        else:
+            status.status = "failed"
+            status.message = "Failed to create Webflow item"
+            db.commit()
 
-        # Update the bill with Webflow info
-        update_bill_with_webflow_info(new_bill, result, db)
+    except Exception as e:
+        bill_logger.error(f"Background processing failed: {str(e)}", exc_info=True)
+        status.status = "failed"
+        status.message = f"Processing failed: {str(e)}"
+        db.commit()
 
-        # Save form data
-        save_form_data(
-            name=request.name,
-            email=request.email,
-            member_organization=request.member_organization,
-            year=request.year,
-            legislation_type="Federal Bills",
-            session=request.session,
-            bill_number=request.bill_number,
-            bill_type=request.bill_type,
-            support=request.support,
-            govId=bill_details["govId"],
-            db=db
+@app.post("/process-federal-bill/")
+async def process_federal_bill(request: FormRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    submission_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    bill_logger = setup_individual_logging(submission_id)
+    
+    bill_logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
+    
+    try:
+        # Create initial status entry
+        status = ProcessingStatus(
+            submission_id=submission_id,
+            status="processing",
+            message="Request received. Bill processing will continue in the background.",
+            created_at=datetime.datetime.now()
+        )
+        db.add(status)
+        db.commit()
+
+        # Start background processing
+        background_tasks.add_task(process_bill_background, request, db, submission_id)
+
+        # Return immediate response with submission ID and clear explanation
+        return JSONResponse(
+            content={
+                "message": "Request accepted. The bill processing has started and will continue in the background.",
+                "note": "The Kialo automation may take several minutes to complete. You can check the status using the status endpoint.",
+                "submission_id": submission_id,
+                "status": "processing",
+                "status_check_endpoint": f"/bill-status/{submission_id}"
+            },
+            status_code=202
         )
 
-        # Return the PDF if it was successfully generated
-        if pdf_path and os.path.exists(pdf_path):
-            with open(pdf_path, "rb") as pdf_file:
-                return Response(content=pdf_file.read(), media_type="application/pdf")
-        else:
-            raise HTTPException(status_code=500, detail="Failed to generate PDF")
-
-    except HTTPException as http_exc:
-        db.rollback()
-        bill_logger.error(f"HTTP exception occurred: {http_exc.detail}")
-        raise http_exc
     except Exception as e:
-        db.rollback()
-        bill_logger.error(f"An error occurred: {str(e)}")
+        bill_logger.error(f"Failed to queue request: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()
+
+@app.get("/bill-status/{submission_id}")
+async def get_bill_status(submission_id: str, db: Session = Depends(get_db)):
+    status = db.query(ProcessingStatus).filter(ProcessingStatus.submission_id == submission_id).first()
+    if not status:
+        raise HTTPException(status_code=404, detail="Status not found")
+    
+    return {
+        "submission_id": submission_id,
+        "status": status.status,
+        "message": status.message,
+        "created_at": status.created_at,
+        "updated_at": status.updated_at
+    }
 
 def validate_bill_details(bill_details):
     required_fields = ["govId", "billTextPath", "full_text", "history", "gov-url"]
