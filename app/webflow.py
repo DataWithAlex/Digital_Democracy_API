@@ -169,16 +169,26 @@ class WebflowAPI:
             return None
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
-        update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
+        update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}/live"
 
-        # Debugging: Print the JSON payload to verify the structure before sending
-        webflow_logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+        # Debugging: Print the JSON payload with sensitive data masked
+        debug_data = data.copy()
+        if 'fieldData' in debug_data:
+            if 'support' in debug_data['fieldData']:
+                debug_data['fieldData']['support'] = '[MASKED]'
+            if 'oppose' in debug_data['fieldData']:
+                debug_data['fieldData']['oppose'] = '[MASKED]'
+        webflow_logger.info(f"JSON Payload: {json.dumps(debug_data, indent=4)}")
 
-        # Making the PUT request to update the collection item
-        response = requests.put(update_item_endpoint, headers=self.headers, data=json.dumps(data))
+        # Making the PATCH request to update the collection item (V2 API uses PATCH)
+        response = requests.patch(update_item_endpoint, headers=self.headers, json=data)
         webflow_logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
-        return response.status_code in [200, 201]
+        if response.status_code not in [200, 201]:
+            webflow_logger.error(f"Failed to update collection item: {response.status_code} - {response.text}")
+            return False
+
+        return True
 
     def get_collection_item(self, item_id: str) -> Optional[Dict]:
         get_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"

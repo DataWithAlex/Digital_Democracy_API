@@ -36,9 +36,10 @@ aws_access_key = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 aws_region = os.getenv('AWS_DEFAULT_REGION')
 
-main_logger.info(f"AWS credentials are {'set' if aws_access_key and aws_secret_key else 'not set'}", extra={
+main_logger.info("AWS credentials configuration", extra={
     'aws_region': aws_region,
-    'aws_configured': bool(aws_access_key and aws_secret_key)
+    'aws_configured': bool(aws_access_key and aws_secret_key),
+    'aws_key_length': len(aws_access_key) if aws_access_key else 0
 })
 
 # Database configuration logging
@@ -48,41 +49,27 @@ db_user = os.getenv('DB_USER')
 db_port = os.getenv('DB_PORT')
 
 main_logger.info("Database configuration loaded", extra={
-    'db_host': db_host,
+    'db_host': '[MASKED]',
     'db_name': db_name,
-    'db_user': db_user,
+    'db_user': '[MASKED]',
     'db_port': db_port
 })
 
 # Webflow configuration logging
 webflow_logger.info("Webflow configuration loaded", extra={
     'webflow_key_configured': bool(os.getenv('WEBFLOW_KEY')),
-    'collection_key': os.getenv('WEBFLOW_COLLECTION_KEY'),
-    'site_id': os.getenv('WEBFLOW_SITE_ID')
+    'collection_key': '[MASKED]',
+    'site_id': '[MASKED]'
 })
 
 # FastAPI app initialization
 app = FastAPI()
 
-# Check and log AWS credentials
-aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-aws_region = os.getenv("AWS_DEFAULT_REGION")
-
-main_logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
-main_logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
-main_logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
-
-if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
-    main_logger.error("AWS credentials are not set correctly.")
-else:
-    main_logger.info("AWS credentials are set correctly.")
-
-# Initialize S3 client
+# Initialize S3 client with masked logging
 s3_client = boto3.client(
     "s3",
-    aws_access_key_id=aws_access_key_id,
-    aws_secret_access_key=aws_secret_access_key,
+    aws_access_key_id=aws_access_key,
+    aws_secret_access_key=aws_secret_key,
     region_name=aws_region
 )
 
@@ -115,7 +102,7 @@ main_logger.info(f"DB_PORT: {db_port}")
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Initialize WebflowAPI
+# Initialize WebflowAPI with masked logging
 webflow_api = WebflowAPI(
     api_key=os.getenv("WEBFLOW_KEY"),
     collection_id="655288ef928edb1283067256",
