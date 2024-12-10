@@ -34,47 +34,55 @@ def remove_numbering_and_format(text):
     if not text or not text.strip():
         return text
 
-    # Split into lines and process each line
-    lines = text.split('\n')
-    formatted_lines = []
+    # First, split the text into individual points
+    # This handles both newline-separated points and points in a single string
+    points = re.split(r'\s*(?:\d+[\.\)]\s*|\-\s*|\•\s*|\*\s*)', text)
     
-    for line in lines:
-        # Skip empty lines
-        if not line.strip():
-            continue
-            
-        # Remove existing numbering patterns (1), 2., etc.)
-        line = re.sub(r'^\s*\d+[\.\)]\s*', '', line)
-        
-        # Remove existing bullet points (•, *, -)
-        line = re.sub(r'^\s*[•\*\-]\s*', '', line)
-        
-        # Add consistent bullet point format
-        line = f"- {line.strip()}"
-        formatted_lines.append(line)
-    
-    return '\n'.join(formatted_lines)
-
-def split_pros_cons(text):
-    """
-    Splits text into individual points, preserving the bullet point format
-    """
-    if not text or not text.strip():
-        return []
-        
-    # Split by bullet points while preserving them
-    points = re.split(r'\n(?=\s*[-•\*]|\s*\d+[\.\)])', text)
-    
-    # Clean and format each point
+    # Process each point
     formatted_points = []
     for point in points:
         point = point.strip()
-        if point:
-            # Ensure each point starts with a bullet
-            formatted_point = remove_numbering_and_format(point)
-            formatted_points.append(formatted_point)
+        if point:  # Only process non-empty points
+            # Remove any remaining numbering or bullets at the start
+            point = re.sub(r'^\s*(?:\d+[\.\)]\s*|\-\s*|\•\s*|\*\s*)', '', point)
+            # Add the bullet point
+            formatted_points.append(f"- {point.strip()}")
+    
+    return '\n'.join(formatted_points)
+
+def split_pros_cons(text):
+    """
+    Splits text into individual points and ensures each point has consistent bullet formatting
+    """
+    if not text or not text.strip():
+        return []
+
+    # First, apply the bullet point formatting
+    formatted_text = remove_numbering_and_format(text)
+    
+    # Split into individual points
+    points = [point.strip() for point in formatted_text.split('\n') if point.strip()]
+    
+    # Ensure each point starts with a bullet
+    formatted_points = []
+    for point in points:
+        if not point.startswith('- '):
+            point = f"- {point}"
+        formatted_points.append(point)
     
     return formatted_points
+
+def process_points_for_kialo(points):
+    """
+    Final processing of points before sending to Kialo
+    """
+    processed = []
+    for point in points:
+        # Ensure the point starts with a bullet
+        if not point.strip().startswith('- '):
+            point = f"- {point.strip()}"
+        processed.append(point)
+    return processed
 
 def clean_url(url):
     cleaned_url = url.split("/permissions")[0] + "/"
@@ -111,16 +119,20 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         pros_text = remove_numbering_and_format(pros_text)
         cons_text = remove_numbering_and_format(cons_text)
         
-        cons = split_pros_cons(cons_text)
         pros = split_pros_cons(pros_text)
+        cons = split_pros_cons(cons_text)
         
         # Ensure we have enough pros and cons
         if len(cons) < 3:
             logger.warning(f"Not enough cons provided: {cons}")
-            cons += [''] * (3 - len(cons))
+            cons += ['- '] * (3 - len(cons))
         if len(pros) < 3:
             logger.warning(f"Not enough pros provided: {pros}")
-            pros += [''] * (3 - len(pros))
+            pros += ['- '] * (3 - len(pros))
+
+        # Process points one final time before using
+        cons = process_points_for_kialo(cons)
+        pros = process_points_for_kialo(pros)
 
         cons_1, cons_2, cons_3 = cons[0], cons[1], cons[2]
         pros_1, pros_2, pros_3 = pros[0], pros[1], pros[2]
