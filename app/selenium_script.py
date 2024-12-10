@@ -9,9 +9,14 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException, WebDriverException
+from selenium.common.exceptions import TimeoutException, WebDriverException, NoSuchElementException
+from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 from .logger_config import selenium_logger as logger
+
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def remove_numbering_and_format(text):
     """
@@ -37,6 +42,24 @@ def split_pros_cons(text):
     
     return sections
 
+def clean_url(url):
+    cleaned_url = url.split("/permissions")[0] + "/"
+    return cleaned_url
+
+def wait_and_find_element(driver, by, value, timeout=20, retries=3):
+    """Helper function to wait for and find an element with retries"""
+    for attempt in range(retries):
+        try:
+            wait = WebDriverWait(driver, timeout)
+            element = wait.until(EC.presence_of_element_located((by, value)))
+            wait.until(EC.element_to_be_clickable((by, value)))
+            return element
+        except (TimeoutException, NoSuchElementException) as e:
+            if attempt == retries - 1:
+                raise e
+            logger.warning(f"Attempt {attempt + 1} failed to find element {value}. Retrying...")
+            time.sleep(2)
+
 def run_selenium_script(title, summary, pros_text, cons_text):
     """Run the Selenium script with enhanced logging"""
     try:
@@ -47,7 +70,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         if run_env == 'ec2':
             logger.info("Configuring Chrome for EC2 environment")
             chrome_options = Options()
-            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--disable-gpu")
@@ -61,14 +84,18 @@ def run_selenium_script(title, summary, pros_text, cons_text):
             chrome_options.add_argument("--v=1")
             chrome_options.add_argument("--single-process")
             chrome_options.add_argument("--start-maximized")
+            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            chrome_options.add_argument('--disable-web-security')
+            chrome_options.add_argument('--allow-running-insecure-content')
 
             service = Service(executable_path="/usr/local/bin/chromedriver")
             driver = webdriver.Chrome(service=service, options=chrome_options)
+            logger.info("ChromeDriver initialized successfully")
         else:
             chrome_options = Options()
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
-            logger.info("Chrome driver initialized in local environment")
+            logger.info("Chrome service & driver instantiated")
 
         # Format pros and cons
         pros_text = remove_numbering_and_format(pros_text)
@@ -117,40 +144,47 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         login_button.click()
         logger.info("Successfully authenticated with Kialo")
 
+        # Wait for login to complete
+        time.sleep(3)
+
         # Create new discussion
+        new_discussion_button = wait_and_find_element(driver, By.XPATH, '//button[@aria-label="New Discussion"]')
+        ActionChains(driver).move_to_element(new_discussion_button).click().perform()
         logger.info("Creating new discussion")
-        new_discussion_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="New Discussion"]')))
-        new_discussion_button.click()
 
-        # Set discussion settings and navigate through setup
-        logger.info("Configuring discussion settings")
-        element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'radio-option__input')))
-        element.click()
+        # Set discussion settings
+        private_option = wait_and_find_element(driver, By.CLASS_NAME, 'radio-option__input')
+        ActionChains(driver).move_to_element(private_option).click().perform()
+        logger.info("Selected private discussion option")
 
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
-        next_button.click()
+        # Navigate through setup
+        next_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')
+        ActionChains(driver).move_to_element(next_button).click().perform()
+        logger.info("Proceeding to next step")
 
         # Set title and thesis
-        name_field = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'input-field__text-input')))
+        name_field = wait_and_find_element(driver, By.CLASS_NAME, 'input-field__text-input')
+        name_field.clear()
         name_field.send_keys(title)
-
-        thesis_field = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'top-node-text-editor__editor')))
-        thesis_field.send_keys("Test Thesis")
-        logger.info("Discussion title and thesis configured")
+        
+        thesis_field = wait_and_find_element(driver, By.CLASS_NAME, 'top-node-text-editor__editor')
+        thesis_field.clear()
+        thesis_field.send_keys(bill_summary_text[:100])  # Use first 100 chars of summary as thesis
+        logger.info("Added title and thesis")
 
         # Continue setup
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
-        next_button.click()
+        next_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')
+        ActionChains(driver).move_to_element(next_button).click().perform()
 
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
-        next_button.click()
+        next_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')
+        ActionChains(driver).move_to_element(next_button).click().perform()
 
         # Upload image
         script_directory = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(script_directory, 'image.png')
-        logger.info("Uploading discussion image")
+        logger.info(f"Uploading image from {image_path}")
 
-        file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
+        file_input = wait_and_find_element(driver, By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
         driver.execute_script("""
             arguments[0].style.height='1px';
             arguments[0].style.width='1px';
@@ -159,77 +193,118 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         """, file_input)
 
         file_input.send_keys(image_path)
-        logger.info("Discussion image uploaded successfully")
+        logger.info("Image uploaded successfully")
 
-        # Add tags and create discussion
-        logger.info("Configuring discussion tags")
-        tags_input_field = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input.pill-editor-input")))
+        # Add tags
+        tags_input_field = wait_and_find_element(driver, By.CSS_SELECTOR, "input.pill-editor-input")
         tags_input_field.clear()
         tags_input_field.send_keys("DDP")
         tags_input_field.send_keys(Keys.ENTER)
+        logger.info("Added DDP tag")
 
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
-        next_button.click()
+        # Continue to next steps
+        next_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')
+        ActionChains(driver).move_to_element(next_button).click().perform()
 
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Create")]')))
-        next_button.click()
+        create_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Create")]')
+        ActionChains(driver).move_to_element(create_button).click().perform()
+        logger.info("Created discussion")
 
-        # Add content
-        time.sleep(10)
+        # Wait for discussion to be created and get URL
+        time.sleep(5)
         current_url = driver.current_url
-        x = current_url[-5:]
-        new_url = f"{current_url}?path={x}.0~{x}.3&active=~{x}.3&action=edit"
-        driver.get(new_url)
-        logger.info("Adding discussion content")
+        discussion_id = current_url.split('/')[-1]
+        edit_url = f"{current_url}?path={discussion_id}.0~{discussion_id}.3&active=~{discussion_id}.3&action=edit"
+        
+        # Navigate to edit URL
+        driver.get(edit_url)
+        logger.info("Navigating to edit page")
+        time.sleep(2)
 
         # Add bill summary
-        logger.info("Adding bill summary")
-        bill_summary_ = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H") or contains(text(), "Thesis")]')))
-        bill_summary_.clear()
-        bill_summary_.send_keys(bill_summary_text)
+        bill_summary_elem = wait_and_find_element(driver, By.XPATH, '//p[contains(@class, "notranslate")]')
+        bill_summary_elem.clear()
+        bill_summary_elem.send_keys(bill_summary_text)
+        logger.info("Added bill summary")
 
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))
-        next_button.click()
+        # Save summary
+        save_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "save")]')
+        ActionChains(driver).move_to_element(save_button).click().perform()
 
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "button") and contains(@aria-label, "Confirm")]')))
-        next_button.click()
+        confirm_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "button") and contains(@aria-label, "Confirm")]')
+        ActionChains(driver).move_to_element(confirm_button).click().perform()
 
         # Add pros
         logger.info("Adding pro arguments")
-        for i, pro_text in enumerate(filter(None, [pros_1, pros_2, pros_3]), 1):
-            logger.info(f"Adding pro argument {i}/3")
-            next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@aria-label, "Add a new pro claim") and contains(@class, "hoverable")]')))
-            next_button.click()
+        for i, pro_text in enumerate([pros_1, pros_2, pros_3], 1):
+            if not pro_text:
+                continue
+                
+            logger.info(f"Adding pro argument {i}")
+            add_pro_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@aria-label, "Add a new pro claim")]')
+            ActionChains(driver).move_to_element(add_pro_button).click().perform()
 
-            pro = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(@class, "notranslate") and contains(@dir, "auto")]')))
-            pro.clear()
-            pro.send_keys(pro_text)
+            pro_field = wait_and_find_element(driver, By.XPATH, '//p[contains(@class, "notranslate")]')
+            pro_field.clear()
+            pro_field.send_keys(pro_text)
 
-            next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))
-            next_button.click()
+            save_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "save")]')
+            ActionChains(driver).move_to_element(save_button).click().perform()
+            time.sleep(1)
 
         # Add cons
         logger.info("Adding con arguments")
-        for i, con_text in enumerate(filter(None, [cons_1, cons_2, cons_3]), 1):
-            logger.info(f"Adding con argument {i}/3")
-            next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@aria-label, "Add a new con claim") and contains(@class, "hoverable")]')))
-            next_button.click()
+        for i, con_text in enumerate([cons_1, cons_2, cons_3], 1):
+            if not con_text:
+                continue
+                
+            logger.info(f"Adding con argument {i}")
+            add_con_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@aria-label, "Add a new con claim")]')
+            ActionChains(driver).move_to_element(add_con_button).click().perform()
 
-            con = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(@class, "notranslate") and contains(@dir, "auto")]')))
-            con.clear()
-            con.send_keys(con_text)
+            con_field = wait_and_find_element(driver, By.XPATH, '//p[contains(@class, "notranslate")]')
+            con_field.clear()
+            con_field.send_keys(con_text)
 
-            next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))
-            next_button.click()
+            save_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "save")]')
+            ActionChains(driver).move_to_element(save_button).click().perform()
+            time.sleep(1)
 
-        logger.info("Discussion creation completed successfully")
-        return current_url
+        # Get share link and publish
+        share_link = wait_and_find_element(driver, By.XPATH, "//a[contains(@class,'share-discussion-button')]")
+        kialo_discussion_url = share_link.get_attribute('href')
+        logger.info(f"Navigating to Kialo Discussion URL: {kialo_discussion_url}")
+
+        # Navigate to sharing page
+        driver.get(kialo_discussion_url)
+        time.sleep(2)
+
+        # Publish discussion
+        publish_button = wait_and_find_element(driver, By.XPATH, "//button[@aria-label='Publish Discussion']")
+        ActionChains(driver).move_to_element(publish_button).click().perform()
+
+        # Navigate through publish wizard
+        for _ in range(2):
+            next_button = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')
+            ActionChains(driver).move_to_element(next_button).click().perform()
+            time.sleep(1)
+
+        publish_final = wait_and_find_element(driver, By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Publish")]')
+        ActionChains(driver).move_to_element(publish_final).click().perform()
+
+        # Get final URL
+        time.sleep(2)
+        final_url = driver.current_url
+        clean_final_url = clean_url(final_url)
+        logger.info(f"Kialo URL: {clean_final_url}")
+
+        return clean_final_url
 
     except Exception as e:
         logger.error(f"Error during Kialo discussion creation: {str(e)}")
         raise e
 
     finally:
-        if 'driver' in locals():
+        if driver:
             driver.quit()
             logger.info("Chrome driver closed")
