@@ -26,8 +26,6 @@ def remove_numbering_and_format(text):
     formatted_lines = [re.sub(r'^\d+\)\s*', '- ', line.strip()) for line in lines]
     return '\n'.join(formatted_lines)
 
-
-
 def split_pros_cons(text):
     # Splitting lines using common delimiters including numbers or bullet points
     pattern = r'(^-|\d+\))\s*'
@@ -43,7 +41,6 @@ def split_pros_cons(text):
             sections.append(text[start:].strip())
     
     return sections
-
 
 def clean_url(url):
     cleaned_url = url.split("/permissions")[0] + "/"

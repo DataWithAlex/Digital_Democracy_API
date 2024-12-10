@@ -13,13 +13,39 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from .translation import translate_to_spanish
 import openai
-
-# Ensure that the OpenAI API key is set
 from .dependencies import openai_api_key
 openai.api_key = openai_api_key
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def setup_bill_logging(bill_name):
+    logs_dir = os.path.join(os.getcwd(), 'logs')
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+
+    date_submitted = datetime.now().strftime("%Y%m%d")
+    bill_log_dir = os.path.join(logs_dir, f"{bill_name}-{date_submitted}")
+    if not os.path.exists(bill_log_dir):
+        os.makedirs(bill_log_dir)
+
+    log_file = os.path.join(bill_log_dir, 'bill_submission.log')
+    logger = logging.getLogger(bill_name)
+    logger.setLevel(logging.INFO)
+
+    file_handler = logging.FileHandler(log_file)
+    console_handler = logging.StreamHandler()
+
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    logger.info(f"Logging setup for bill: {bill_name}")
+
+    return logger
 
 # Define the list of categories with their names and IDs
 # Define the list of categories with their names and IDs
@@ -121,7 +147,6 @@ def format_categories_for_webflow(openai_output, valid_categories):
     # Return the list of valid IDs formatted for Webflow's ItemRefSet field
     return category_ids
 
-
 # Function to upload files to S3
 def upload_to_s3(bucket_name, file_path):
     try:
@@ -150,8 +175,6 @@ def download_pdf(pdf_url, local_path="bill_text.pdf"):
     except Exception as e:
         logging.error(f"Error downloading PDF: {e}")
         raise
-
-# Import necessary functions
 
 # Function to fetch bill details
 def fetch_bill_details(bill_page_url):

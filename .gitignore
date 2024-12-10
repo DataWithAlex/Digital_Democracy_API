@@ -25,3 +25,7 @@ myenv-local-only/
 .WebFlow.ipynb
 
 WebFlow.ipynb
+alex-mob-form-ddp-key.pem
+README-old.md
+.DS_Store
+archive/translations/en-US.json
