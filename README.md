@@ -126,4 +126,4 @@ The API will return a PDF containing a summary of the bill, and pros & cons for 
 
 ## License
 
-This project is licensed under the MIT License
+This project is licensed under the MIT License.
