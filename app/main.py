@@ -130,7 +130,8 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
                 kialo_url,
                 support_text=request.member_organization if request.support == "Support" else '',
                 oppose_text=request.member_organization if request.support == "Oppose" else '',
-                jurisdiction="FL"
+                jurisdiction="FL",
+                member_organization=request.member_organization
             )
 
             if result is None:

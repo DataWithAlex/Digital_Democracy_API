@@ -80,6 +80,7 @@ class WebflowAPI:
         self.api_key = api_key
         self.collection_id = collection_id
         self.site_id = site_id
+        self.member_org_collection_id = "65bd4aca31deb7e14e53d5dc"  # Member Organizations collection ID
         webflow_logger.info("Initializing WebflowAPI", extra={
             'collection_id': collection_id,
             'site_id': site_id
@@ -121,7 +122,89 @@ class WebflowAPI:
                 return True
         return False
 
-    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str) -> Optional[tuple]:
+    def search_member_organization(self, org_name: str) -> Optional[str]:
+        """Search for a member organization by name and return its ID if found."""
+        webflow_logger.info(f"Searching for member organization: {org_name}")
+        
+        # Fetch all items from member organizations collection
+        items_endpoint = f"{self.base_url}/collections/{self.member_org_collection_id}/items"
+        response = requests.get(items_endpoint, headers=self.headers)
+        
+        if response.status_code != 200:
+            webflow_logger.error(f"Failed to fetch member organizations: {response.status_code} - {response.text}")
+            return None
+            
+        items = response.json().get('items', [])
+        webflow_logger.info(f"Retrieved {len(items)} member organizations")
+        
+        # Log all retrieved organizations
+        org_list = [{"name": item['fieldData'].get('name'), "id": item['id']} for item in items]
+        webflow_logger.info(f"Retrieved member organizations: {json.dumps(org_list, indent=2)}")
+        
+        # Search for exact match first, then case-insensitive match
+        for item in items:
+            if item['fieldData'].get('name') == org_name:
+                webflow_logger.info(f"Found exact match for organization: {org_name} (ID: {item['id']})")
+                return item['id']
+                
+        for item in items:
+            if item['fieldData'].get('name').lower() == org_name.lower():
+                webflow_logger.info(f"Found case-insensitive match for organization: {org_name} (ID: {item['id']})")
+                return item['id']
+                
+        webflow_logger.info(f"No matching organization found for: {org_name}")
+        return None
+
+    def create_member_organization(self, org_name: str) -> Optional[str]:
+        """Create a new member organization and return its ID."""
+        webflow_logger.info(f"Creating new member organization: {org_name}")
+        
+        # Generate slug from organization name
+        slug = generate_slug(org_name)
+        
+        # Prepare the data payload
+        data = {
+            "fieldData": {
+                "name": org_name,
+                "slug": slug
+            }
+        }
+        
+        webflow_logger.info(f"Creating member organization with data: {json.dumps(data, indent=2)}")
+        
+        # Create new organization
+        create_endpoint = f"{self.base_url}/collections/{self.member_org_collection_id}/items/live"
+        response = requests.post(create_endpoint, headers=self.headers, json=data)
+        
+        if response.status_code not in [200, 201, 202]:
+            webflow_logger.error(f"Failed to create member organization: {response.status_code} - {response.text}")
+            return None
+            
+        try:
+            response_data = response.json()
+            org_id = response_data['id']
+            webflow_logger.info(f"Successfully created member organization: {org_name} (ID: {org_id})")
+            return org_id
+        except Exception as e:
+            webflow_logger.error(f"Error parsing create organization response: {str(e)}", exc_info=True)
+            return None
+
+    def handle_member_organization(self, org_name: str) -> Optional[str]:
+        """Search for existing organization or create new one if not found."""
+        if not org_name:
+            webflow_logger.warning("No organization name provided")
+            return None
+            
+        # Search for existing organization
+        org_id = self.search_member_organization(org_name)
+        
+        if org_id:
+            return org_id
+            
+        # Create new organization if not found
+        return self.create_member_organization(org_name)
+
+    def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str, member_organization: Optional[str] = None) -> Optional[tuple]:
         slug = generate_slug(bill_details['title'])
         title = reformat_title(bill_details['title'])
         kialo_url = clean_kialo_url(kialo_url)
@@ -161,6 +244,13 @@ class WebflowAPI:
         if 'categories' in bill_details and bill_details['categories']:
             data['fieldData']['category'] = bill_details['categories']
             webflow_logger.info(f"Adding categories to item: {bill_details['categories']}")
+
+        # Add member organization if provided
+        if member_organization:
+            org_id = self.handle_member_organization(member_organization)
+            if org_id:
+                data['fieldData']['member-organizations'] = [org_id]
+                webflow_logger.info(f"Adding member organization to item: {org_id}")
 
         webflow_logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
