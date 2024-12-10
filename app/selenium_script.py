@@ -37,18 +37,15 @@ def split_pros_cons(text):
     
     return sections
 
-def clean_url(url):
-    cleaned_url = url.split("/permissions")[0] + "/"
-    return cleaned_url
-
 def run_selenium_script(title, summary, pros_text, cons_text):
     """Run the Selenium script with enhanced logging"""
     try:
         run_env = 'ec2'
-        logger.info("Starting Selenium script")
-        logger.info("Configuring Chrome options")
+        logger.info("Starting Kialo discussion creation process")
         
+        # Configure Chrome options based on environment
         if run_env == 'ec2':
+            logger.info("Configuring Chrome for EC2 environment")
             chrome_options = Options()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
@@ -65,55 +62,30 @@ def run_selenium_script(title, summary, pros_text, cons_text):
             chrome_options.add_argument("--single-process")
             chrome_options.add_argument("--start-maximized")
 
-            logger.info("Initializing Chrome driver")
             service = Service(executable_path="/usr/local/bin/chromedriver")
             driver = webdriver.Chrome(service=service, options=chrome_options)
-            logger.info("ChromeDriver initialized successfully")
         else:
             chrome_options = Options()
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
-            logger.info("chrome service & driver instantiated")
+            logger.info("Chrome driver initialized in local environment")
 
-        # Set Kialo credentials - hardcoded for now, should be moved to environment variables
-        kialo_username = 'explore@datawithalex.com'
-        kialo_password = '%Mineguy29'
-        
+        # Set up WebDriverWait
+        wait = WebDriverWait(driver, 10)
+
+        # Navigate to Kialo
+        driver.get("https://www.kialo.com/")
+        logger.info("Navigating to Kialo website")
+
+        # Get environment variables
+        kialo_username = os.environ.get('KIALO_USERNAME')
+        kialo_password = os.environ.get('KIALO_PASSWORD')
+
         if not kialo_username or not kialo_password:
             raise ValueError("Kialo credentials not found in environment variables")
 
-        # Format pros and cons
-        pros_text = remove_numbering_and_format(pros_text)
-        cons_text = remove_numbering_and_format(cons_text)
-        
-        cons = split_pros_cons(cons_text)
-        pros = split_pros_cons(pros_text)
-        
-        logger.info("Formatted pros and cons")
-
-        # Ensure we have enough pros and cons
-        if len(cons) < 3:
-            cons += [''] * (3 - len(cons))
-        if len(pros) < 3:
-            pros += [''] * (3 - len(pros))
-
-        cons_1, cons_2, cons_3 = cons[0], cons[1], cons[2]
-        pros_1, pros_2, pros_3 = pros[0], pros[1], pros[2]
-
-        # Truncate summary if needed
-        bill_summary_text = summary
-        if len(bill_summary_text) > 500:
-            last_period_index = bill_summary_text.rfind('.', 0, 500)
-            if last_period_index != -1:
-                bill_summary_text = bill_summary_text[:last_period_index + 1]
-            else:
-                bill_summary_text = bill_summary_text[:500]
-
-        driver.get("https://www.kialo.com/my")
-        wait = WebDriverWait(driver, 20)
-
         # Login process
-        logger.info("Logging in to Kialo")
+        logger.info("Starting Kialo authentication")
         username_field = wait.until(EC.presence_of_element_located((By.NAME, "emailOrUsername")))
         password_field = wait.until(EC.presence_of_element_located((By.NAME, "password")))
         login_button = wait.until(EC.presence_of_element_located((By.XPATH, '//button[@aria-label="Log In"]')))
@@ -121,17 +93,16 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         username_field.send_keys(kialo_username)
         password_field.send_keys(kialo_password)
         login_button.click()
-        logger.info("Logged in to Kialo")
+        logger.info("Successfully authenticated with Kialo")
 
         # Create new discussion
+        logger.info("Starting discussion creation process")
         new_discussion_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="New Discussion"]')))
         new_discussion_button.click()
-        logger.info("Creating new discussion")
 
         # Set discussion settings
         element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'radio-option__input')))
         element.click()
-        logger.info("Selected discussion settings")
 
         # Navigate through setup
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
@@ -143,7 +114,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
         thesis_field = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'top-node-text-editor__editor')))
         thesis_field.send_keys("Test Thesis")
-        logger.info("Added title and thesis")
+        logger.info("Discussion title and thesis configured")
 
         # Continue setup
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
@@ -155,7 +126,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         # Upload image
         script_directory = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(script_directory, 'image.png')
-        logger.info(f"Uploading image from {image_path}")
+        logger.info("Uploading discussion image")
 
         file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][data-testid='image-upload-input-element']")
         driver.execute_script("""
@@ -166,9 +137,10 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         """, file_input)
 
         file_input.send_keys(image_path)
-        logger.info("Image uploaded")
+        logger.info("Discussion image uploaded successfully")
 
         # Add tags and create discussion
+        logger.info("Configuring discussion tags")
         tags_input_field = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input.pill-editor-input")))
         tags_input_field.clear()
         tags_input_field.send_keys("DDP")
@@ -186,7 +158,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         x = current_url[-5:]
         new_url = f"{current_url}?path={x}.0~{x}.3&active=~{x}.3&action=edit"
         driver.get(new_url)
-        logger.info("Adding discussion content")
+        logger.info("Adding discussion content and arguments")
 
         # Add bill summary
         bill_summary_ = wait.until(EC.element_to_be_clickable((By.XPATH, '//p[contains(text(), "S") or contains(text(), "H") or contains(text(), "Thesis")]')))
@@ -200,6 +172,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         next_button.click()
 
         # Add pros
+        logger.info("Adding pro arguments to discussion")
         for pro_text in [pros_1, pros_2, pros_3]:
             next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@aria-label, "Add a new pro claim") and contains(@class, "hoverable")]')))
             next_button.click()
@@ -212,6 +185,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
             next_button.click()
 
         # Add cons
+        logger.info("Adding con arguments to discussion")
         for con_text in [cons_1, cons_2, cons_3]:
             next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@aria-label, "Add a new con claim") and contains(@class, "hoverable")]')))
             next_button.click()
@@ -223,32 +197,14 @@ def run_selenium_script(title, summary, pros_text, cons_text):
             next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))
             next_button.click()
 
-        # Publish discussion
-        share_link = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[contains(@class,'share-discussion-button')]")))
-        kialo_discussion_url = share_link.get_attribute('href')
-        logger.info(f"Discussion created at: {kialo_discussion_url}")
-
-        driver.get(kialo_discussion_url)
-
-        share_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Publish Discussion']")))
-        share_button.click()
-
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
-        next_button.click()
-
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
-        next_button.click()
-
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Publish")]')))
-        next_button.click()
-
-        # Get final URL
-        current_url = driver.current_url
-        modified_url = clean_url(current_url)
-        logger.info(f"Final Kialo URL: {modified_url}")
-        
-        return modified_url
+        logger.info("Discussion creation completed successfully")
+        return current_url
 
     except Exception as e:
-        logger.error(f"Selenium script failed: {str(e)}", exc_info=True)
-        raise
+        logger.error(f"Error during Kialo discussion creation: {str(e)}")
+        raise e
+
+    finally:
+        if 'driver' in locals():
+            driver.quit()
+            logger.info("Chrome driver closed")
