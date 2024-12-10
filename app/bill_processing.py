@@ -2,6 +2,7 @@ import os
 import re
 from urllib.parse import urljoin
 from datetime import datetime
+import logging
 import boto3
 import requests
 from bs4 import BeautifulSoup
@@ -12,19 +13,63 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from .translation import translate_to_spanish
 import openai
+
+# Ensure that the OpenAI API key is set
 from .dependencies import openai_api_key
-from .logger_config import get_bill_logger, main_logger
 openai.api_key = openai_api_key
 
-def get_top_categories(bill_text, categories, model="gpt-4o"):
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Define the list of categories with their names and IDs
+categories = [
+    {"name": "Animals", "id": "668329ae71bf22a23a6ac94b"},
+    {"name": "International Relations", "id": "663299c73b94826974bd24da"},
+    {"name": "National Security", "id": "6632997a194f0d20b0d24108"},
+    {"name": "Civil Rights", "id": "663298e4562bd3696c89b3ea"},
+    {"name": "Arts", "id": "660ede71e88a45fcd08e2e39"},
+    {"name": "Energy", "id": "660ed44984debef46e8d5c5d"},
+    {"name": "Military and Veterans", "id": "65ce5778dae6450ac15a2d2f"},
+    {"name": "Priority Bill", "id": "65ba9dbe9768a6290a95c945"},
+    {"name": "Media", "id": "65b550562534316ee17131c0"},
+    {"name": "LGBT", "id": "655288ef928edb128306753e"},
+    {"name": "Public Records", "id": "655288ef928edb128306753d"},
+    {"name": "Social Welfare", "id": "655288ef928edb12830673e2"},
+    {"name": "Technology", "id": "655288ef928edb128306743e"},
+    {"name": "Government", "id": "655288ef928edb12830673e1"},
+    {"name": "Business", "id": "655288ef928edb128306746b"},
+    {"name": "Employment", "id": "655288ef928edb1283067425"},
+    {"name": "Public Safety", "id": "655288ef928edb1283067442"},
+    {"name": "Drugs", "id": "655288ef928edb128306745e"},
+    {"name": "Immigration", "id": "655288ef928edb12830673e5"},
+    {"name": "Transportation", "id": "655288ef928edb1283067415"},
+    {"name": "Criminal Justice", "id": "655288ef928edb12830673dc"},
+    {"name": "Elections", "id": "655288ef928edb12830673e0"},
+    {"name": "Culture", "id": "655288ef928edb1283067436"},
+    {"name": "Sports", "id": "655288ef928edb12830673df"},
+    {"name": "Marriage", "id": "655288ef928edb128306742d"},
+    {"name": "Housing", "id": "655288ef928edb128306743d"},
+    {"name": "Education", "id": "655288ef928edb12830673e4"},
+    {"name": "Medical", "id": "655288ef928edb12830673e9"},
+    {"name": "State Parks", "id": "655288ef928edb128306745d"},
+    {"name": "Guns", "id": "655288ef928edb128306741f"},
+    {"name": "Disney", "id": "655288ef928edb128306742c"},
+    {"name": "Natural Disasters", "id": "655288ef928edb1283067435"},
+    {"name": "Environment", "id": "655288ef928edb128306741b"},
+    {"name": "Taxes", "id": "655288ef928edb128306745c"}
+]
+
+def get_top_categories(bill_text, categories_list=categories, model="gpt-4o"):
     # Prepare the system message with instructions
     system_message = (
         "You are an AI that categorizes legislative texts into predefined categories. "
-        "You will select the three most relevant categories for the given text."
+        "You will receive a list of categories and the text of a legislative bill. "
+        "Your task is to select the three most relevant categories for the given text."
     )
     
     # Construct the list of categories as a user message
-    categories_list = "\n".join([f"- {category['name']}" for category in categories])
+    categories_list = "\n".join([f"- {category['name']}" for category in categories_list])
     user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}. NOTE: YOU MUST RETURN THEM IN THE FOLLOWING FORMAT: [CATEGORY: CATEGORY ID]. For example, [Disney, 655288ef928edb128306742c]"
 
     try:
@@ -40,14 +85,14 @@ def get_top_categories(bill_text, categories, model="gpt-4o"):
         top_categories_response = response['choices'][0]['message']['content']
         
         # Log the response for debugging purposes
-        main_logger.info(f"OpenAI Category Response: {top_categories_response}")
+        logger.info(f"OpenAI Category Response: {top_categories_response}")
         
         # Split the response into individual categories
         top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
         return top_categories
     
     except Exception as e:
-        main_logger.error(f"Error in OpenAI category generation: {str(e)}", exc_info=True)
+        logger.error(f"Error in OpenAI category generation: {str(e)}")
         return []
 
 def format_categories_for_webflow(openai_output, valid_categories):
@@ -64,7 +109,7 @@ def format_categories_for_webflow(openai_output, valid_categories):
             if category_id in valid_category_ids:
                 category_ids.append(category_id)
             else:
-                main_logger.warning(f"Invalid Category ID detected: {category_id}")
+                logger.warning(f"Invalid Category ID detected: {category_id}")
     
     return category_ids
 
@@ -75,10 +120,10 @@ def upload_to_s3(bucket_name, file_path):
         file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
         s3_client.upload_file(file_path, bucket_name, file_key, ExtraArgs={'ACL': 'public-read'})
         object_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
-        main_logger.info(f"Uploaded {file_path} to {object_url}")
+        logger.info(f"Uploaded {file_path} to {object_url}")
         return object_url
     except Exception as e:
-        main_logger.error(f"Failed to upload to S3: {e}", exc_info=True)
+        logger.error(f"Failed to upload to S3: {e}", exc_info=True)
         raise
 
 def download_pdf(pdf_url, local_path="bill_text.pdf"):
@@ -87,12 +132,12 @@ def download_pdf(pdf_url, local_path="bill_text.pdf"):
         if response.status_code == 200:
             with open(local_path, 'wb') as file:
                 file.write(response.content)
-            main_logger.info(f"Downloaded PDF from {pdf_url} to {local_path}")
+            logger.info(f"Downloaded PDF from {pdf_url} to {local_path}")
             return local_path
         else:
             raise Exception(f"Failed to download PDF from {pdf_url}")
     except Exception as e:
-        main_logger.error(f"Error downloading PDF: {e}", exc_info=True)
+        logger.error(f"Error downloading PDF: {e}", exc_info=True)
         raise
 
 def fetch_bill_details(url, bill_id=None):
@@ -130,7 +175,7 @@ def fetch_bill_details(url, bill_id=None):
 
             # Extract text from PDF and get top categories
             full_text = extract_text_from_pdf(bill_details["pdf_path"])
-            top_categories = get_top_categories(full_text, categories)
+            top_categories = get_top_categories(full_text)
             formatted_categories = format_categories_for_webflow(top_categories, categories)
             
             logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
