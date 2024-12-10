@@ -1,11 +1,12 @@
 import os
 import logging
+from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
 import openai
-from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish, validate_and_generate_pros_cons, setup_bill_logging
+from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish, validate_and_generate_pros_cons
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
@@ -82,6 +83,21 @@ logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
 logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")
 logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
+# Function to set up logging for each submission
+def setup_individual_logging(submission_id):
+    log_dir = "logs"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    log_filename = f"{log_dir}/submission_{submission_id}.log"
+    logging.basicConfig(
+        filename=log_filename,
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger(__name__)
+    return logger
+
 @app.post("/upload-file/")
 async def upload_file():
     file_path = 'test.txt'
@@ -103,18 +119,15 @@ async def delete_file():
 
 @app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
-    logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
+    submission_id = datetime.now().strftime("%Y%m%d%H%M%S")
+    bill_logger = setup_individual_logging(submission_id)
+    
+    bill_logger.info(f"Received request to generate federal bill summary for session: {request.session}, bill: {request.bill_number}, type: {request.bill_type}")
     try:
         bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
-        logger.info(f"Fetched bill details: {bill_details}")
+        bill_logger.info(f"Fetched bill details: {bill_details}")
 
         validate_bill_details(bill_details)
-
-        # Set up logging for this specific bill
-        bill_logger = setup_bill_logging(bill_details["title"])
-
-        # Use the bill-specific logger
-        bill_logger.info("Processing federal bill")
 
         # Generate slug from the bill title
         slug = generate_slug(bill_details['title'])
@@ -123,11 +136,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         cms_items = webflow_api.fetch_all_cms_items()
 
         if not cms_items:
-            logger.error("Failed to fetch CMS items from Webflow.")
+            bill_logger.error("Failed to fetch CMS items from Webflow.")
             raise HTTPException(status_code=500, detail="Failed to fetch CMS items from Webflow.")
         
         if webflow_api.check_slug_exists(slug, cms_items):
-            logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
+            bill_logger.info(f"Slug '{slug}' already exists in Webflow. Skipping creation.")
             return JSONResponse(content={"message": f"Bill with slug '{slug}' already exists"}, status_code=200)
 
         # Generate bill summary and PDF
@@ -144,7 +157,7 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
         result = create_webflow_item(bill_details, kialo_url, request, slug)
 
         if result is None:
-            logger.error("Failed to create Webflow item.")
+            bill_logger.error("Failed to create Webflow item.")
             raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
         # Update the bill with Webflow info
@@ -174,11 +187,11 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
     except HTTPException as http_exc:
         db.rollback()
-        logger.error(f"HTTP exception occurred: {http_exc.detail}")
+        bill_logger.error(f"HTTP exception occurred: {http_exc.detail}")
         raise http_exc
     except Exception as e:
         db.rollback()
-        logger.error(f"An error occurred: {str(e)}")
+        bill_logger.error(f"An error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
