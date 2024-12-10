@@ -31,15 +31,20 @@ main_logger.info("Starting FastAPI application", extra={
     'openai_api_configured': bool(openai.api_key),
 })
 
+def mask_sensitive_data(data):
+    if not data:
+        return data
+    return f"{data[:4]}...{data[-4:]}" if len(data) > 8 else "****"
+
 # AWS Credentials logging
-aws_access_key = os.getenv('AWS_ACCESS_KEY_ID')
-aws_secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-aws_region = os.getenv('AWS_DEFAULT_REGION')
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_region = os.getenv("AWS_DEFAULT_REGION")
 
 main_logger.info("AWS credentials configuration", extra={
     'aws_region': aws_region,
-    'aws_configured': bool(aws_access_key and aws_secret_key),
-    'aws_key_length': len(aws_access_key) if aws_access_key else 0
+    'aws_configured': bool(aws_access_key_id and aws_secret_access_key),
+    'aws_key_length': len(aws_access_key_id) if aws_access_key_id else 0
 })
 
 # Database configuration logging
@@ -68,8 +73,8 @@ app = FastAPI()
 # Initialize S3 client with masked logging
 s3_client = boto3.client(
     "s3",
-    aws_access_key_id=aws_access_key,
-    aws_secret_access_key=aws_secret_key,
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
     region_name=aws_region
 )
 
@@ -94,8 +99,8 @@ db_port = os.getenv('DB_PORT')
 
 main_logger.info(f"DB_HOST: {db_host}")
 main_logger.info(f"DB_NAME: {db_name}")
-main_logger.info(f"DB_USER: {db_user}")
-main_logger.info(f"DB_PASSWORD: {db_password}")
+main_logger.info(f"DB_USER: {mask_sensitive_data(db_user)}")
+main_logger.info(f"DB_PASSWORD: {mask_sensitive_data(db_password)}")
 main_logger.info(f"DB_PORT: {db_port}")
 
 # SQLAlchemy engine and session maker
@@ -109,7 +114,7 @@ webflow_api = WebflowAPI(
     site_id=os.getenv("WEBFLOW_SITE_ID")
 )
 
-main_logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
+main_logger.info(f"WEBFLOW_KEY: {mask_sensitive_data(os.getenv('WEBFLOW_KEY'))}")
 main_logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")
 main_logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
