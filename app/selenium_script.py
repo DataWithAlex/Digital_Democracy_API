@@ -26,26 +26,55 @@ logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(loggin
 
 def remove_numbering_and_format(text):
     """
-    Removes any numbering format like '1) ' or '2) ' from the text and replaces it with '- '.
+    Ensures consistent bullet point formatting by:
+    1. Removing any existing numbering (1), 2), etc.)
+    2. Removing any existing bullet points (•, *, -)
+    3. Adding consistent bullet points (-)
     """
+    if not text or not text.strip():
+        return text
+
+    # Split into lines and process each line
     lines = text.split('\n')
-    formatted_lines = [re.sub(r'^\d+\)\s*', '- ', line.strip()) for line in lines]
+    formatted_lines = []
+    
+    for line in lines:
+        # Skip empty lines
+        if not line.strip():
+            continue
+            
+        # Remove existing numbering patterns (1), 2., etc.)
+        line = re.sub(r'^\s*\d+[\.\)]\s*', '', line)
+        
+        # Remove existing bullet points (•, *, -)
+        line = re.sub(r'^\s*[•\*\-]\s*', '', line)
+        
+        # Add consistent bullet point format
+        line = f"- {line.strip()}"
+        formatted_lines.append(line)
+    
     return '\n'.join(formatted_lines)
 
 def split_pros_cons(text):
-    pattern = r'(^-|\d+\))\s*'
-    matches = list(re.finditer(pattern, text, re.MULTILINE))
-    sections = []
+    """
+    Splits text into individual points, preserving the bullet point format
+    """
+    if not text or not text.strip():
+        return []
+        
+    # Split by bullet points while preserving them
+    points = re.split(r'\n(?=\s*[-•\*]|\s*\d+[\.\)])', text)
     
-    for i, match in enumerate(matches):
-        start = match.start()
-        if i < len(matches) - 1:
-            end = matches[i + 1].start()
-            sections.append(text[start:end].strip())
-        else:
-            sections.append(text[start:].strip())
+    # Clean and format each point
+    formatted_points = []
+    for point in points:
+        point = point.strip()
+        if point:
+            # Ensure each point starts with a bullet
+            formatted_point = remove_numbering_and_format(point)
+            formatted_points.append(formatted_point)
     
-    return sections
+    return formatted_points
 
 def clean_url(url):
     cleaned_url = url.split("/permissions")[0] + "/"
