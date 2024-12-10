@@ -14,6 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from .translation import translate_to_spanish
 import openai
 from .dependencies import openai_api_key
+from .logger_config import get_bill_logger, main_logger
 openai.api_key = openai_api_key
 
 # Configure logging
@@ -177,39 +178,48 @@ def download_pdf(pdf_url, local_path="bill_text.pdf"):
         raise
 
 # Function to fetch bill details
-def fetch_bill_details(bill_page_url):
-    base_url = 'https://www.flsenate.gov'
-    response = requests.get(urljoin(base_url, bill_page_url))
-    bill_details = {"title": "", "description": "", "pdf_path": "", "govId": "", "billTextPath": ""}
+def fetch_bill_details(url, bill_id=None):
+    """Fetch bill details from the provided URL"""
+    logger = get_bill_logger(bill_id) if bill_id else main_logger
+    
+    try:
+        logger.info(f"Starting bill fetch", extra={'url': url})
+        base_url = 'https://www.flsenate.gov'
+        response = requests.get(urljoin(base_url, url))
+        bill_details = {"title": "", "description": "", "pdf_path": "", "govId": "", "billTextPath": ""}
 
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        bill_title_tag = soup.find('div', id='prevNextBillNav').find_next('h2')
-        if bill_title_tag:
-            bill_details["title"] = bill_title_tag.get_text(strip=True)
-            gov_id_match = re.search(r"([A-Z]{2} \d+):", bill_details["title"])
-            if gov_id_match:
-                bill_details["govId"] = gov_id_match.group(1)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            bill_title_tag = soup.find('div', id='prevNextBillNav').find_next('h2')
+            if bill_title_tag:
+                bill_details["title"] = bill_title_tag.get_text(strip=True)
+                gov_id_match = re.search(r"([A-Z]{2} \d+):", bill_details["title"])
+                if gov_id_match:
+                    bill_details["govId"] = gov_id_match.group(1)
 
-        bill_pdf_link = soup.find('a', class_='lnk_BillTextPDF')
-        if bill_pdf_link:
-            pdf_url = urljoin(base_url, bill_pdf_link['href'])
-            local_pdf_path = download_pdf(pdf_url)
-            bill_details["pdf_path"] = local_pdf_path
-            bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)
+            bill_pdf_link = soup.find('a', class_='lnk_BillTextPDF')
+            if bill_pdf_link:
+                pdf_url = urljoin(base_url, bill_pdf_link['href'])
+                local_pdf_path = download_pdf(pdf_url)
+                bill_details["pdf_path"] = local_pdf_path
+                bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)
 
-        # Extract text from PDF and get top categories
-        full_text = extract_text_from_pdf(bill_details["pdf_path"])
-        top_categories = get_top_categories(full_text, categories)
-        formatted_categories = format_categories_for_webflow(top_categories, categories)
-        
-        logging.info(f"Formatted Categories for Webflow: {formatted_categories}")
-        
-        bill_details["categories"] = formatted_categories  # Add categories to bill details
+            # Extract text from PDF and get top categories
+            full_text = extract_text_from_pdf(bill_details["pdf_path"])
+            top_categories = get_top_categories(full_text, categories)
+            formatted_categories = format_categories_for_webflow(top_categories, categories)
+            
+            logging.info(f"Formatted Categories for Webflow: {formatted_categories}")
+            
+            bill_details["categories"] = formatted_categories  # Add categories to bill details
 
-        return bill_details
-    else:
-        raise Exception("Failed to fetch bill details due to HTTP error.")
+            return bill_details
+        else:
+            raise Exception("Failed to fetch bill details due to HTTP error.")
+    except Exception as e:
+        logger.error(f"Error fetching bill details: {str(e)}", 
+                    extra={'url': url}, exc_info=True)
+        raise
 
 def extract_text_from_pdf(pdf_path):
     full_text = ""
@@ -533,13 +543,23 @@ def create_federal_summary_pdf_spanish(full_text, output_pdf_path, title):
 
     return os.path.abspath(output_pdf_path), summary, pros, cons
 
-def validate_and_generate_pros_cons(full_text):
-    pros, cons = generate_pros_and_cons(full_text)
+def validate_and_generate_pros_cons(bill_text, bill_id=None):
+    """Generate pros and cons for a bill"""
+    logger = get_bill_logger(bill_id) if bill_id else main_logger
     
-    def is_valid_format(text):
-        return bool(re.match(r'^\d\).*', text))
-    
-    if not all(is_valid_format(p) for p in pros.split('\n')) or not all(is_valid_format(c) for c in cons.split('\n')):
-        pros, cons = generate_pros_and_cons(full_text)  # Regenerate if invalid format
+    try:
+        logger.info("Starting pros and cons generation")
+        pros, cons = generate_pros_and_cons(bill_text)
+        
+        def is_valid_format(text):
+            return bool(re.match(r'^\d\).*', text))
+        
+        if not all(is_valid_format(p) for p in pros.split('\n')) or not all(is_valid_format(c) for c in cons.split('\n')):
+            pros, cons = generate_pros_and_cons(bill_text)  # Regenerate if invalid format
 
-    return pros, cons
+        logger.info("Completed pros and cons generation", 
+                   extra={'pros_count': len(pros), 'cons_count': len(cons)})
+        return pros, cons
+    except Exception as e:
+        logger.error(f"Error generating pros and cons: {str(e)}", exc_info=True)
+        raise

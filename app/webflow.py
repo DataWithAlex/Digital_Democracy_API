@@ -3,21 +3,29 @@ import logging
 import json
 import re
 from typing import Dict, Optional
-from .logger_config import logger
+from .logger_config import webflow_logger
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
 def generate_slug(title):
-    # Convert to lowercase
-    slug = title.lower()
-    # Replace spaces with hyphens
-    slug = slug.replace(" ", "-")
-    # Remove invalid characters
-    slug = re.sub(r'[^a-z0-9-]', '', slug)
-    # Remove multiple consecutive hyphens
-    slug = re.sub(r'-+', '-', slug)
-    return slug
+    """Generate a URL-friendly slug from a title"""
+    try:
+        webflow_logger.debug(f"Generating slug for title", extra={'title': title})
+        # Convert to lowercase
+        slug = title.lower()
+        # Replace spaces with hyphens
+        slug = slug.replace(" ", "-")
+        # Remove invalid characters
+        slug = re.sub(r'[^a-z0-9-]', '', slug)
+        # Remove multiple consecutive hyphens
+        slug = re.sub(r'-+', '-', slug)
+        webflow_logger.debug(f"Generated slug", extra={'slug': slug})
+        return slug
+    except Exception as e:
+        webflow_logger.error(f"Error generating slug: {str(e)}", 
+                           extra={'title': title}, exc_info=True)
+        raise
 
 def reformat_title(title):
     """
@@ -63,6 +71,10 @@ class WebflowAPI:
         self.api_key = api_key
         self.collection_id = collection_id
         self.site_id = site_id
+        webflow_logger.info("Initializing WebflowAPI", extra={
+            'collection_id': collection_id,
+            'site_id': site_id
+        })
         self.headers = {
             'Authorization': f'Bearer {api_key}',
             'accept-version': '2.0.0',  # Use V2 API version
@@ -82,21 +94,21 @@ class WebflowAPI:
         items_endpoint = f"{self.base_url}/collections/{self.collection_id}/items"
         response = requests.get(items_endpoint, headers=self.headers)
 
-        logger.info(f"Fetching CMS items from: {items_endpoint}")
+        webflow_logger.info(f"Fetching CMS items from: {items_endpoint}")
 
         if response.status_code == 200:
             items_data = response.json().get('items', [])
-            logger.info(f"Successfully fetched {len(items_data)} CMS items from Webflow.")
+            webflow_logger.info(f"Successfully fetched {len(items_data)} CMS items from Webflow.")
             return items_data
         else:
-            logger.error(f"Failed to fetch CMS items: {response.status_code} - {response.text}")
+            webflow_logger.error(f"Failed to fetch CMS items: {response.status_code} - {response.text}")
             return []
 
     def check_slug_exists(self, slug, items_data):
         """Check if the generated slug already exists in the fetched CMS items (V2 API)."""
         for item in items_data:
             if item['fieldData']['slug'] == slug:  # Adjusted for V2 API response structure
-                logger.info(f"Slug '{slug}' already exists with ID: {item['id']}")
+                webflow_logger.info(f"Slug '{slug}' already exists with ID: {item['id']}")
                 return True
         return False
 
@@ -106,16 +118,16 @@ class WebflowAPI:
         kialo_url = clean_kialo_url(kialo_url)
 
         if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
-            logger.error(f"Invalid gov-url: {bill_url}")
+            webflow_logger.error(f"Invalid gov-url: {bill_url}")
             return None
 
         # Map jurisdiction to its corresponding ItemRef
         jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
         if not jurisdiction_item_ref:
-            logger.error(f"Invalid jurisdiction: {jurisdiction}")
+            webflow_logger.error(f"Invalid jurisdiction: {jurisdiction}")
             return None
 
-        logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
+        webflow_logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
         data = {
             "fieldData": {
@@ -135,36 +147,36 @@ class WebflowAPI:
             }
         }
 
-        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+        webflow_logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
         # Updated endpoint for V2 API
         create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/live"
         response = requests.post(create_item_endpoint, headers=self.headers, json=data)
-        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+        webflow_logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         if response.status_code in [200, 201, 202]:
             try:
                 response_data = response.json()
                 item_id = response_data.get('id')
                 slug = response_data['fieldData'].get('slug')
-                logger.info(f"Live collection item created successfully, ID: {item_id}, slug: {slug}")
+                webflow_logger.info(f"Live collection item created successfully, ID: {item_id}, slug: {slug}")
                 return item_id, slug
             except Exception as e:
-                logger.error(f"Error parsing Webflow API response: {str(e)}", exc_info=True)
+                webflow_logger.error(f"Error parsing Webflow API response: {str(e)}", exc_info=True)
                 return None
         else:
-            logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
+            webflow_logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
             return None
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
 
         # Debugging: Print the JSON payload to verify the structure before sending
-        logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+        webflow_logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 
         # Making the PUT request to update the collection item
         response = requests.put(update_item_endpoint, headers=self.headers, data=json.dumps(data))
-        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+        webflow_logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         return response.status_code in [200, 201]
 
@@ -172,10 +184,10 @@ class WebflowAPI:
         get_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}"
 
         response = requests.get(get_item_endpoint, headers=self.headers)
-        logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+        webflow_logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
 
         if response.status_code in [200, 201]:
             return response.json()
         else:
-            logger.error(f"Failed to get collection item: {response.status_code} - {response.text}")
+            webflow_logger.error(f"Failed to get collection item: {response.status_code} - {response.text}")
             return None

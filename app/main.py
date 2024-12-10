@@ -11,12 +11,55 @@ from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
 from .webflow import WebflowAPI, generate_slug
-from .logger_config import logger
+from .logger_config import main_logger, get_bill_logger, selenium_logger, webflow_logger
+from .middleware import RequestLoggingMiddleware
 from fastapi.responses import JSONResponse
 import datetime
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Add request logging middleware
+app.add_middleware(RequestLoggingMiddleware)
+
+# Log application startup
+main_logger.info("Starting FastAPI application", extra={
+    'environment': os.getenv('ENVIRONMENT', 'development'),
+    'openai_api_configured': bool(openai.api_key),
+})
+
+# AWS Credentials logging
+aws_access_key = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+aws_region = os.getenv('AWS_DEFAULT_REGION')
+
+main_logger.info(f"AWS credentials are {'set' if aws_access_key and aws_secret_key else 'not set'}", extra={
+    'aws_region': aws_region,
+    'aws_configured': bool(aws_access_key and aws_secret_key)
+})
+
+# Database configuration logging
+db_host = os.getenv('DB_HOST')
+db_name = os.getenv('DB_NAME')
+db_user = os.getenv('DB_USER')
+db_port = os.getenv('DB_PORT')
+
+main_logger.info("Database configuration loaded", extra={
+    'db_host': db_host,
+    'db_name': db_name,
+    'db_user': db_user,
+    'db_port': db_port
+})
+
+# Webflow configuration logging
+webflow_logger.info("Webflow configuration loaded", extra={
+    'webflow_key_configured': bool(os.getenv('WEBFLOW_KEY')),
+    'collection_key': os.getenv('WEBFLOW_COLLECTION_KEY'),
+    'site_id': os.getenv('WEBFLOW_SITE_ID')
+})
 
 # FastAPI app initialization
 app = FastAPI()
@@ -375,8 +418,28 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
 # Exception handlers
 @app.exception_handler(Exception)
 async def universal_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception occurred: {exc}", exc_info=True)
-    return JSONResponse(content={"message": "An internal server error occurred."})
+    """Global exception handler with enhanced logging"""
+    error_id = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    
+    main_logger.error(
+        f"Unhandled exception: {str(exc)}",
+        extra={
+            'error_id': error_id,
+            'url': str(request.url),
+            'method': request.method,
+            'client_host': request.client.host if request.client else None,
+        },
+        exc_info=True
+    )
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "error_id": error_id,
+            "message": str(exc) if os.getenv('ENVIRONMENT') == 'development' else "An unexpected error occurred"
+        }
+    )
 
 def add_new_bill(db, bill_details, summary, pros, cons, language):
     new_bill = Bill(
