@@ -11,8 +11,7 @@ from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest, ProcessingStatus
 from .webflow import WebflowAPI, generate_slug
-from .logger_config import main_logger, get_bill_logger, selenium_logger, webflow_logger
-from .middleware import RequestLoggingMiddleware
+from .logger_config import main_logger, selenium_logger, webflow_logger
 from fastapi.responses import JSONResponse
 import datetime
 import asyncio
@@ -22,9 +21,6 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize FastAPI app
 app = FastAPI()
-
-# Add request logging middleware
-app.add_middleware(RequestLoggingMiddleware)
 
 # Log application startup
 main_logger.info("Starting FastAPI application", extra={
@@ -37,7 +33,7 @@ def mask_sensitive_data(data):
         return data
     return f"{data[:4]}...{data[-4:]}" if len(data) > 8 else "****"
 
-# AWS Credentials logging
+# AWS Credentials logging with masked data
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_DEFAULT_REGION")
@@ -48,28 +44,26 @@ main_logger.info("AWS credentials configuration", extra={
     'aws_key_length': len(aws_access_key_id) if aws_access_key_id else 0
 })
 
-# Database configuration logging
+# Database configuration logging with masked data
 db_host = os.getenv('DB_HOST')
 db_name = os.getenv('DB_NAME')
 db_user = os.getenv('DB_USER')
+db_password = os.getenv('DB_PASSWORD')
 db_port = os.getenv('DB_PORT')
 
 main_logger.info("Database configuration loaded", extra={
-    'db_host': '[MASKED]',
+    'db_host': mask_sensitive_data(db_host),
     'db_name': db_name,
-    'db_user': '[MASKED]',
+    'db_user': mask_sensitive_data(db_user),
     'db_port': db_port
 })
 
-# Webflow configuration logging
+# Webflow configuration logging with masked data
 webflow_logger.info("Webflow configuration loaded", extra={
     'webflow_key_configured': bool(os.getenv('WEBFLOW_KEY')),
-    'collection_key': '[MASKED]',
-    'site_id': '[MASKED]'
+    'collection_key': mask_sensitive_data(os.getenv('WEBFLOW_COLLECTION_KEY')),
+    'site_id': mask_sensitive_data(os.getenv('WEBFLOW_SITE_ID'))
 })
-
-# FastAPI app initialization
-app = FastAPI()
 
 # Initialize S3 client with masked logging
 s3_client = boto3.client(
@@ -81,6 +75,13 @@ s3_client = boto3.client(
 
 BUCKET_NAME = "ddp-bills-2"
 
+# Initialize WebflowAPI (remove duplicate initialization)
+webflow_api = WebflowAPI(
+    api_key=os.getenv("WEBFLOW_KEY"),
+    collection_id="655288ef928edb1283067256",
+    site_id=os.getenv("WEBFLOW_SITE_ID")
+)
+
 # Dependency: Database connection
 def get_db():
     main_logger.info("Establishing database connection")
@@ -91,29 +92,9 @@ def get_db():
         main_logger.info("Closing database connection")
         db.close()
 
-# Database connection details
-db_host = os.getenv('DB_HOST')
-db_name = os.getenv('DB_NAME')
-db_user = os.getenv('DB_USER')
-db_password = os.getenv('DB_PASSWORD')
-db_port = os.getenv('DB_PORT')
-
-main_logger.info(f"DB_HOST: {db_host}")
-main_logger.info(f"DB_NAME: {db_name}")
-main_logger.info(f"DB_USER: {mask_sensitive_data(db_user)}")
-main_logger.info(f"DB_PASSWORD: {mask_sensitive_data(db_password)}")
-main_logger.info(f"DB_PORT: {db_port}")
-
 # SQLAlchemy engine and session maker
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Initialize WebflowAPI with masked logging
-webflow_api = WebflowAPI(
-    api_key=os.getenv("WEBFLOW_KEY"),
-    collection_id="655288ef928edb1283067256",
-    site_id=os.getenv("WEBFLOW_SITE_ID")
-)
 
 main_logger.info(f"WEBFLOW_KEY: {mask_sensitive_data(os.getenv('WEBFLOW_KEY'))}")
 main_logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")

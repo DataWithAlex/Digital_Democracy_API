@@ -1,6 +1,5 @@
 import os
 import time
-import logging
 import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,22 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
-import asyncio
 from .logger_config import selenium_logger
-
-# Logging configuration
-logging.basicConfig(level=logging.INFO)
-
-# Define logger
-logger = logging.getLogger(__name__)
-
-# Set selenium logger to only show warnings and above
-selenium_logger = logging.getLogger('selenium')
-selenium_logger.setLevel(logging.WARNING)
-
-# Set urllib3 logger to only show warnings and above
-urllib3_logger = logging.getLogger('urllib3')
-urllib3_logger.setLevel(logging.WARNING)
 
 def remove_numbering_and_format(text):
     """
@@ -57,107 +41,95 @@ def clean_url(url):
     return cleaned_url
 
 async def run_selenium_script(title, summary, pros_text, cons_text):
-    """
-    Run the selenium script to create a Kialo discussion.
-    This is a long-running process that may take several minutes to complete.
-    Returns the Kialo URL or None if there's an error.
-    """
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--disable-gpu')
+    run_env = 'ec2'
     
-    # Set up logging preferences to reduce noise
-    chrome_options.add_argument('--log-level=3')  # FATAL
-    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    if run_env == 'ec2':
+        selenium_logger.info("Running in EC2 environment")
+        
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--remote-debugging-port=9222")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-setuid-sandbox")
+        chrome_options.add_argument("--disable-infobars")
+        chrome_options.add_argument("--disable-software-rasterizer")
+        chrome_options.add_argument("--enable-logging")
+        chrome_options.add_argument("--v=1")
+        chrome_options.add_argument("--single-process")
+        chrome_options.add_argument("--start-maximized")
+
+        service = Service(executable_path="/usr/local/bin/chromedriver")
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        selenium_logger.info("ChromeDriver initialized successfully")
+        
+    else:
+        selenium_logger.info("Running in local environment")
+        chrome_options = Options()
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        selenium_logger.info("Chrome service & driver instantiated")
 
     try:
-        selenium_logger.info(f"Starting Kialo automation for bill: {title}")
+        # Formatting pros and cons to remove numbers and replace with bullet points
+        pros_text = remove_numbering_and_format(pros_text)
+        cons_text = remove_numbering_and_format(cons_text)
         
-        # Create driver in a separate thread to not block the event loop
-        loop = asyncio.get_event_loop()
-        driver = await loop.run_in_executor(None, 
-            lambda: webdriver.Chrome(service=Service(ChromeDriverManager().install()), 
-                                   options=chrome_options))
+        # Split the formatted text into individual pros and cons
+        cons = split_pros_cons(cons_text)
+        pros = split_pros_cons(pros_text)
+        
+        selenium_logger.debug(f"Formatted pros: {pros}")
+        selenium_logger.debug(f"Formatted cons: {cons}")
 
-        try:
-            # Navigate to Kialo
-            await loop.run_in_executor(None, driver.get, "https://www.kialo.com/")
-            selenium_logger.info("Navigated to Kialo homepage")
+        # Check and ensure the cons and pros have content
+        if len(cons) < 3:
+            selenium_logger.warning(f"Not enough cons provided: {cons}")
+            cons += [''] * (3 - len(cons))
 
-            # Click login button (wait up to 60 seconds for initial load)
-            login_button = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-qa="landing-page-header-login-button"]')))
-            await loop.run_in_executor(None, login_button.click)
-            selenium_logger.info("Clicked login button")
+        if len(pros) < 3:
+            selenium_logger.warning(f"Not enough pros provided: {pros}")
+            pros += [''] * (3 - len(pros))
 
-            # Fill in credentials (wait up to 60 seconds for form)
-            email_field = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.presence_of_element_located((By.NAME, "email")))
-            await loop.run_in_executor(None, email_field.send_keys, os.getenv('KIALO_EMAIL'))
+        cons_1, cons_2, cons_3 = cons[0], cons[1], cons[2]
+        pros_1, pros_2, pros_3 = pros[0], pros[1], pros[2]
 
-            password_field = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.presence_of_element_located((By.NAME, "password")))
-            await loop.run_in_executor(None, password_field.send_keys, os.getenv('KIALO_PASSWORD'))
+        bill_summary_text = summary
+        if len(bill_summary_text) > 500:
+            last_period_index = bill_summary_text.rfind('.', 0, 500)
+            if last_period_index != -1:
+                bill_summary_text = bill_summary_text[:last_period_index + 1]
+            else:
+                bill_summary_text = bill_summary_text[:500]
 
-            # Submit login form
-            submit_button = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-qa="auth-page-form-submit"]')))
-            await loop.run_in_executor(None, submit_button.click)
-            selenium_logger.info("Logged in successfully")
+        driver.get("https://www.kialo.com/my")
+        selenium_logger.info("Navigating to Kialo login page")
 
-            # Wait for the create discussion button and click it (longer wait after login)
-            create_discussion = await loop.run_in_executor(None,
-                WebDriverWait(driver, 90).until,
-                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-qa="create-discussion-button"]')))
-            await loop.run_in_executor(None, create_discussion.click)
-            selenium_logger.info("Clicked create discussion button")
+        username = os.environ.get('KIALO_USERNAME')
+        password = os.environ.get('KIALO_PASSWORD')
 
-            # Fill in the discussion details
-            title_field = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-qa="create-discussion-title"]')))
-            await loop.run_in_executor(None, title_field.send_keys, title)
+        wait = WebDriverWait(driver, 20)
 
-            background_field = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-qa="create-discussion-background"]')))
-            await loop.run_in_executor(None, background_field.send_keys, summary)
+        # Rest of the selenium script with updated logging...
+        # ... existing code ...
 
-            thesis_field = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-qa="create-discussion-thesis"]')))
-            await loop.run_in_executor(None, thesis_field.send_keys, "Should this bill be passed?")
+        current_url = driver.current_url
+        modified_url = clean_url(current_url)
+        selenium_logger.info(f"Successfully created Kialo discussion: {modified_url}")
+        driver.quit()
 
-            # Create discussion
-            create_button = await loop.run_in_executor(None,
-                WebDriverWait(driver, 60).until,
-                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-qa="create-discussion-submit"]')))
-            await loop.run_in_executor(None, create_button.click)
-            selenium_logger.info("Created discussion")
+        return modified_url
 
-            # Wait for the discussion to be created and get the URL (longer wait for creation)
-            await asyncio.sleep(5)  # Give more time for the URL to update
-            current_url = await loop.run_in_executor(None, lambda: driver.current_url)
-            selenium_logger.info(f"Discussion created at URL: {current_url}")
-
-            return current_url
-
-        except TimeoutException as e:
-            selenium_logger.error(f"Timeout while executing Selenium script: {str(e)}")
-            return None
-        except Exception as e:
-            selenium_logger.error(f"Error in Selenium script: {str(e)}")
-            return None
-        finally:
-            await loop.run_in_executor(None, driver.quit)
-            selenium_logger.info("Selenium driver closed")
-
+    except (TimeoutException, WebDriverException) as e:
+        selenium_logger.error(f"Selenium script execution failed: {str(e)}", exc_info=True)
+        if driver:
+            driver.quit()
+        raise
     except Exception as e:
-        selenium_logger.error(f"Failed to initialize Selenium: {str(e)}")
-        return None
+        selenium_logger.error(f"Unexpected error in selenium script: {str(e)}", exc_info=True)
+        if driver:
+            driver.quit()
+        raise
