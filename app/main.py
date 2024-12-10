@@ -1,6 +1,5 @@
 import os
 import logging
-from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
@@ -11,25 +10,29 @@ from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
 from .webflow import WebflowAPI, generate_slug
+from .logger_config import logger
 from fastapi.responses import JSONResponse
-import asyncio
+import datetime
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Logging configuration
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Initialize FastAPI app
+# FastAPI app initialization
 app = FastAPI()
 
-# AWS Credentials
+# Check and log AWS credentials
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_DEFAULT_REGION")
 
-logger.info("AWS credentials configuration")
+logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
+logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
+logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
+
+if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
+    logger.error("AWS credentials are not set correctly.")
+else:
+    logger.info("AWS credentials are set correctly.")
 
 # Initialize S3 client
 s3_client = boto3.client(
@@ -79,53 +82,75 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
             logger.info(f"Bill with history {history_value} already exists. Process not run.")
-            # ... rest of existing bill handling code ...
+            return JSONResponse(content={"message": "Bill already exists"}, status_code=200)
 
-        else:
-            # New bill creation
-            bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
-            bill_details = fetch_bill_details(bill_url)
-            logger.info(f"Obtained bill details for: {bill_url}")
+        # New bill creation
+        bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
+        bill_details = fetch_bill_details(bill_url)
+        logger.info(f"Obtained bill details for: {bill_url}")
 
-            if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
-                raise HTTPException(status_code=500, detail="Required bill details are missing.")
+        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
+            raise HTTPException(status_code=500, detail="Required bill details are missing.")
 
-            new_bill = Bill(
-                govId=bill_details["govId"], 
-                billTextPath=bill_details["billTextPath"], 
-                history=history_value
-            )
-            db.add(new_bill)
-            db.commit()
+        new_bill = Bill(
+            govId=bill_details["govId"], 
+            billTextPath=bill_details["billTextPath"], 
+            history=history_value
+        )
+        db.add(new_bill)
+        db.commit()
 
-            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
-            logger.info("Generated Summary")
+        pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+        logger.info("Generated Summary")
 
-            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
-                db.add(new_meta)
-            db.commit()
+        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
+            db.add(new_meta)
+        db.commit()
 
-            logger.info("Running Selenium script")
-            try:
-                # Set a timeout for the selenium script
-                kialo_url = await asyncio.wait_for(
-                    run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons),
-                    timeout=39.0
-                )
-                if kialo_url is None:
-                    logger.warning("Selenium script returned None, but continuing with processing")
-            except asyncio.TimeoutError:
-                logger.info("Selenium script timeout - continuing in background")
-                return JSONResponse(
-                    content={
-                        "message": "Request received and processing in background. Please check back later.",
-                        "status": "processing"
-                    },
-                    status_code=202
-                )
+        logger.info("Running Selenium script")
+        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+        if kialo_url is None:
+            logger.warning("Selenium script failed but continuing with processing")
 
-            # ... rest of the code ...
+        logger.info("Creating Webflow item")
+        result = webflow_api.create_live_collection_item(
+            bill_url,
+            {
+                **bill_details,
+                "description": summary
+            },
+            kialo_url,
+            support_text=request.member_organization if request.support == "Support" else '',
+            oppose_text=request.member_organization if request.support == "Oppose" else '',
+            jurisdiction="FL"
+        )
+
+        if result is None:
+            logger.error("Failed to create Webflow item")
+            raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+
+        webflow_item_id, slug = result
+        webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
+
+        new_bill.webflow_link = webflow_url
+        new_bill.webflow_item_id = webflow_item_id
+        db.commit()
+
+        # Save form data
+        save_form_data(
+            name=request.name,
+            email=request.email,
+            member_organization=request.member_organization,
+            year=request.year,
+            legislation_type="Florida Bills",
+            session="N/A",
+            bill_number=request.bill_number,
+            bill_type=bill_details['govId'].split(" ")[0],
+            support=request.support,
+            govId=bill_details["govId"],
+            db=db
+        )
 
     except HTTPException as http_exc:
         logger.error(f"HTTP exception occurred: {http_exc.detail}")
@@ -138,4 +163,19 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
 
-# ... rest of the code ...
+def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
+    form_data = FormData(
+        name=name,
+        email=email,
+        member_organization=member_organization,
+        year=year,
+        legislation_type=legislation_type,
+        session=session,
+        bill_number=bill_number,
+        bill_type=bill_type,
+        support=support,
+        govId=govId,
+        created_at=datetime.datetime.now()
+    )
+    db.add(form_data)
+    db.commit()
