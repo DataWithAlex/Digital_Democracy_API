@@ -320,6 +320,40 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Publish")]')))
         next_button.click()
 
+        # Wait for the permissions page to load
+        time.sleep(2)
+        
+        # Click Invite Teams button
+        invite_teams_button = wait.until(EC.element_to_be_clickable((
+            By.XPATH, '//button[contains(@class, "invite-to-discussion-section__button--invite-teams")]'
+        )))
+        invite_teams_button.click()
+        logger.info("✓ Clicked Invite Teams button")
+
+        # Select Digital Democracy Project team
+        time.sleep(1)
+        ddp_team = wait.until(EC.element_to_be_clickable((
+            By.XPATH, '//button[contains(@class, "team-suggestion-item__wrapper")]//span[contains(text(), "Digital Democracy Project")]/..'
+        )))
+        ddp_team.click()
+        logger.info("✓ Selected Digital Democracy Project team")
+
+        # Click Next button
+        time.sleep(1)
+        next_button = wait.until(EC.element_to_be_clickable((
+            By.XPATH, '//button[contains(@class, "button--action") and contains(@aria-label, "Next")]'
+        )))
+        next_button.click()
+        logger.info("✓ Clicked Next")
+
+        # Click Invite button
+        time.sleep(1)
+        invite_button = wait.until(EC.element_to_be_clickable((
+            By.XPATH, '//button[contains(@class, "button--action") and contains(@aria-label, "Invite")]'
+        )))
+        invite_button.click()
+        logger.info("✓ Invited Digital Democracy Project team")
+
         # Get final URL and clean it
         current_url = driver.current_url
         modified_url = clean_url(current_url)
