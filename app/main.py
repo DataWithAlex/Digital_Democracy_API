@@ -321,7 +321,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             db.commit()
 
             main_logger.info("Running Selenium script")
-            kialo_url = run_selenium_script(pros=pros, cons=cons, bill_text=summary, bill_id=bill_details['govId'])
+            kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
             main_logger.info("Creating Webflow item")
             result = webflow_api.create_live_collection_item(
