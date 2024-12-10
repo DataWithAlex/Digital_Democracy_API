@@ -300,13 +300,13 @@ def generate_bill_summary(full_text, language, title):
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
 
-    logger.info(f"Starting update-bill() for bill: {history_value}")
+    main_logger.info(f"Starting update-bill() for bill: {history_value}")
 
     try:
         # Check if the history value exists
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
-            logger.info(f"Bill with history {history_value} already exists. Process not run.")
+            main_logger.info(f"Bill with history {history_value} already exists. Process not run.")
 
             # Get the Webflow item ID
             webflow_item_id = existing_bill.webflow_item_id
@@ -315,14 +315,14 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             # Get the existing Webflow item
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
-            logger.info(f"Webflow API Response: {webflow_item}")
+            main_logger.info(f"Webflow API Response: {webflow_item}")
             if not webflow_item:
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
 
             # The response structure has changed - fieldData is now directly in the root
             webflow_item_data = webflow_item.get('fieldData', {})
             if not webflow_item_data:
-                logger.error(f"Unexpected Webflow response structure: {webflow_item}")
+                main_logger.error(f"Unexpected Webflow response structure: {webflow_item}")
                 raise HTTPException(status_code=500, detail="Unexpected Webflow response structure")
 
             name = webflow_item_data.get('name')
@@ -360,7 +360,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             # New bill creation
             bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
             bill_details = fetch_bill_details(bill_url)
-            logger.info(f"Obtained bill details for: {bill_url}")
+            main_logger.info(f"Obtained bill details for: {bill_url}")
 
             if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
                 raise HTTPException(status_code=500, detail="Required bill details are missing.")
@@ -374,18 +374,18 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             db.commit()
 
             pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
-            logger.info("Generated Summary")
+            main_logger.info("Generated Summary")
 
             for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
                 new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
                 db.add(new_meta)
             db.commit()
 
-            logger.info("Running Selenium script")
+            main_logger.info("Running Selenium script")
             # Properly await the async selenium script
             kialo_url = await run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
-            logger.info("Creating Webflow item")
+            main_logger.info("Creating Webflow item")
             result = webflow_api.create_live_collection_item(
                 bill_url,
                 {
@@ -399,7 +399,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             )
 
             if result is None:
-                logger.error("Failed to create Webflow item")
+                main_logger.error("Failed to create Webflow item")
                 raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
             webflow_item_id, slug = result
@@ -439,14 +439,14 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             )
 
     except HTTPException as http_exc:
-        logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
+        main_logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
         raise http_exc
     except Exception as e:
-        logger.error(f"An error occurred: {str(e)}", exc_info=True)
+        main_logger.error(f"An error occurred: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-        logger.info("Database connection closed")
+        main_logger.info("Database connection closed")
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
 
