@@ -69,14 +69,14 @@ aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_DEFAULT_REGION")
 
-logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
-logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
-logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
+main_logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
+main_logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
+main_logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
 
 if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
-    logger.error("AWS credentials are not set correctly.")
+    main_logger.error("AWS credentials are not set correctly.")
 else:
-    logger.info("AWS credentials are set correctly.")
+    main_logger.info("AWS credentials are set correctly.")
 
 # Initialize S3 client
 s3_client = boto3.client(
@@ -90,12 +90,12 @@ BUCKET_NAME = "ddp-bills-2"
 
 # Dependency: Database connection
 def get_db():
-    logger.info("Establishing database connection")
+    main_logger.info("Establishing database connection")
     db = SessionLocal()
     try:
         yield db
     finally:
-        logger.info("Closing database connection")
+        main_logger.info("Closing database connection")
         db.close()
 
 # Database connection details
@@ -105,11 +105,11 @@ db_user = os.getenv('DB_USER')
 db_password = os.getenv('DB_PASSWORD')
 db_port = os.getenv('DB_PORT')
 
-logger.info(f"DB_HOST: {db_host}")
-logger.info(f"DB_NAME: {db_name}")
-logger.info(f"DB_USER: {db_user}")
-logger.info(f"DB_PASSWORD: {db_password}")
-logger.info(f"DB_PORT: {db_port}")
+main_logger.info(f"DB_HOST: {db_host}")
+main_logger.info(f"DB_NAME: {db_name}")
+main_logger.info(f"DB_USER: {db_user}")
+main_logger.info(f"DB_PASSWORD: {db_password}")
+main_logger.info(f"DB_PORT: {db_port}")
 
 # SQLAlchemy engine and session maker
 engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
@@ -122,24 +122,17 @@ webflow_api = WebflowAPI(
     site_id=os.getenv("WEBFLOW_SITE_ID")
 )
 
-logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
-logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")
-logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
+main_logger.info(f"WEBFLOW_KEY: {os.getenv('WEBFLOW_KEY')}")
+main_logger.info(f"WEBFLOW_COLLECTION_KEY: 655288ef928edb1283067256")
+main_logger.info(f"WEBFLOW_SITE_ID: {os.getenv('WEBFLOW_SITE_ID')}")
 
 # Function to set up logging for each submission
 def setup_individual_logging(submission_id):
-    log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    log_dir = os.path.join(BASE_LOGS_DIR, "submissions")
+    os.makedirs(log_dir, exist_ok=True)
     
-    log_filename = f"{log_dir}/submission_{submission_id}.log"
-    logging.basicConfig(
-        filename=log_filename,
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    logger = logging.getLogger(__name__)
-    return logger
+    submission_logger = get_bill_logger(submission_id)
+    return submission_logger
 
 @app.post("/upload-file/")
 async def upload_file():
@@ -148,7 +141,7 @@ async def upload_file():
         response = s3_client.upload_file(Filename=file_path, Bucket=BUCKET_NAME, Key='test.txt')
         return {"message": "File uploaded successfully", "response": str(response)}
     except Exception as e:
-        logger.error(f"Failed to upload file: {str(e)}")
+        main_logger.error(f"Failed to upload file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/delete-file/")
@@ -157,7 +150,7 @@ async def delete_file():
         response = s3_client.delete_object(Bucket=BUCKET_NAME, Key='test.txt')
         return {"message": "File deleted successfully", "response": str(response)}
     except Exception as e:
-        logger.error(f"Failed to delete file: {str(e)}")
+        main_logger.error(f"Failed to delete file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/process-federal-bill/", response_class=Response)
@@ -254,13 +247,13 @@ def generate_bill_summary(full_text, language, title):
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
 
-    logger.info(f"Starting update-bill() for bill: {history_value}")
+    main_logger.info(f"Starting update-bill() for bill: {history_value}")
 
     try:
         # Check if the history value exists
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
-            logger.info(f"Bill with history {history_value} already exists. Process not run.")
+            main_logger.info(f"Bill with history {history_value} already exists. Process not run.")
 
             # Get the Webflow item ID
             webflow_item_id = existing_bill.webflow_item_id
@@ -269,7 +262,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             # Get the existing Webflow item
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
-            logger.info(f"Webflow API Response: {webflow_item}")
+            main_logger.info(f"Webflow API Response: {webflow_item}")
             if not webflow_item:
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
 
@@ -310,7 +303,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             # New bill creation
             bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
             bill_details = fetch_bill_details(bill_url)
-            logger.info(f"Obtained bill details for: {bill_url}")
+            main_logger.info(f"Obtained bill details for: {bill_url}")
 
             if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
                 raise HTTPException(status_code=500, detail="Required bill details are missing.")
@@ -324,17 +317,17 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             db.commit()
 
             pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
-            logger.info("Generated Summary")
+            main_logger.info("Generated Summary")
 
             for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
                 new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
                 db.add(new_meta)
             db.commit()
 
-            logger.info("Running Selenium script")
+            main_logger.info("Running Selenium script")
             kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
 
-            logger.info("Creating Webflow item")
+            main_logger.info("Creating Webflow item")
             result = webflow_api.create_live_collection_item(
                 bill_url,
                 {
@@ -348,7 +341,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             )
 
             if result is None:
-                logger.error("Failed to create Webflow item")
+                main_logger.error("Failed to create Webflow item")
                 raise HTTPException(status_code=500, detail="Failed to create Webflow item")
 
             webflow_item_id, slug = result
@@ -388,10 +381,10 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             )
 
     except HTTPException as http_exc:
-        logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
+        main_logger.error(f"HTTP exception occurred: {http_exc.detail}", exc_info=True)
         raise http_exc
     except Exception as e:
-        logger.error(f"An error occurred: {str(e)}", exc_info=True)
+        main_logger.error(f"An error occurred: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
@@ -482,12 +475,12 @@ def update_existing_bill(existing_bill, request, db):
         slug_exists, webflow_item_id = webflow_api.check_slug_exists(slug, cms_items)
 
         if slug_exists:
-            logger.info(f"Bill with slug '{slug}' exists in Webflow. Proceeding to update.")
+            main_logger.info(f"Bill with slug '{slug}' exists in Webflow. Proceeding to update.")
 
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
 
             if not webflow_item:
-                logger.error(f"Failed to fetch Webflow item with ID: {webflow_item_id}")
+                main_logger.error(f"Failed to fetch Webflow item with ID: {webflow_item_id}")
                 raise HTTPException(status_code=500, detail="Failed to fetch Webflow item.")
 
             fields = webflow_item['items'][0]
@@ -498,11 +491,11 @@ def update_existing_bill(existing_bill, request, db):
             existing_bill.kialo_url = fields.get('kialo-url', existing_bill.kialo_url)
             existing_bill.gov_url = fields.get('gov-url', existing_bill.gov_url)
 
-            logger.info(f"Updated bill {existing_bill.id} with Webflow data and request inputs")
+            main_logger.info(f"Updated bill {existing_bill.id} with Webflow data and request inputs")
             db.commit()
 
         else:
-            logger.info(f"Slug '{slug}' does not exist in Webflow. Creating new CMS item.")
+            main_logger.info(f"Slug '{slug}' does not exist in Webflow. Creating new CMS item.")
 
             result = webflow_api.create_live_collection_item(
                 existing_bill.gov_url,
@@ -518,7 +511,7 @@ def update_existing_bill(existing_bill, request, db):
             )
 
             if result is None:
-                logger.error("Failed to create new Webflow CMS item")
+                main_logger.error("Failed to create new Webflow CMS item")
                 raise HTTPException(status_code=500, detail="Failed to create Webflow CMS item")
 
             webflow_item_id, new_slug = result
@@ -529,8 +522,8 @@ def update_existing_bill(existing_bill, request, db):
             db.commit()
 
     except Exception as e:
-        logger.error(f"An error occurred while updating the bill ID: {existing_bill.id}. Error: {str(e)}", exc_info=True)
+        main_logger.error(f"An error occurred while updating the bill ID: {existing_bill.id}. Error: {str(e)}", exc_info=True)
 
     finally:
         db.close()
-        logger.info(f"Database connection closed for bill ID: {existing_bill.id}")
+        main_logger.info(f"Database connection closed for bill ID: {existing_bill.id}")
