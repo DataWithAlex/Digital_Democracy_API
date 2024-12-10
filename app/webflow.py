@@ -60,11 +60,20 @@ def reformat_title(title):
     new_title = f"{description} ({bill_type} {bill_number})"
     return new_title
 
-def clean_kialo_url(url: str) -> str:
-    # Split the URL at "&action="
-    parts = url.split("&action=")
-    # Return the first part which contains the URL without the action parameter
-    return parts[0]
+def clean_kialo_url(url):
+    """Clean and format the Kialo URL."""
+    if url is None:
+        return None
+        
+    # If it's a coroutine (async result), return as is - will be cleaned later
+    if hasattr(url, '__await__'):
+        return url
+        
+    try:
+        parts = url.split("&action=")
+        return parts[0] if parts else url
+    except (AttributeError, IndexError):
+        return url
 
 class WebflowAPI:
     def __init__(self, api_key: str, collection_id: str, site_id: str):
