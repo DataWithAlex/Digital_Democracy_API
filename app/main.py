@@ -5,14 +5,17 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
 import openai
-from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_summary_pdf_spanish, create_federal_summary_pdf, create_federal_summary_pdf_spanish, validate_and_generate_pros_cons
+from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
 from .webflow import WebflowAPI, generate_slug
-from .logger_config import logger
 from fastapi.responses import JSONResponse
 import datetime
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Set OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -20,19 +23,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # FastAPI app initialization
 app = FastAPI()
 
-# Check and log AWS credentials
+# AWS credentials
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_DEFAULT_REGION")
-
-logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
-logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
-logger.info(f"AWS_DEFAULT_REGION: {aws_region}")
-
-if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
-    logger.error("AWS credentials are not set correctly.")
-else:
-    logger.info("AWS credentials are set correctly.")
 
 # Initialize S3 client
 s3_client = boto3.client(
@@ -81,7 +75,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         # Check if the history value exists
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
-            logger.info(f"Bill with history {history_value} already exists. Process not run.")
+            logger.info(f"Bill with history {history_value} already exists")
             return JSONResponse(content={"message": "Bill already exists"}, status_code=200)
 
         # New bill creation
@@ -90,7 +84,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         logger.info(f"Obtained bill details for: {bill_url}")
 
         if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
-            raise HTTPException(status_code=500, detail="Required bill details are missing.")
+            raise HTTPException(status_code=500, detail="Required bill details are missing")
 
         new_bill = Bill(
             govId=bill_details["govId"], 
@@ -101,19 +95,19 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         db.commit()
 
         pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
-        logger.info("Generated Summary")
+        logger.info("Generated summary")
 
         for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
             new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
             db.add(new_meta)
         db.commit()
 
-        logger.info("Running Selenium script")
+        logger.info("Running selenium script")
         kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
         if kialo_url is None:
-            logger.warning("Selenium script failed but continuing with processing")
+            logger.warning("Selenium script failed but continuing")
 
-        logger.info("Creating Webflow item")
+        logger.info("Creating webflow item")
         result = webflow_api.create_live_collection_item(
             bill_url,
             {
@@ -127,8 +121,8 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         )
 
         if result is None:
-            logger.error("Failed to create Webflow item")
-            raise HTTPException(status_code=500, detail="Failed to create Webflow item")
+            logger.error("Failed to create webflow item")
+            raise HTTPException(status_code=500, detail="Failed to create webflow item")
 
         webflow_item_id, slug = result
         webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
@@ -153,10 +147,10 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         )
 
     except HTTPException as http_exc:
-        logger.error(f"HTTP exception occurred: {http_exc.detail}")
+        logger.error(f"HTTP error: {http_exc.detail}")
         raise http_exc
     except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
+        logger.error(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()

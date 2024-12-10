@@ -61,55 +61,36 @@ categories = [
 ]
 
 def get_top_categories(bill_text, categories_list=categories, model="gpt-4o"):
-    # Prepare the system message with instructions
-    system_message = (
-        "You are an AI that categorizes legislative texts into predefined categories. "
-        "You will receive a list of categories and the text of a legislative bill. "
-        "Your task is to select the three most relevant categories for the given text."
-    )
-    
-    # Construct the list of categories as a user message
-    categories_list = "\n".join([f"- {category['name']}" for category in categories_list])
-    user_message = f"Here is a list of categories:\n{categories_list}\n\nBased on the following bill text, select the three most relevant categories:\n{bill_text}. NOTE: YOU MUST RETURN THEM IN THE FOLLOWING FORMAT: [CATEGORY: CATEGORY ID]. For example, [Disney, 655288ef928edb128306742c]"
-
     try:
         response = openai.ChatCompletion.create(
             model=model,
             messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": user_message}
+                {"role": "system", "content": "You are an AI that categorizes legislative texts into predefined categories. Select the three most relevant categories for the given text."},
+                {"role": "user", "content": f"Based on this bill text, select the three most relevant categories from: {[c['name'] for c in categories_list]}. Return in format: [Category Name, ID]. Example: [Disney, 655288ef928edb128306742c]\n\nText: {bill_text}"}
             ],
         )
         
-        # Extract the response content
         top_categories_response = response['choices'][0]['message']['content']
+        logger.info(f"Category Response: {top_categories_response}")
         
-        # Log the response for debugging purposes
-        logger.info(f"OpenAI Category Response: {top_categories_response}")
-        
-        # Split the response into individual categories
-        top_categories = [category.strip() for category in top_categories_response.split("\n") if category.strip()]
-        return top_categories
+        return [cat.strip() for cat in top_categories_response.split("\n") if cat.strip()]
     
     except Exception as e:
-        logger.error(f"Error in OpenAI category generation: {str(e)}")
+        logger.error(f"Error in category generation: {str(e)}")
         return []
 
 def format_categories_for_webflow(openai_output, valid_categories):
-    # Extract category IDs from the OpenAI output
     category_ids = []
     valid_category_ids = {category["id"] for category in valid_categories}
     
     for category in openai_output:
-        # Assuming the format is: "[Category Name, Category ID]"
         parts = category.strip("[]").split(",")
         if len(parts) == 2:
             category_id = parts[1].strip()
-            
             if category_id in valid_category_ids:
                 category_ids.append(category_id)
             else:
-                logger.warning(f"Invalid Category ID detected: {category_id}")
+                logger.warning(f"Invalid category ID: {category_id}")
     
     return category_ids
 
@@ -120,10 +101,10 @@ def upload_to_s3(bucket_name, file_path):
         file_key = f"bill_details/{timestamp}_{file_path.split('/')[-1]}"
         s3_client.upload_file(file_path, bucket_name, file_key, ExtraArgs={'ACL': 'public-read'})
         object_url = f"https://{bucket_name}.s3.amazonaws.com/{file_key}"
-        logger.info(f"Uploaded {file_path} to {object_url}")
+        logger.info(f"Uploaded to S3: {object_url}")
         return object_url
     except Exception as e:
-        logger.error(f"Failed to upload to S3: {e}", exc_info=True)
+        logger.error(f"S3 upload failed: {e}")
         raise
 
 def download_pdf(pdf_url, local_path="bill_text.pdf"):
@@ -132,62 +113,44 @@ def download_pdf(pdf_url, local_path="bill_text.pdf"):
         if response.status_code == 200:
             with open(local_path, 'wb') as file:
                 file.write(response.content)
-            logger.info(f"Downloaded PDF from {pdf_url} to {local_path}")
+            logger.info(f"Downloaded PDF: {local_path}")
             return local_path
         else:
-            raise Exception(f"Failed to download PDF from {pdf_url}")
+            raise Exception(f"Failed to download PDF: {pdf_url}")
     except Exception as e:
-        logger.error(f"Error downloading PDF: {e}", exc_info=True)
+        logger.error(f"PDF download failed: {e}")
         raise
 
-def fetch_bill_details(url, bill_id=None):
-    """Fetch bill details from the provided URL"""
-    logger = get_bill_logger(bill_id) if bill_id else main_logger
-    
-    try:
-        logger.info("Starting bill fetch", extra={'url': url})
-        base_url = 'https://www.flsenate.gov'
-        response = requests.get(urljoin(base_url, url))
-        bill_details = {"title": "", "description": "", "pdf_path": "", "govId": "", "billTextPath": ""}
+def fetch_bill_details(bill_page_url):
+    logger.info("Starting bill fetch")
+    base_url = 'https://www.flsenate.gov'
+    response = requests.get(urljoin(base_url, bill_page_url))
+    bill_details = {"title": "", "description": "", "pdf_path": "", "govId": "", "billTextPath": ""}
 
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # First check if the page exists and has content
-            if not soup.find('div', id='prevNextBillNav'):
-                raise Exception("Bill page structure not found. The bill might not exist or the page structure has changed.")
-                
-            bill_title_tag = soup.find('div', id='prevNextBillNav').find_next('h2')
-            if bill_title_tag:
-                bill_details["title"] = bill_title_tag.get_text(strip=True)
-                gov_id_match = re.search(r"([A-Z]{2} \d+):", bill_details["title"])
-                if gov_id_match:
-                    bill_details["govId"] = gov_id_match.group(1)
-                    logger.info(f"Found bill ID: {bill_details['govId']}")
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.content, 'html.parser')
+        bill_title_tag = soup.find('div', id='prevNextBillNav').find_next('h2')
+        if bill_title_tag:
+            bill_details["title"] = bill_title_tag.get_text(strip=True)
+            gov_id_match = re.search(r"([A-Z]{2} \d+):", bill_details["title"])
+            if gov_id_match:
+                bill_details["govId"] = gov_id_match.group(1)
+                logger.info(f"Found bill ID: {bill_details['govId']}")
 
-            bill_pdf_link = soup.find('a', class_='lnk_BillTextPDF')
-            if bill_pdf_link:
-                pdf_url = urljoin(base_url, bill_pdf_link['href'])
-                local_pdf_path = download_pdf(pdf_url)
-                bill_details["pdf_path"] = local_pdf_path
-                bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)
-                logger.info("Successfully processed bill PDF")
+        bill_pdf_link = soup.find('a', class_='lnk_BillTextPDF')
+        if bill_pdf_link:
+            pdf_url = urljoin(base_url, bill_pdf_link['href'])
+            local_pdf_path = download_pdf(pdf_url)
+            bill_details["pdf_path"] = local_pdf_path
+            bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)
 
-            # Extract text from PDF and get top categories
-            full_text = extract_text_from_pdf(bill_details["pdf_path"])
-            top_categories = get_top_categories(full_text)
-            formatted_categories = format_categories_for_webflow(top_categories, categories)
-            
-            logger.info(f"Formatted Categories for Webflow: {formatted_categories}")
-            bill_details["categories"] = formatted_categories
+        full_text = extract_text_from_pdf(bill_details["pdf_path"])
+        top_categories = get_top_categories(full_text)
+        bill_details["categories"] = format_categories_for_webflow(top_categories, categories)
 
-            return bill_details
-        else:
-            raise Exception(f"Failed to fetch bill details. HTTP Status: {response.status_code}")
-    except Exception as e:
-        logger.error(f"Error fetching bill details: {str(e)}", 
-                    extra={'url': url}, exc_info=True)
-        raise
+        return bill_details
+    else:
+        raise Exception("Failed to fetch bill details: HTTP error")
 
 def extract_text_from_pdf(pdf_path):
     full_text = ""
@@ -196,7 +159,6 @@ def extract_text_from_pdf(pdf_path):
             page = pdf[page_num]
             full_text += page.get_text()
     return full_text
-    
 
 def fetch_federal_bill_details(session, bill, bill_type):
     base_url = 'https://www.congress.gov'
