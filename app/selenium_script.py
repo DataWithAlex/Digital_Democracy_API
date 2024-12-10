@@ -12,15 +12,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Configure logging to only show INFO level messages
-logging.basicConfig(level=logging.INFO)
+# Configure logging to only show INFO level messages and suppress all debug logs
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'  # Only show the message without timestamp or level
+)
 logger = logging.getLogger(__name__)
 
-# Disable selenium's own debug logging
-selenium_logger = logging.getLogger('selenium')
-selenium_logger.setLevel(logging.WARNING)
-urllib3_logger = logging.getLogger('urllib3')
-urllib3_logger.setLevel(logging.WARNING)
+# Disable all selenium and urllib3 logging
+logging.getLogger('selenium').setLevel(logging.ERROR)
+logging.getLogger('urllib3').setLevel(logging.ERROR)
+logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(logging.ERROR)
 
 def remove_numbering_and_format(text):
     """
@@ -115,17 +117,17 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         username_field.send_keys(os.environ.get('KIALO_USERNAME'))
         password_field.send_keys(os.environ.get('KIALO_PASSWORD'))
         login_button.click()
-        logger.info("✓ Successfully logged in to Kialo")
+        logger.info("✓ Logged in to Kialo")
 
         # Create new discussion
         new_discussion_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="New Discussion"]')))
         new_discussion_button.click()
-        logger.info("✓ Started new discussion creation")
+        logger.info("✓ Started new discussion")
 
         # Select Private Discussion
         element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'radio-option__input')))
         element.click()
-        logger.info("✓ Set discussion privacy settings")
+        logger.info("✓ Set discussion to private")
 
         # Click Next
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
@@ -138,7 +140,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
         thesis_field = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'top-node-text-editor__editor')))
         thesis_field.send_keys("Test Thesis")
-        logger.info("✓ Added discussion title and thesis")
+        logger.info("✓ Added title and thesis")
 
         # Next Page
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Next")]')))
@@ -165,7 +167,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
 
         logger.info("About to upload image")
         file_input.send_keys(image_path)
-        logger.info("✓ Uploaded discussion image")
+        logger.info("✓ Added image")
 
         # Click upload button
         upload_button = driver.find_element(By.XPATH, "//button[contains(@aria-label, 'Drag and drop or click')]")
@@ -188,7 +190,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         time.sleep(1)
         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "icon-button") and contains(@aria-label, "Create")]')))
         next_button.click()
-        logger.info("✓ Created base discussion")
+        logger.info("✓ Created discussion")
 
         # Wait for discussion to be created and get URL
         time.sleep(10)
@@ -232,7 +234,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
                 next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))
                 next_button.click()
                 pros_added += 1
-        logger.info(f"✓ Added {pros_added} pro arguments")
+        logger.info(f"✓ Added {pros_added} supporting arguments")
 
         # Add Cons
         cons_added = 0
@@ -251,7 +253,7 @@ def run_selenium_script(title, summary, pros_text, cons_text):
                 next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "save") and contains(@aria-label, "Save")]')))
                 next_button.click()
                 cons_added += 1
-        logger.info(f"✓ Added {cons_added} con arguments")
+        logger.info(f"✓ Added {cons_added} opposing arguments")
 
         # Get share link and publish
         share_link = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[contains(@class,'share-discussion-button')]")))
@@ -280,19 +282,19 @@ def run_selenium_script(title, summary, pros_text, cons_text):
         # Get final URL and clean it
         current_url = driver.current_url
         modified_url = clean_url(current_url)
-        logger.info(f"✓ Successfully created Kialo discussion at: {modified_url}")
+        logger.info(f"✓ Discussion created at: {modified_url}")
         
         if driver:
             driver.quit()
         return modified_url
 
     except (TimeoutException, WebDriverException) as e:
-        logger.error(f"❌ Failed to create Kialo discussion: {str(e)}")
+        logger.error(f"❌ Failed to create discussion: {str(e)}")
         if driver:
             driver.quit()
         return None
     except Exception as e:
-        logger.error(f"❌ Unexpected error while creating Kialo discussion: {str(e)}")
+        logger.error(f"❌ Unexpected error: {str(e)}")
         if driver:
             driver.quit()
         return None
