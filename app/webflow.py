@@ -138,6 +138,7 @@ class WebflowAPI:
 
         webflow_logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
 
+        # Prepare the data payload
         data = {
             "fieldData": {
                 "name": title,
@@ -155,6 +156,11 @@ class WebflowAPI:
                 "featured": True
             }
         }
+
+        # Add categories if they exist
+        if 'categories' in bill_details and bill_details['categories']:
+            data['fieldData']['category'] = bill_details['categories']
+            webflow_logger.info(f"Adding categories to item: {bill_details['categories']}")
 
         webflow_logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
 

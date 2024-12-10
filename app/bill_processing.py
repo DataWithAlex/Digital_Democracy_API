@@ -62,37 +62,43 @@ categories = [
 
 def get_top_categories(bill_text, categories_list=categories, model="gpt-4o"):
     try:
+        # Create a list of valid category names for the prompt
+        category_names = [c['name'] for c in categories_list]
+        category_name_list = ', '.join(category_names)
+
         response = openai.ChatCompletion.create(
             model=model,
             messages=[
-                {"role": "system", "content": "You are an AI that categorizes legislative texts into predefined categories. Select the three most relevant categories for the given text."},
-                {"role": "user", "content": f"Based on this bill text, select the three most relevant categories from: {[c['name'] for c in categories_list]}. Return in format: [Category Name, ID]. Example: [Disney, 655288ef928edb128306742c]\n\nText: {bill_text}"}
+                {"role": "system", "content": "You are an AI that categorizes legislative texts into predefined categories. Select exactly three most relevant categories from the provided list. Only use categories from the provided list."},
+                {"role": "user", "content": f"Based on this bill text, select the three most relevant categories from this list: {category_name_list}. Return only the category names, one per line, no additional text or formatting.\n\nText: {bill_text}"}
             ],
         )
         
-        top_categories_response = response['choices'][0]['message']['content']
-        logger.info(f"Category Response: {top_categories_response}")
+        # Get the raw category names from the response
+        category_names_response = response['choices'][0]['message']['content'].strip().split('\n')
+        logger.info(f"Raw category response: {category_names_response}")
         
-        return [cat.strip() for cat in top_categories_response.split("\n") if cat.strip()]
+        # Map the category names to their IDs
+        category_ids = []
+        name_to_id = {c['name']: c['id'] for c in categories_list}
+        
+        for category_name in category_names_response:
+            clean_name = category_name.strip()
+            if clean_name in name_to_id:
+                category_ids.append(name_to_id[clean_name])
+                logger.info(f"Mapped category '{clean_name}' to ID: {name_to_id[clean_name]}")
+            else:
+                logger.warning(f"Category name '{clean_name}' not found in valid categories")
+        
+        return category_ids[:3]  # Ensure we only return up to 3 categories
     
     except Exception as e:
         logger.error(f"Error in category generation: {str(e)}")
         return []
 
 def format_categories_for_webflow(openai_output, valid_categories):
-    category_ids = []
-    valid_category_ids = {category["id"] for category in valid_categories}
-    
-    for category in openai_output:
-        parts = category.strip("[]").split(",")
-        if len(parts) == 2:
-            category_id = parts[1].strip()
-            if category_id in valid_category_ids:
-                category_ids.append(category_id)
-            else:
-                logger.warning(f"Invalid category ID: {category_id}")
-    
-    return category_ids
+    # This function is now deprecated as get_top_categories handles the formatting
+    return openai_output
 
 def upload_to_s3(bucket_name, file_path):
     try:
@@ -145,8 +151,11 @@ def fetch_bill_details(bill_page_url):
             bill_details["billTextPath"] = upload_to_s3('ddp-bills-2', local_pdf_path)
 
         full_text = extract_text_from_pdf(bill_details["pdf_path"])
-        top_categories = get_top_categories(full_text)
-        bill_details["categories"] = format_categories_for_webflow(top_categories, categories)
+        
+        # Get categories and add them directly to bill_details
+        category_ids = get_top_categories(full_text)
+        bill_details["categories"] = category_ids
+        logger.info(f"Assigned categories: {category_ids}")
 
         return bill_details
     else:
