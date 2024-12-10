@@ -18,6 +18,14 @@ logging.basicConfig(level=logging.INFO)
 # Define logger
 logger = logging.getLogger(__name__)
 
+# Set selenium logger to only show warnings and above
+selenium_logger = logging.getLogger('selenium')
+selenium_logger.setLevel(logging.WARNING)
+
+# Set urllib3 logger to only show warnings and above
+urllib3_logger = logging.getLogger('urllib3')
+urllib3_logger.setLevel(logging.WARNING)
+
 def remove_numbering_and_format(text):
     """
     Removes any numbering format like '1) ' or '2) ' from the text and replaces it with '- '.
