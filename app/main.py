@@ -263,11 +263,16 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
             # Get the existing Webflow item
             webflow_item = webflow_api.get_collection_item(webflow_item_id)
             main_logger.info(f"Webflow API Response: {webflow_item}")
+            
             if not webflow_item:
                 raise HTTPException(status_code=500, detail="Failed to retrieve Webflow item.")
 
-            # Ensure all required fields are present
-            webflow_item_data = webflow_item.get('items', [])[0]
+            # The response structure has changed - fieldData is now directly in the root
+            webflow_item_data = webflow_item.get('fieldData', {})
+            if not webflow_item_data:
+                main_logger.error(f"Unexpected Webflow response structure: {webflow_item}")
+                raise HTTPException(status_code=500, detail="Unexpected Webflow response structure")
+
             name = webflow_item_data.get('name')
             slug = webflow_item_data.get('slug')
             support_text = webflow_item_data.get('support', '') or ''
@@ -285,19 +290,23 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             # Prepare the data with the description field included
             data = {
-                "fields": {
+                "fieldData": {
                     "support": support_text.strip(),
                     "oppose": oppose_text.strip(),
                     "name": name,
                     "slug": slug,
                     "description": description,
-                    "_draft": webflow_item_data.get("_draft", False),
-                    "_archived": webflow_item_data.get("_archived", False)
+                    "public": webflow_item_data.get("public", True),
+                    "featured": webflow_item_data.get("featured", True)
                 }
             }
 
+            main_logger.info(f"Updating Webflow item with data: {data}")
+
             if not webflow_api.update_collection_item(webflow_item_id, data):
                 raise HTTPException(status_code=500, detail="Failed to update Webflow item.")
+
+            main_logger.info(f"Successfully updated Webflow item {webflow_item_id}")
 
         else:
             # New bill creation
@@ -388,6 +397,7 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+        main_logger.info("Database connection closed")
 
     return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
 
