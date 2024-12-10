@@ -8,7 +8,7 @@ import openai
 from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
-from .models import BillRequest, Bill, BillMeta, FormData, FormRequest
+from .models import BillRequest, Bill, BillMeta, FormData, FormRequest, ProcessingStatus
 from .webflow import WebflowAPI, generate_slug
 from fastapi.responses import JSONResponse
 import datetime
@@ -76,86 +76,133 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
         existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
         if existing_bill:
             logger.info(f"Bill with history {history_value} already exists")
-            return JSONResponse(content={"message": "Bill already exists"}, status_code=200)
+            return JSONResponse(content={
+                "message": "Bill already exists",
+                "status": "success",
+                "history_value": history_value
+            }, status_code=200)
 
-        # New bill creation
-        bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
-        bill_details = fetch_bill_details(bill_url)
-        logger.info(f"Obtained bill details for: {bill_url}")
+        # Return immediate acknowledgment
+        response = JSONResponse(content={
+            "message": "Request received successfully. Processing will continue in the background.",
+            "status": "processing",
+            "history_value": history_value
+        }, status_code=202)
 
-        if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
-            raise HTTPException(status_code=500, detail="Required bill details are missing")
+        # Start processing in background
+        try:
+            # New bill creation
+            bill_url = f"https://www.flsenate.gov/Session/Bill/{request.year}/{request.bill_number}"
+            bill_details = fetch_bill_details(bill_url)
+            logger.info(f"Obtained bill details for: {bill_url}")
 
-        new_bill = Bill(
-            govId=bill_details["govId"], 
-            billTextPath=bill_details["billTextPath"], 
-            history=history_value
-        )
-        db.add(new_bill)
-        db.commit()
+            if not all(k in bill_details for k in ["govId", "billTextPath", "pdf_path", "description"]):
+                raise HTTPException(status_code=500, detail="Required bill details are missing")
 
-        pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
-        logger.info("Generated summary")
+            new_bill = Bill(
+                govId=bill_details["govId"], 
+                billTextPath=bill_details["billTextPath"], 
+                history=history_value
+            )
+            db.add(new_bill)
+            db.commit()
 
-        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
-            db.add(new_meta)
-        db.commit()
+            pdf_path, summary, pros, cons = create_summary_pdf(bill_details['pdf_path'], "output/bill_summary.pdf", bill_details['title'])
+            logger.info("Generated summary")
 
-        logger.info("Running selenium script")
-        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
-        if kialo_url is None:
-            logger.warning("Selenium script failed but continuing")
+            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
+                db.add(new_meta)
+            db.commit()
 
-        logger.info("Creating webflow item")
-        result = webflow_api.create_live_collection_item(
-            bill_url,
-            {
-                **bill_details,
-                "description": summary
-            },
-            kialo_url,
-            support_text=request.member_organization if request.support == "Support" else '',
-            oppose_text=request.member_organization if request.support == "Oppose" else '',
-            jurisdiction="FL"
-        )
+            logger.info("Running selenium script")
+            kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+            if kialo_url is None:
+                logger.warning("Selenium script failed but continuing")
 
-        if result is None:
-            logger.error("Failed to create webflow item")
-            raise HTTPException(status_code=500, detail="Failed to create webflow item")
+            logger.info("Creating webflow item")
+            result = webflow_api.create_live_collection_item(
+                bill_url,
+                {
+                    **bill_details,
+                    "description": summary
+                },
+                kialo_url,
+                support_text=request.member_organization if request.support == "Support" else '',
+                oppose_text=request.member_organization if request.support == "Oppose" else '',
+                jurisdiction="FL"
+            )
 
-        webflow_item_id, slug = result
-        webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
+            if result is None:
+                logger.error("Failed to create webflow item")
+                raise HTTPException(status_code=500, detail="Failed to create webflow item")
 
-        new_bill.webflow_link = webflow_url
-        new_bill.webflow_item_id = webflow_item_id
-        db.commit()
+            webflow_item_id, slug = result
+            webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
-        # Save form data
-        save_form_data(
-            name=request.name,
-            email=request.email,
-            member_organization=request.member_organization,
-            year=request.year,
-            legislation_type="Florida Bills",
-            session="N/A",
-            bill_number=request.bill_number,
-            bill_type=bill_details['govId'].split(" ")[0],
-            support=request.support,
-            govId=bill_details["govId"],
-            db=db
-        )
+            new_bill.webflow_link = webflow_url
+            new_bill.webflow_item_id = webflow_item_id
+            db.commit()
 
-    except HTTPException as http_exc:
-        logger.error(f"HTTP error: {http_exc.detail}")
-        raise http_exc
+            # Save form data
+            save_form_data(
+                name=request.name,
+                email=request.email,
+                member_organization=request.member_organization,
+                year=request.year,
+                legislation_type="Florida Bills",
+                session="N/A",
+                bill_number=request.bill_number,
+                bill_type=bill_details['govId'].split(" ")[0],
+                support=request.support,
+                govId=bill_details["govId"],
+                db=db
+            )
+
+        except Exception as processing_error:
+            logger.error(f"Background processing error: {str(processing_error)}")
+            # The error will be visible in the status endpoint
+            raise
+
+        return response
+
     except Exception as e:
         logger.error(f"Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(content={
+            "message": "An error occurred while processing the request",
+            "status": "error",
+            "history_value": history_value
+        }, status_code=500)
     finally:
         db.close()
 
-    return JSONResponse(content={"message": "Bill processed successfully"}, status_code=200)
+@app.get("/bill-status/{history_value}")
+async def get_bill_status(history_value: str, db: Session = Depends(get_db)):
+    try:
+        # Check if the bill exists
+        bill = db.query(Bill).filter(Bill.history == history_value).first()
+        
+        if not bill:
+            return JSONResponse(content={
+                "message": "Bill not found",
+                "status": "not_found"
+            }, status_code=404)
+
+        # If bill exists, it means processing was completed
+        return JSONResponse(content={
+            "message": "Bill processing completed",
+            "status": "completed",
+            "webflow_link": bill.webflow_link
+        }, status_code=200)
+
+    except Exception as e:
+        logger.error(f"Error fetching status: {str(e)}")
+        return JSONResponse(content={
+            "message": "Error fetching status",
+            "status": "error"
+        }, status_code=500)
+    finally:
+        db.close()
 
 def save_form_data(name, email, member_organization, year, legislation_type, session, bill_number, bill_type, support, govId, db: Session):
     form_data = FormData(
