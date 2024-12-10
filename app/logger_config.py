@@ -154,3 +154,7 @@ def get_bill_logger(bill_id, session=None, bill_number=None):
 main_logger = setup_logger("ddp_api", "api")
 selenium_logger = setup_logger("selenium", "selenium")
 webflow_logger = setup_logger("webflow", "webflow")
+
+# Export loggers for use in other modules
+logger = main_logger  # Default logger
+__all__ = ['logger', 'main_logger', 'selenium_logger', 'webflow_logger', 'setup_logger', 'get_bill_logger']

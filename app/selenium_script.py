@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
-from .logger_config import logger
+from .logger_config import selenium_logger as logger
 
 def remove_numbering_and_format(text):
     """
