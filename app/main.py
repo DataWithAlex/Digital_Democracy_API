@@ -245,11 +245,9 @@ async def process_federal_bill(request: FormRequest, db: Session = Depends(get_d
 
         # Create new bill record
         new_bill = Bill(
-            title=bill_details['title'],
-            description=summary,
             govId=bill_details['govId'],
             billTextPath=bill_details['billTextPath'],
-            slug=generate_slug(bill_details['title'])
+            history=f"{request.session}{request.bill_type}{request.bill_number}"
         )
         db.add(new_bill)
         db.flush()
