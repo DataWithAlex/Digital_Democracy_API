@@ -131,7 +131,14 @@ def fetch_bill_details(bill_page_url):
     logger.info("Starting bill fetch")
     base_url = 'https://www.flsenate.gov'
     response = requests.get(urljoin(base_url, bill_page_url))
-    bill_details = {"title": "", "description": "", "pdf_path": "", "govId": "", "billTextPath": ""}
+    bill_details = {
+        "title": "", 
+        "description": "", 
+        "pdf_path": "", 
+        "govId": "", 
+        "billTextPath": "",
+        "gov-url": bill_page_url
+    }
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
