@@ -66,7 +66,7 @@ def get_db():
         logger.info("Closing database connection")
         db.close()
 
-@app.post("/update-bill/")
+@app.post("/update-bill/", response_class=Response)
 async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
     history_value = f"{request.year}{request.bill_number}"
     logger.info(f"Starting update-bill() for bill: {history_value}")
@@ -122,12 +122,9 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             logger.info("Creating webflow item")
             result = webflow_api.create_live_collection_item(
-                bill_url,
-                {
-                    **bill_details,
-                    "description": summary
-                },
-                kialo_url,
+                bill_url=bill_details["gov-url"],
+                bill_details=bill_details,
+                kialo_url=kialo_url,
                 support_text=request.member_organization if request.support == "Support" else '',
                 oppose_text=request.member_organization if request.support == "Oppose" else '',
                 jurisdiction="FL",
@@ -136,7 +133,10 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
             if result is None:
                 logger.error("Failed to create webflow item")
-                raise HTTPException(status_code=500, detail="Failed to create webflow item")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to create webflow item. Please ensure all Webflow collection changes are published."
+                )
 
             webflow_item_id, slug = result
             webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
@@ -167,13 +167,19 @@ async def update_bill(request: FormRequest, db: Session = Depends(get_db)):
 
         return response
 
+    except HTTPException as http_exc:
+        db.rollback()
+        logger.error(f"HTTP exception occurred: {http_exc.detail}")
+        raise http_exc
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
-        return JSONResponse(content={
-            "message": "An error occurred while processing the request",
-            "status": "error",
-            "history_value": history_value
-        }, status_code=500)
+        db.rollback()
+        logger.error(f"An error occurred: {str(e)}")
+        if "collection needs to be published" in str(e).lower():
+            raise HTTPException(
+                status_code=409,  # Using 409 to indicate conflict
+                detail=str(e)
+            )
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
 

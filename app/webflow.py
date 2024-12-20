@@ -2,6 +2,7 @@ import requests
 import logging
 import json
 import re
+import time
 from typing import Dict, Optional
 from .logger_config import webflow_logger
 
@@ -205,73 +206,95 @@ class WebflowAPI:
         return self.create_member_organization(org_name)
 
     def create_live_collection_item(self, bill_url, bill_details: Dict, kialo_url: str, support_text: str, oppose_text: str, jurisdiction: str, member_organization: Optional[str] = None) -> Optional[tuple]:
-        slug = generate_slug(bill_details['title'])
-        title = reformat_title(bill_details['title'])
-        kialo_url = clean_kialo_url(kialo_url)
+        try:
+            slug = generate_slug(bill_details['title'])
+            title = reformat_title(bill_details['title'])
+            kialo_url = clean_kialo_url(kialo_url)
 
-        if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
-            webflow_logger.error(f"Invalid gov-url: {bill_url}")
-            return None
-
-        # Map jurisdiction to its corresponding ItemRef
-        jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
-        if not jurisdiction_item_ref:
-            webflow_logger.error(f"Invalid jurisdiction: {jurisdiction}")
-            return None
-
-        webflow_logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
-
-        # Prepare the data payload
-        data = {
-            "fieldData": {
-                "name": title,
-                "slug": slug,
-                "post-body": "",
-                "jurisdiction": jurisdiction_item_ref,
-                "voatzid": "",
-                "kialo-url": kialo_url,
-                "gov-url": bill_url,
-                "bill-score": 0.0,
-                "description": bill_details['description'],
-                "support": support_text,
-                "oppose": oppose_text,
-                "public": True,
-                "featured": True
-            }
-        }
-
-        # Add categories if they exist
-        if 'categories' in bill_details and bill_details['categories']:
-            data['fieldData']['category'] = bill_details['categories']
-            webflow_logger.info(f"Adding categories to item: {bill_details['categories']}")
-
-        # Add member organization if provided
-        if member_organization:
-            org_id = self.handle_member_organization(member_organization)
-            if org_id:
-                data['fieldData']['member-organizations'] = [org_id]
-                webflow_logger.info(f"Adding member organization to item: {org_id}")
-
-        webflow_logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
-
-        # Updated endpoint for V2 API
-        create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/live"
-        response = requests.post(create_item_endpoint, headers=self.headers, json=data)
-        webflow_logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
-
-        if response.status_code in [200, 201, 202]:
-            try:
-                response_data = response.json()
-                item_id = response_data.get('id')
-                slug = response_data['fieldData'].get('slug')
-                webflow_logger.info(f"Live collection item created successfully, ID: {item_id}, slug: {slug}")
-                return item_id, slug
-            except Exception as e:
-                webflow_logger.error(f"Error parsing Webflow API response: {str(e)}", exc_info=True)
+            if not bill_url.startswith("http://") and not bill_url.startswith("https://"):
+                webflow_logger.error(f"Invalid gov-url: {bill_url}")
                 return None
-        else:
-            webflow_logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
-            return None
+
+            # Map jurisdiction to its corresponding ItemRef
+            jurisdiction_item_ref = self.jurisdiction_map.get(jurisdiction)
+            if not jurisdiction_item_ref:
+                webflow_logger.error(f"Invalid jurisdiction: {jurisdiction}")
+                return None
+
+            webflow_logger.info(f"slug: {slug}, title: {title}, kialo_url: {kialo_url}, description: {bill_details['description']}, gov-url: {bill_url}")
+
+            # Prepare the data payload
+            data = {
+                "fieldData": {
+                    "name": title,
+                    "slug": slug,
+                    "post-body": "",
+                    "jurisdiction": jurisdiction_item_ref,
+                    "voatzid": "",
+                    "kialo-url": kialo_url,
+                    "gov-url": bill_url,
+                    "bill-score": 0.0,
+                    "description": bill_details['description'],
+                    "support": support_text,
+                    "oppose": oppose_text,
+                    "public": True,
+                    "featured": True
+                }
+            }
+
+            # Add categories if they exist
+            if 'categories' in bill_details and bill_details['categories']:
+                data['fieldData']['category'] = bill_details['categories']
+                webflow_logger.info(f"Adding categories to item: {bill_details['categories']}")
+
+            # Add member organization if provided
+            if member_organization:
+                org_id = self.handle_member_organization(member_organization)
+                if org_id:
+                    data['fieldData']['member-organizations'] = [org_id]
+                    webflow_logger.info(f"Adding member organization to item: {org_id}")
+
+            webflow_logger.info(f"JSON Payload: {json.dumps(data, indent=4)}")
+
+            # Updated endpoint for V2 API
+            create_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/live"
+            response = requests.post(create_item_endpoint, headers=self.headers, json=data)
+            webflow_logger.info(f"Webflow API Response Status: {response.status_code}, Response Text: {response.text}")
+
+            if response.status_code == 409:
+                webflow_logger.warning("Collection conflict detected, attempting to retry...")
+                
+                error_msg = response.json().get('message', 'Unknown conflict error')
+                if "collection structure changed" in error_msg.lower():
+                    raise Exception("Webflow collection needs to be published before creating new items. Please publish recent changes in Webflow and try again.")
+                
+                time.sleep(5)
+                
+                response = requests.post(create_item_endpoint, headers=self.headers, json=data)
+                webflow_logger.info(f"Retry Response Status: {response.status_code}, Response Text: {response.text}")
+                
+                if response.status_code == 409:
+                    raise Exception("Webflow collection needs to be published. Please publish recent changes in Webflow before continuing.")
+
+            if response.status_code in [200, 201, 202]:
+                try:
+                    response_data = response.json()
+                    item_id = response_data.get('id')
+                    slug = response_data['fieldData'].get('slug')
+                    webflow_logger.info(f"Live collection item created successfully, ID: {item_id}, slug: {slug}")
+                    return item_id, slug
+                except Exception as e:
+                    webflow_logger.error(f"Error parsing Webflow API response: {str(e)}", exc_info=True)
+                    return None
+            else:
+                webflow_logger.error(f"Failed to create live collection item: {response.status_code} - {response.text}")
+                if response.status_code == 409:
+                    raise Exception("Webflow collection needs to be published. Please publish recent changes in Webflow before continuing.")
+                return None
+
+        except Exception as e:
+            webflow_logger.error(f"Error in create_live_collection_item: {str(e)}", exc_info=True)
+            raise
 
     def update_collection_item(self, item_id: str, data: Dict) -> bool:
         update_item_endpoint = f"{self.base_url}/collections/{self.collection_id}/items/{item_id}/live"
