@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
 import boto3
 import openai
-from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf
+from .bill_processing import fetch_bill_details, fetch_federal_bill_details, create_summary_pdf, create_federal_bill_summary
 from .translation import translate_to_spanish
 from .selenium_script import run_selenium_script
 from .models import BillRequest, Bill, BillMeta, FormData, FormRequest, ProcessingStatus
@@ -222,120 +222,97 @@ def save_form_data(name, email, member_organization, year, legislation_type, ses
     db.add(form_data)
     db.commit()
 
-@app.post("/process-federal-bill/")
+@app.post("/process-federal-bill/", response_class=Response)
 async def process_federal_bill(request: FormRequest, db: Session = Depends(get_db)):
     logger.info(f"Starting process-federal-bill() for bill: {request.bill_number} in session {request.session}")
-    history_value = f"{request.session}{request.bill_type}{request.bill_number}"
-
     try:
-        # Check if the history value exists
-        existing_bill = db.query(Bill).filter(Bill.history == history_value).first()
-        if existing_bill:
-            logger.info(f"Federal bill with history {history_value} already exists")
-            return JSONResponse(content={
-                "message": "Bill already exists",
-                "status": "success",
-                "history_value": history_value
-            }, status_code=200)
+        # Fetch bill details
+        bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
+        logger.info(f"Obtained federal bill details for: {bill_details['govId']}")
 
-        # Return immediate acknowledgment
-        response = JSONResponse(content={
-            "message": "Request received successfully. Processing will continue in the background.",
-            "status": "processing",
-            "history_value": history_value
-        }, status_code=202)
+        # Generate summary and PDFs
+        pdf_path, summary, pros, cons = create_federal_bill_summary(
+            bill_details['full_text'],
+            language=request.lan,
+            title=bill_details['title']
+        )
 
-        try:
-            # Fetch federal bill details
-            bill_details = fetch_federal_bill_details(request.session, request.bill_number, request.bill_type)
-            logger.info(f"Obtained federal bill details for: {bill_details['govId']}")
+        # Create new bill record
+        new_bill = Bill(
+            title=bill_details['title'],
+            description=summary,
+            govId=bill_details['govId'],
+            billTextPath=bill_details['billTextPath'],
+            slug=generate_slug(bill_details['title'])
+        )
+        db.add(new_bill)
+        db.flush()
 
-            if not all(k in bill_details for k in ["govId", "billTextPath", "full_text"]):
-                raise HTTPException(status_code=500, detail="Required bill details are missing")
+        # Add metadata
+        for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
+            new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language=request.lan)
+            db.add(new_meta)
+        db.commit()
 
-            # Create new bill record
-            new_bill = Bill(
-                govId=bill_details["govId"],
-                billTextPath=bill_details["billTextPath"],
-                history=history_value
-            )
-            db.add(new_bill)
-            db.commit()
+        # Create Kialo discussion
+        logger.info("Running selenium script for federal bill")
+        kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
+        if kialo_url is None:
+            logger.warning("Selenium script failed but continuing")
 
-            # Generate summary, pros, and cons
-            pdf_path, summary, pros, cons = create_summary_pdf(
-                bill_details['full_text'],
-                "output/federal_bill_summary.pdf",
-                bill_details['title'],
-                is_text=True
-            )
-            logger.info("Generated summary for federal bill")
+        # Create Webflow item
+        logger.info("Creating webflow item")
+        result = webflow_api.create_live_collection_item(
+            bill_details['gov-url'],
+            {
+                **bill_details,
+                "description": summary
+            },
+            kialo_url,
+            support_text=request.member_organization if request.support == "Support" else '',
+            oppose_text=request.member_organization if request.support == "Oppose" else '',
+            jurisdiction="US",
+            member_organization=request.member_organization
+        )
 
-            # Save metadata
-            for meta_type, text in [("Summary", summary), ("Pro", pros), ("Con", cons)]:
-                new_meta = BillMeta(billId=new_bill.id, type=meta_type, text=text, language="EN")
-                db.add(new_meta)
-            db.commit()
+        if result is None:
+            logger.error("Failed to create webflow item")
+            raise HTTPException(status_code=500, detail="Failed to create webflow item")
 
-            # Create Kialo discussion
-            logger.info("Running selenium script for federal bill")
-            kialo_url = run_selenium_script(title=bill_details['govId'], summary=summary, pros_text=pros, cons_text=cons)
-            if kialo_url is None:
-                logger.warning("Selenium script failed but continuing")
+        webflow_item_id, slug = result
+        webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
 
-            # Create Webflow item
-            logger.info("Creating webflow item for federal bill")
-            result = webflow_api.create_live_collection_item(
-                bill_details['gov-url'],
-                {
-                    **bill_details,
-                    "description": summary
-                },
-                kialo_url,
-                support_text=request.member_organization if request.support == "Support" else '',
-                oppose_text=request.member_organization if request.support == "Oppose" else '',
-                jurisdiction="US",
-                member_organization=request.member_organization
-            )
+        new_bill.webflow_link = webflow_url
+        new_bill.webflow_item_id = webflow_item_id
+        db.commit()
 
-            if result is None:
-                logger.error("Failed to create webflow item")
-                raise HTTPException(status_code=500, detail="Failed to create webflow item")
+        # Save form data
+        save_form_data(
+            name=request.name,
+            email=request.email,
+            member_organization=request.member_organization,
+            year=request.year,
+            legislation_type="Federal Bills",
+            session=request.session,
+            bill_number=request.bill_number,
+            bill_type=request.bill_type,
+            support=request.support,
+            govId=bill_details["govId"],
+            db=db
+        )
 
-            webflow_item_id, slug = result
-            webflow_url = f"https://digitaldemocracyproject.org/bills/{slug}"
-
-            new_bill.webflow_link = webflow_url
-            new_bill.webflow_item_id = webflow_item_id
-            db.commit()
-
-            # Save form data
-            save_form_data(
-                name=request.name,
-                email=request.email,
-                member_organization=request.member_organization,
-                year=request.year,
-                legislation_type="Federal Bills",
-                session=request.session,
-                bill_number=request.bill_number,
-                bill_type=request.bill_type,
-                support=request.support,
-                govId=bill_details["govId"],
-                db=db
-            )
-
-        except Exception as processing_error:
-            logger.error(f"Background processing error: {str(processing_error)}")
-            raise
-
-        return response
+        # Return PDF
+        if pdf_path and os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as pdf_file:
+                return Response(content=pdf_file.read(), media_type="application/pdf")
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate PDF")
 
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         return JSONResponse(content={
             "message": "An error occurred while processing the request",
-            "status": "error",
-            "history_value": history_value
+            "status": "error"
         }, status_code=500)
     finally:
         db.close()

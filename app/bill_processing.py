@@ -502,3 +502,20 @@ def validate_and_generate_pros_cons(bill_text, bill_id=None):
     except Exception as e:
         logger.error(f"Error generating pros and cons: {str(e)}", exc_info=True)
         raise
+
+def create_federal_bill_summary(full_text, language="EN", title=""):
+    """
+    Create summary for federal bills with proper error handling
+    """
+    logger.info("Generating federal bill summary")
+    try:
+        output_pdf_path = "bill_summary.pdf"
+        
+        if language.upper() == "ES":
+            return create_federal_summary_pdf_spanish(full_text, output_pdf_path, title)
+        else:
+            return create_federal_summary_pdf(full_text, output_pdf_path, title)
+            
+    except Exception as e:
+        logger.error(f"Error generating federal bill summary: {str(e)}")
+        raise
